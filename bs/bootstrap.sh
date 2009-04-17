@@ -21,6 +21,9 @@ RUNKIT='runkit'
 APC='apc'
 #APC=''
 
+MEMCACHE='memcache'
+#MEMCACHE=''
+
 SAVANT='http://phpsavant.com/Savant3-3.0.0.tgz'
 # }}}
 if [ ! -d packages ]; then
@@ -60,6 +63,11 @@ fi
 # Install APC {{{
 if [ "$APC" != "" ]; then
 $SUDO pecl install $APC
+fi
+# }}}
+# Install memcache {{{
+if [ "$MEMCACHE" != "" ]; then
+$SUDO pecl install $MEMCACHE
 fi
 # }}}
 # Install Savant3 {{{
