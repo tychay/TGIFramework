@@ -1,2 +1,3 @@
 php_value auto_prepend_file '../config.php'
+php_value unserialize_callback_func '__autoload'
 php_value runkit.superglobal '_TAG'

@@ -14,12 +14,14 @@ APACHECTL=/opt/local/apache2/bin/apachectl
 # }}}
 # PACKAGES {{{
 # Runkit is still in beta. Note that Runkit 0.9 doesn't compile in CVS
-#RUNKIT='runkit'
+RUNKIT='runkit'
 #RUNKIT='channel://pecl.php.net/runkit-0.9'
-RUNKIT=''
+#RUNKIT=''
 
-#APC='apc'
-APC=''
+APC='apc'
+#APC=''
+
+SAVANT='http://phpsavant.com/Savant3-3.0.0.tgz'
 # }}}
 if [ ! -d packages ]; then
     mkdir packages
@@ -34,27 +36,35 @@ fi
 # }}}
 # Install runkit {{{
 if [ "$RUNKIT" != "" ]; then
-# TODO: add test for PHP 5
-pushd packages
-    if [ ! -d pecl/runkit ]; then
-        cvs -d :pserver:cvsread@cvs.php.net:/repository checkout  pecl/runkit
-    fi
-    pushd pecl/runkit
-        cvs update
-	phpize
-	./configure --enable-runkit
-	make
-	make test
-	$SUDO make install
-    popd
-popd packages
-RUNKIT="$BASE_DIR/packages/pecl/runkit"
-$SUDO pecl install $RUNKIT
+# TODO: add test for PHP 5.2
+if [ "TRUE" ]; then
+    $SUDO pecl install $RUNKIT
+    RUNKIT="$BASE_DIR/packages/pecl/runkit"
+else
+    pushd packages
+        if [ ! -d pecl/runkit ]; then
+            cvs -d :pserver:cvsread@cvs.php.net:/repository checkout  pecl/runkit
+        fi
+        pushd pecl/runkit
+            cvs update
+            phpize
+            ./configure --enable-runkit
+            make
+            make test
+            $SUDO make install
+        popd
+     popd packages
+fi
 fi
 # }}}
 # Install APC {{{
 if [ "$APC" != "" ]; then
 $SUDO pecl install $APC
+fi
+# }}}
+# Install Savant3 {{{
+if [ "$SAVANT" != "" ]; then
+$SUDO pear install $SAVANT
 fi
 # }}}
 echo You may need to add 'extension=apc.so' and restart.
