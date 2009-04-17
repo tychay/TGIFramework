@@ -1,0 +1,4 @@
+[ ] bs/boostrap.sh to install PEAR and PECL libraries
+[ ] add "extension=apc.so" to the php.ini file
+[ ] put samples/www somewhere in web path
+[ ] add .htaccess to <Directory> in http.conf or make sure AllowOverrides is set (to use htaccess) for samples
