@@ -46,10 +46,10 @@ function __autoload($class_name)
         // backward compatibily map table load {{{
         if (empty($map_table)) {
             //sprintf('__autoload(): %s forced load of classmaps',$class_name);
-            //$map_table = include(LIB_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php');
+            //$map_table = include(APP_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php');
             if (!$map_table = @$_TAG->classmaps) {
                 // this should never be called.
-                $map_table = include(LIB_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php');
+                $map_table = include(APP_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php');
             }
         }
         if (array_key_exists($lower_class_name,$map_table)) {
@@ -62,7 +62,7 @@ function __autoload($class_name)
         if (strcmp(substr($class_name,0,5),'tgif_')===0) {
             if (__autoload_xform($lower_class_name, TGIF_CLASS_DIR.DIRECTORY_SEPARATOR)) { return; }
         } else {
-            if (__autoload_xform($lower_class_name, LIB_CLASS_DIR.DIRECTORY_SEPARATOR)) { return; }
+            if (__autoload_xform($lower_class_name, APP_CLASS_DIR.DIRECTORY_SEPARATOR)) { return; }
         }
         // }}}
     }

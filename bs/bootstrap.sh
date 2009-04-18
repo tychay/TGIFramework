@@ -75,5 +75,6 @@ if [ "$SAVANT" != "" ]; then
 $SUDO pear install $SAVANT
 fi
 # }}}
-echo You may need to add 'extension=apc.so' and restart.
+echo You may need to add  'extension=apc.so', 'extension=runkit.so', and
+echo 'extension=memcache.so' to php.ini and restart.
 $SUDO $APACHECTL restart
