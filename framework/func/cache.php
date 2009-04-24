@@ -4,12 +4,15 @@
  * Shared memory cache voodoo.
  *
  * Basically this creates a uniform api that mimics the apc shared memory
- * variable cache.
+ * variable cache. This replaces the tag_cache_* I wrote in Tagged's framework.
+ *
+ * It is untested (because I always have APC installed nowadays).
  *
  * @package tgiframework
  * @subpackage global
  * @copyright 2007-2009 Tagged, Inc. <http://www.tagged.com/>, 2009 terry chay <tychay@php.net>
- * @author terry chay <tychay@tagged.com>
+ * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
+ * @author terry chay <tychay@php.net>
  */
 if (function_exists('apc_fetch')) {
     //echo "apc\n";
@@ -17,10 +20,9 @@ if (function_exists('apc_fetch')) {
     /*
      * Get key shared memory cache!
      *
-     * If caching is not available, this cleanly returns false. :-)
-     *
-     * Note because of wierdness, you cannot store "false" into cache. Don't try
-     * it'll be ugly.
+     * If caching is not available, this cleanly returns false. :-) Note
+     * because of this wierdness, you cannot store "false" into cache. Don't
+     * try it'll be ugly. :-)
      *
      * @param $key string The variable to get from cache
      * @return mixed the stored variable, it returns false on failure.
@@ -86,6 +88,9 @@ if (function_exists('apc_fetch')) {
     // I need semaphore locking for this code to work. Someone please help!
     // hack to use shm segments {{{
     // {{{ _shm_init()
+    /**
+     * Utility function to create a shared memory segment to emulate APC's
+     */
     function _shm_init()
     {
         $GLOBALS['tgif_shm'] = shm_attach('tgif_shm',1024*1024*16,0666);
@@ -93,8 +98,13 @@ if (function_exists('apc_fetch')) {
     }
     // }}}
     // {{{ _shm_key($key)
+    /**
+     * Lookup function to get shared memory key if using shm extension to
+     * emulate APC.
+     */
     function _shm_key($key)
     {
+        global $tgif_shm;
         static $maps;
         if (!is_array($maps)) {
             $maps = @shm_get_var($GLOBALS['tgif_shm'],0);
@@ -109,8 +119,8 @@ if (function_exists('apc_fetch')) {
         }
         $idx = count($maps)+1;
         $maps[$key] = $idx;
-        shm_put_var($GLOBALS['tgif_shm'],0,$maps);
-        shm_put_var($GLOBALS['tgif_shm'],$idx,null);
+        shm_put_var($tgif_shm,0,$maps);
+        shm_put_var($tgif_shm,$idx,null);
         return $idx;
     }
     // }}}
