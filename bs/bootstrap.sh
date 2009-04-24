@@ -18,7 +18,7 @@ PHP_INI=/opt/local/etc
 # UTILS {{{
 PHP_EXT_TEST=$BASE_DIR/bs/extension_installed.php
 PHP_VERSION_TEST=$BASE_DIR/bs/version_compare.php
-pear_installed () { pear list | grep ^$1 | wc -l ; }
+pear_installed () { pear list -a | grep ^$1 | wc -l ; }
 # }}}
 # PACKAGES {{{
 # RUNKIT {{{
@@ -36,6 +36,8 @@ MEMCACHE='memcache'
 XDEBUG='xdebug'
 
 SAVANT='http://phpsavant.com/Savant3-3.0.0.tgz'
+FIREPHP_CHANNEL='pear.firephp.org'
+FIREPHP='FirePHPCore'
 
 WEBGRIND='webgrind'
 WEBGRIND_VERSION='1.0'
@@ -119,11 +121,21 @@ else
     echo 'be sure to add to your php.ini: extension=memcache.so'
 fi
 # }}}
-# Install Savant3 {{{
+# Install PEAR::Savant3 {{{
 if [ `pear_installed Savant3` ]; then
-    $SUDO pear upgrade $SAVANT
+#    $SUDO pear upgrade savant/$SAVANT
 else
+#    $SUDO pear channel-discover savant.pearified.com
+#    $SUDO pear install savant/$SAVANT
     $SUDO pear install $SAVANT
+fi
+# }}}
+# Install PEAR::FirePHP {{{
+if [ `pear_installed firephp/FirePHPCore` ]; then
+    $SUDO pear upgrade firephp/$FIREPHP
+else
+    $SUDO pear channel-discover $FIREPHP_CHANNEL
+    $SUDO pear install firephp/$FIREPHP
 fi
 # }}}
 # Install samples {{{
