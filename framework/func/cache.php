@@ -25,7 +25,7 @@ if (function_exists('apc_fetch')) {
      * @param $key string The variable to get from cache
      * @return mixed the stored variable, it returns false on failure.
      */
-    function apc_fetch($key) { return apc_fetch($key); }
+    //function apc_fetch($key) { return apc_fetch($key); }
     /*
      * Cache a variable to the shared memory cache
      *
