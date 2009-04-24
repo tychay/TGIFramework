@@ -10,8 +10,8 @@ php_value runkit.superglobal '_TAG'
 # XDEBUG
 php_flag  xdebug.show_mem_delta             1
 
-# Xdebug profiling
-php_flag  xdebug.profiler_enable            1
-#php_flag  xdebug.profiler_enable_trigger    1
+# Xdebug profiling: turn on wiht XDEBUG_PROFILE in GPC
+#php_flag  xdebug.profiler_enable            1
+php_flag  xdebug.profiler_enable_trigger    1
 php_value xdebug.profiler_output_dir        '{{{BASE_DIR}}}/samples/traces'
 php_value xdebug.profiler_output_name       'cachegrind.out.%t.%p'
