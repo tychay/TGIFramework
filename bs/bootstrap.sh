@@ -12,12 +12,13 @@ PHP_INI=/etc/php.ini # check php --ini
 # MacPorts
 #PHP=/opt/local/bin/php
 APACHECTL=/opt/local/apache2/bin/apachectl
-PHP_INI=/opt/local/etc/php.ini
+PHP_INI=/opt/local/etc
+#PHP_INI=/opt/local/etc/php.ini
 # }}}
 # UTILS {{{
 PHP_EXT_TEST=$BASE_DIR/bs/extension_installed.php
 PHP_VERSION_TEST=$BASE_DIR/bs/version_compare.php
-pear_installed () { pear list | grep ^$1 ; }
+pear_installed () { pear list | grep ^$1 | wc -l ; }
 # }}}
 # PACKAGES {{{
 # RUNKIT {{{
@@ -32,12 +33,20 @@ fi
 APC='apc'
 #APC='http://pecl.php.net/get/APC'
 MEMCACHE='memcache'
+XDEBUG='xdebug'
 
 SAVANT='http://phpsavant.com/Savant3-3.0.0.tgz'
+
+WEBGRIND='webgrind'
+WEBGRIND_VERSION='1.0'
+WEBGRIND_PKG="${WEBGRIND}-release-${WEBGRIND_VERSION}"
+WEBGRIND_URL="http://webgrind.googlecode.com/files/${WEBGRIND_PKG}.zip"
 # }}}
+# Make directories {{{
 if [ ! -d packages ]; then
     mkdir packages
 fi
+# }}}
 # Install/update PEAR {{{
 if [ `which pear` ]; then
     $SUDO pear config-set php_bin $PHP
@@ -46,7 +55,18 @@ else
     $SUDO $PHP -q bs/go-pear.php
 fi
 if [ `which pecl` ]; then
+    $SUDO pear config-set php_ini $PHP_INI
     $SUDO pecl config-set php_ini $PHP_INI
+fi
+# }}}
+# Install XDEBUG {{{
+if [ `$PHP_EXT_TEST xdebug` ]; then
+    echo '### XDEBUG INSTALLED';
+    $SUDO pecl upgrade $XDEBUG
+else
+    echo '### INSTALLING XDEBUG';
+    $SUDO pecl install $XDEBUG
+    echo 'be sure to add to your php.ini: zend_extension="<something>/xdebug.so"'
 fi
 # }}}
 # Install runkit {{{
@@ -76,6 +96,7 @@ else
             popd
          popd packages
     fi
+    echo 'be sure to add to your php.ini: extension=runkit.so'
 fi
 # }}}
 # Install APC {{{
@@ -85,6 +106,7 @@ if [ `$PHP_EXT_TEST apc` ]; then
 else
     echo '### INSTALLING APC';
     $SUDO pecl install $APC
+    echo 'be sure to add to your php.ini: extension=apc.so'
 fi
 # }}}
 # Install memcache {{{
@@ -94,14 +116,48 @@ if [ `$PHP_EXT_TEST memcache` ]; then
 else
     echo '### INSTALLING MEMCACHE';
     $SUDO pecl install $MEMCACHE
+    echo 'be sure to add to your php.ini: extension=memcache.so'
 fi
 # }}}
 # Install Savant3 {{{
 if [ `pear_installed Savant3` ]; then
-    $SUDO pear update $SAVANT
+    $SUDO pear upgrade $SAVANT
 else
     $SUDO pear install $SAVANT
 fi
 # }}}
-echo '### You may need to add  'extension=apc.so', 'extension=runkit.so', and echo 'extension=memcache.so' to php.ini and restart.'
+# Install samples {{{
+pushd samples
+    if [ ! -d traces ]; then
+        mkdir traces
+        chmod 777 traces
+    fi
+    if [ ! -f www/.htaccess ]; then
+        echo "### Building .htaccess file for samples"
+        cat res/default.htaccess | sed "s|{{{BASE_DIR}}}|${BASE_DIR}|" >www/.htaccess
+    fi
+popd
+# }}}
+# Install WebGrind {{{
+pushd packages
+    if [ ! -f ${WEBGRIND_PKG}.zip ]; then
+        echo "### Downloading $WEBGRIND_URL"
+        curl -O $WEBGRIND_URL;
+    fi
+popd
+pushd samples/www
+    if [ ! -d ${WEBGRIND} ]; then
+        echo "### Unpacking ${WEBGRIND_PKG}.zip"
+        unzip $BASE_DIR/packages/${WEBGRIND_PKG}.zip
+    fi
+    pushd $WEBGRIND
+        if [ ! -f .htaccess ]; then
+            cp ../../res/webgrind.htaccess .htaccess
+            echo "### Update profilerDir to point to $BASE_DIR/samples/traces"
+            vim +20 config.php
+        fi
+    popd
+popd
+# }}}
+echo '### You may need to add  stuff to your php.ini and restart'
 $SUDO $APACHECTL restart

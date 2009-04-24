@@ -1,0 +1,6 @@
+php_value auto_prepend_file                 none
+php_value unserialize_callback_func         none
+php_value runkit.superglobal                none
+
+php_flag  xdebug.profiler_enable            0
+php_flag  xdebug.profiler_enable_trigger    0
