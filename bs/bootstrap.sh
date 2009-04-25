@@ -122,8 +122,9 @@ else
 fi
 # }}}
 # Install PEAR::Savant3 {{{
-if [ `pear_installed Savant3` ]; then
+if [ `pear_installed Savant3` != '0' ]; then
 #    $SUDO pear upgrade savant/$SAVANT
+    echo "No way of upgrading Savant3"
 else
 #    $SUDO pear channel-discover savant.pearified.com
 #    $SUDO pear install savant/$SAVANT

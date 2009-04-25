@@ -2,7 +2,7 @@
 // vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 /**
- * Hello world template.
+ * Test global config and variables
  *
  * @package tgiframework
  * @subpackage samples
@@ -10,8 +10,7 @@
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
  */
-$page = new tgif_page();
-$page->assign('title','Test');
-$page->assign('greeting','Hello world!');
-$page->render('hello.php');
 ?>
+'testConf' config is <?php var_dump($_TAG->config('testConf')); ?>
+
+'testGlobal' global is <?php var_dump($_TAG->testGlobal); ?>

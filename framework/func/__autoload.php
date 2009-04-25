@@ -6,7 +6,7 @@
  *
  * @package tgiframework
  * @subpackage global
- * @copyright 2007 Tagged, Inc. 2009 terry chay <tychay@php.net>
+ * @copyright 2007 Tagged, Inc. 2009 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
  */
@@ -49,7 +49,9 @@ function __autoload($class_name)
             //$map_table = include(APP_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php');
             if (!$map_table = @$_TAG->classmaps) {
                 // this should never be called.
-                $map_table = include(APP_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php');
+                $map_table = (defined('APP_INC_DIR'))
+                           ? include(APP_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php')
+                           : array();
             }
         }
         if (array_key_exists($lower_class_name,$map_table)) {
@@ -91,12 +93,10 @@ function __autoload($class_name)
  */
 function __autoload_maptable()
 {
+    if (!defined('APP_INC_DIR')) { return array(); }
     $filename = APP_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php';
-    if (file_exists($filename)) {
-        return include($filename);
-    } else {
-        return array();
-    }
+    if (!file_exists($filename)) { return array(); }
+    return include($filename);
 }
 // }}}
 // {{{ __autoload_xform($class_name[,$base_dird])

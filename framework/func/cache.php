@@ -10,7 +10,7 @@
  *
  * @package tgiframework
  * @subpackage global
- * @copyright 2007-2009 Tagged, Inc. <http://www.tagged.com/>, 2009 terry chay <tychay@php.net>
+ * @copyright 2007 Tagged, Inc., 2009 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
  */
@@ -57,6 +57,7 @@ if (function_exists('apc_fetch')) {
      */
     //function apc_clear() { return apc_clear_cache('user'); }
     // }}}
+    return;
 } elseif (function_exists('output_cache_get')) {
     //echo "zend\n";
     //zend cache is segfaulting dev, may be unreliable. Someone please help!
