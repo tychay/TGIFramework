@@ -1,7 +1,11 @@
+php_value error_reporting 2147483647
+
 php_value auto_prepend_file '{{{BASE_DIR}}}/samples/config.php'
 php_value unserialize_callback_func '__autoload'
+
 php_value runkit.superglobal '_TAG'
 
+#Xdebug related stuff
 #php_flag  xdebug.show_local_vars 1
 #php_value xdebug.dump.SERVER 'HTTP_HOST,SERVER_NAME'
 #php_flag  xdebug.dump_globals 1

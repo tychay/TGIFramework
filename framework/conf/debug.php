@@ -11,6 +11,9 @@
  * @author terry chay <tychay@php.net>
  */
 return array(
+// {{{ readConfig: set to true to cache configuration (instead of reparse)
+'readConfig'    => false,
+// }}}
 // {{{ $_TAG->firebug
 'gld_firebug' => array(
     'construct'         => array('tgif_debug_firephp','get_instance'),

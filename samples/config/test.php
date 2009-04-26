@@ -11,26 +11,29 @@
  * @author terry chay <tychay@php.net>
  */
 return array(
-'gld_testGlobal'    => array(
-    'construct'         => array('sample_test'),
-    'version'           => 1,
-    'shouldShard'       => false,
-    'isSmemable'        => true,
-    'isMemcacheable'    => false,
-),
-'testConf'          => 'testing',
-'firephp_enable;'   => true,
-// $classmaps {{{
-'gld_classmaps'     => array(
-    'construct'         => '__autoload_maptable',
-    'version'           => 1,
-    'shouldShard'       => true,  //different installs should be seperate'
-    'isSmemable'        => true,
-    'isMemcacheable'    => false, // I tried this with TRUE for testing. Works only if we deal with the commenting issues elsewhere
-    'memcacheChannel'   => '___',
-    'memcacheKey'       => false,
-    'deferCache'        => false, //don't try to call a defer cache. it's ugly
+    'readConfig'        => true, // don't keep loading config
+    //test variables {{{
+    'gld_testGlobal'    => array(
+        'construct'         => array('sample_test'),
+        'version'           => 1,
+        'shouldShard'       => false,
+        'isSmemable'        => true,
+        'isMemcacheable'    => false,
     ),
-// }}}
+    'testConf'          => 'testing',
+    // }}}
+    'firephp_enable;'   => true,
+    // $classmaps {{{
+    'gld_classmaps'     => array(
+        'construct'         => '__autoload_maptable',
+        'version'           => 1,
+        'shouldShard'       => true,  //different installs should be seperate'
+        'isSmemable'        => true,
+        'isMemcacheable'    => false, // I tried this with TRUE for testing. Works only if we deal with the commenting issues elsewhere
+        'memcacheChannel'   => '___',
+        'memcacheKey'       => false,
+        'deferCache'        => false, //don't try to call a defer cache. it's ugly
+    ),
+    // }}}
 );
 ?>
