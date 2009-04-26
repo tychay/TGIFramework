@@ -26,7 +26,7 @@ class tgif_debug_firebug
     public static function get_instance()
     {
         global $_TAG;
-        if ($_TAG->config('enable_firephp')) {
+        if ($_TAG->config('firephp_enable')) {
             // explicitly require because the naming convention doesn't obey
             // PEAR's naming standards
             require_once('FirePHPCore/FirePHP.class.php');

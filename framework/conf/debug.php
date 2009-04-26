@@ -20,5 +20,8 @@ return array(
     'isMemcacheable'    => false,
 ),
 // }}}
+// {{{ firephp_enable: set to true to turn on firephp debugging
+'firephp_enable'    => false,
+// }}}
 );
 ?>

@@ -11,16 +11,17 @@
  * @author terry chay <tychay@php.net>
  */
 return array(
-'gld_testGlobal' => array(
+'gld_testGlobal'    => array(
     'construct'         => array('sample_test'),
     'version'           => 1,
     'shouldShard'       => false,
     'isSmemable'        => true,
     'isMemcacheable'    => false,
 ),
-'testConf' => 'testing',
+'testConf'          => 'testing',
+'firephp_enable;'   => true,
 // $classmaps {{{
-'gld_classmaps' => array(
+'gld_classmaps'     => array(
     'construct'         => '__autoload_maptable',
     'version'           => 1,
     'shouldShard'       => true,  //different installs should be seperate'
