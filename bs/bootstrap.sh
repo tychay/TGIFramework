@@ -12,8 +12,8 @@ PHP_INI=/etc/php.ini # check php --ini
 # MacPorts
 #PHP=/opt/local/bin/php
 APACHECTL=/opt/local/apache2/bin/apachectl
-PHP_INI=/opt/local/etc
-#PHP_INI=/opt/local/etc/php.ini
+#PHP_INI=/opt/local/etc
+PHP_INI=/opt/local/etc/php.ini
 # }}}
 # UTILS {{{
 PHP_EXT_TEST=$BASE_DIR/bs/extension_installed.php
@@ -32,8 +32,9 @@ fi
 # }}}
 APC='apc'
 #APC='http://pecl.php.net/get/APC'
-MEMCACHE='memcache'
+INCLUED='inclued-alpha'
 XDEBUG='xdebug'
+MEMCACHE='memcache'
 
 SAVANT='http://phpsavant.com/Savant3-3.0.0.tgz'
 FIREPHP_CHANNEL='pear.firephp.org'
@@ -61,14 +62,14 @@ if [ `which pecl` ]; then
     $SUDO pecl config-set php_ini $PHP_INI
 fi
 # }}}
-# Install XDEBUG {{{
-if [ `$PHP_EXT_TEST xdebug` ]; then
-    echo '### XDEBUG INSTALLED';
-    $SUDO pecl upgrade $XDEBUG
+# Install APC {{{
+if [ `$PHP_EXT_TEST apc` ]; then
+    echo '### APC INSTALLED';
+    $SUDO pecl upgrade $APC
 else
-    echo '### INSTALLING XDEBUG';
-    $SUDO pecl install $XDEBUG
-    echo 'be sure to add to your php.ini: zend_extension="<something>/xdebug.so"'
+    echo '### INSTALLING APC';
+    $SUDO pecl install $APC
+    echo 'be sure to add to your php.ini: extension=apc.so'
 fi
 # }}}
 # Install runkit {{{
@@ -101,14 +102,24 @@ else
     echo 'be sure to add to your php.ini: extension=runkit.so'
 fi
 # }}}
-# Install APC {{{
-if [ `$PHP_EXT_TEST apc` ]; then
-    echo '### APC INSTALLED';
-    $SUDO pecl upgrade $APC
+# Install XDEBUG {{{
+if [ `$PHP_EXT_TEST xdebug` ]; then
+    echo '### XDEBUG INSTALLED';
+    $SUDO pecl upgrade $XDEBUG
 else
-    echo '### INSTALLING APC';
-    $SUDO pecl install $APC
-    echo 'be sure to add to your php.ini: extension=apc.so'
+    echo '### INSTALLING XDEBUG';
+    $SUDO pecl install $XDEBUG
+    echo 'be sure to add to your php.ini: zend_extension="<something>/xdebug.so"'
+fi
+# }}}
+# Install inclued {{{
+if [ `$PHP_EXT_TEST inclued` ]; then
+    echo '### INCLUED INSTALLED';
+    $SUDO pecl upgrade $INCLUED
+else
+    echo '### INSTALLING INCLUED';
+    $SUDO pecl install $INCLUED
+    echo 'be sure to add to your php.ini: extension=inclued.so'
 fi
 # }}}
 # Install memcache {{{
@@ -144,6 +155,10 @@ pushd samples
     if [ ! -d traces ]; then
         mkdir traces
         chmod 777 traces
+    fi
+    if [ ! -d inclued ]; then
+        mkdir inclued
+        chmod 777 inclued
     fi
     if [ ! -f www/.htaccess ]; then
         echo "### Building .htaccess file for samples"
