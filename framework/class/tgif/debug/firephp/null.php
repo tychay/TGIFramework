@@ -15,6 +15,9 @@
  * Null function for {@link FirePHP} created by {@link tgif_debug_firephp}.
  *
  * This gets used when you don't want to be using FirePHP
+ *
+ * @package tgiframework
+ * @subpackage debugging
  */
 class tgif_debug_firephp_null
 {

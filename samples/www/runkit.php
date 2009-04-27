@@ -4,11 +4,13 @@
 /**
  * Test whether runkit is working
  *
- * @package tgiframework
- * @subpackage samples
+ * @package tgif_samples
+ * @subpackage tests
  * @copyright 2009 terry chay <tychay@php.net>
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@tagged.com>
+ */
+/**
  */
 function testme() {
     echo "_TAG is $_TAG\n";

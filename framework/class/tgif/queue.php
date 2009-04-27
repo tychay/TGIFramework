@@ -3,7 +3,7 @@
 /**
  * Container for {@link tgif_queue}
  * 
- * @package tgiframewrok
+ * @package tgiframework
  * @subpackage global
  * @copyright c.2007-2009 Tagged, Inc., c.2009 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
@@ -70,6 +70,9 @@
  * want it this way because objects are slow in PHP. Basically, we have a single
  * object in the design and a single interface and just take advantge of PHP's
  * native constructs for the rest.
+ *
+ * @package tgiframework
+ * @subpackage global
  */
 // }}}
 class tgif_queue

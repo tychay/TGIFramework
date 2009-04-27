@@ -62,21 +62,33 @@ if (function_exists('apc_fetch')) {
     //echo "zend\n";
     //zend cache is segfaulting dev, may be unreliable. Someone please help!
     // zend cache available {{{
+    /**
+     * @ignore
+     */
     function apc_fetch($key)
     {
         // Bug: Zend didn't document {@link output_cache_get()}. The second
         // parameter is a time to live. So I'm setting it to zero.
         return output_cache_get($key,0);
     }
+    /**
+     * @ignore
+     */
     function apc_store($key,$value,$ttl)
     {
         //$ttl is not implemented
         return output_cache_put($key,$value);
     }
+    /**
+     * @ignore
+     */
     function apc_delete($key)
     {
         return output_cache_remove_key($key);
     }
+    /**
+     * @ignore
+     */
     function apc_clear_cache($type)
     {
         // not implemented
@@ -126,24 +138,36 @@ if (function_exists('apc_fetch')) {
     }
     // }}}
     // {{{ apc_fetch()
+    /**
+     * @ignore
+     */
     function apc_fetch($key)
     {
         return shm_get_var($GLOBALS['tgif_shm'],_shm_key($key));
     }
     // }}}
     // {{{ apc_store()
+    /**
+     * @ignore
+     */
     function apc_store($key, $value,$ttl=0)
     {
         return shm_put_var($GLOBALS['tgif_shm'],_shm_key($key),$value);
     }
     // }}}
     // {{{ apc_delete($key)
+    /**
+     * @ignore
+     */
     function apc_delete($key)
     {
         return shm_remove_var($GLOBALS['tgif_shm'],_shm_key($key));
     }
     // }}}
     // {{{ apc_clear_cache()
+    /**
+     * @ignore
+     */
     function apc_clear_cache()
     {
         return shm_remove($GLOBALS['tgif_shm']);
@@ -155,9 +179,21 @@ if (function_exists('apc_fetch')) {
 } else {
     //echo "none\n";
     // no shared memory cache available {{{
+    /**
+     * @ignore
+     */
     function apc_fetch() { return false; }
+    /**
+     * @ignore
+     */
     function apc_store() { return false; }
+    /**
+     * @ignore
+     */
     function apc_delete() { return false; }
+    /**
+     * @ignore
+     */
     function apc_clear_cache() { return true; }
     // }}}
 }

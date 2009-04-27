@@ -22,6 +22,7 @@ define('BASE_DIR', dirname(dirname(realpath(__FILE__))));
 // TGIF_DIR {{{
 /**
  * The directory where the framework code is stored
+ * @ignore
  */
 define('TGIF_DIR', BASE_DIR.DIRECTORY_SEPARATOR.'framework');
 // }}}

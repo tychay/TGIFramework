@@ -194,6 +194,9 @@ pushd samples/www
         fi
     popd
 popd
+
+echo "### Running phpdoc"
+./bs/phpdoc.sh
 # }}}
 echo '### You may need to add  stuff to your php.ini and restart'
 $SUDO $APACHECTL restart

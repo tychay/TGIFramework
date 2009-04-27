@@ -4,7 +4,7 @@
 /**
  * Container for {@link tag_global_loader}
  *
- * @package tgiframewrok
+ * @package tgiframework
  * @subpackage global
  * @copyright c.2007 Tagged, Inc., c.2009 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
@@ -15,6 +15,9 @@
  */
 // imports {{{
 if (!function_exists('apc_fetch')) {
+    /**
+     * Need apc_* user cache functions (or emulators)
+     */
     require_once TGIF_FUNC_DIRD.'cache.php';
 }
 // }}}
@@ -77,6 +80,9 @@ if (!function_exists('apc_fetch')) {
  * {@link call_user_func_array()}. This means if the constructor has multiple
  * paramters in the constructor, it can only have a single parameter(!) which
  * is an array of the parameterization.
+ *
+ * @package tgiframework
+ * @subpackage global
  */
 // }}}
 class tgif_global_loader extends tgif_global_object
@@ -100,8 +106,6 @@ class tgif_global_loader extends tgif_global_object
      * - "": original
      * - "0": use memcaches internal serialize and deserialize by default,
      *       default version is an empty string instead of 0.
-     *
-     * @const string
      */
     const _global_version = '0';
     // }}}

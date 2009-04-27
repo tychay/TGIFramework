@@ -20,7 +20,8 @@ if (!isset($GLOBALS['_start_time'])) {
      * If we don't start it manually, it will start when {@link preinclude.php}
      * loads.
      *
-     * @global $_start_time string
+     * @global string $GLOBALS['_start_time']
+     * @name $_start_time
      */
     $GLOBALS['_start_time'] = microtime();
 }
@@ -30,7 +31,6 @@ if (!isset($GLOBALS['_start_time'])) {
 if (!defined('TGIF_DIR')) {
     /**
      * The directory where the framework code is stored
-     * @const string
      */
     define('TGIF_DIR',dirname(dirname(realpath(__FILE__))));
 }

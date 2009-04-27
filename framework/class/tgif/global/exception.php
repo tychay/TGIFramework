@@ -14,6 +14,10 @@
 // {{{ tgif_global_exception
 /**
  * Uncaught exceptions and errors in the loader library
+ *
+ * @package tgiframework
+ * @subpackage global
+ */
  */
 class tgif_global_exception extends Exception
 {

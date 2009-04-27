@@ -2,13 +2,20 @@
 // vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 /**
- * Debug-related library
+ * Container for {@link tgif_debug}
  *
  * @package tgiframework
  * @subpackage debugging
  * @copyright 2008. Tagged, Inc.
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
- * @author (unknown)
+ * @author Itai Zukerman <izukerman@tagged.com>
+ */
+// {{{ tgif_debug
+/**
+ * Debug-related library
+ *
+ * @package tgiframework
+ * @subpackage debugging
  */
 class tgif_debug
 {
@@ -36,3 +43,4 @@ class tgif_debug
     }
     // }}}
 }
+// }}}

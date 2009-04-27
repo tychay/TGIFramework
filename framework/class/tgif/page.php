@@ -8,18 +8,21 @@
  * @copyright 2007 Tagged, Inc. <http://www.tagged.com/>, 2009 terry chay <tychay@php.net>
  * @author terry chay <tychay@php.net>
  * @author Mark Jen <markjen@tagged.net>
+ * @todo Since Savant doesn't seem to be maintained anymore and I don't use
+ * much of it's features, consider just forking the codebase.
  */
 // imports {{{
 /**
  * Uses savant library for View layer
- * @todo Since Savant doesn't seem to be maintained anymore and I don't use
- * much of it's features, consider just forking the codebase.
  */
 require_once 'Savant3.php';
 // }}}
 // {{{ tgif_page
 /**
  * Handle the presentation layer when using Savant to display web pages.
+ *
+ * @package tgiframework
+ * @subpackage templating
  */
 class tgif_page
 {

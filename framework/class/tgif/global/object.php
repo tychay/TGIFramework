@@ -3,7 +3,7 @@
 /**
  * Container for {@link tgif_global_object}
  *
- * @package tgiframewrok
+ * @package tgiframework
  * @subpackage global
  * @copyright c.2007 Tagged, Inc., c.2009 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
@@ -16,6 +16,9 @@
  * I didn't call it a loader or abstract loader because it does double duty
  * in some cases as being the array object for a class of objects that may
  * be loaded later in the process (i.e. without dispatch).
+ *
+ * @package tgiframework
+ * @subpackage global
  */
 class tgif_global_object
 {
@@ -30,7 +33,7 @@ class tgif_global_object
      * This calls the constructors for all the {@link tgif_global_objects} so
      * don't call it yourself.
      *
-     * @params $params array this contains a parameterization of settings from
+     * @param $params array this contains a parameterization of settings from
      *      the global loader + a special paramter ['params'] which contains
      *      the parameter count
      * @param $arguments array this is the index arguments in order to handle

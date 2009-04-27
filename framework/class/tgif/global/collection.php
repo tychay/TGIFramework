@@ -18,6 +18,9 @@
  * This is used for parameterized loads of globals, but unlike
  * {@link tgif_global_loader} this is <strong>also</strong> stored as the tag
  * global itself!
+ *
+ * @package tgiframework
+ * @subpackage global
  */
 class tgif_global_collection extends tgif_global_object implements ArrayAccess
 {
@@ -44,7 +47,7 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
     // }}}
     // {{{ __construct($params, $arguments)
     /**
-     * @params $arguments array the stuff to use in a constructor of an initial
+     * @param $arguments array the stuff to use in a constructor of an initial
      *      member in a subclass. Note that if one isn’t provided the collection
      *      is created but there is no submember loaded.
      */
@@ -106,7 +109,7 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
      * This routine is a little flakey because we can build arrays on demands
      * so even it returns false, that doesn’t mean you can’t access it anyway.
      *
-     * @params $offset integer|string offset to check
+     * @param $offset integer|string offset to check
      * @returns boolean whether the offset exists
      */
     function offsetExists($offset)
@@ -120,7 +123,7 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
     /**
      * Get the object if it exists, if it doesn't, create it.
      *
-     * @params $offset integer|string offset to retrieve
+     * @param $offset integer|string offset to retrieve
      * @returns mixed value at given offset
      */
     function offsetGet($offset)
@@ -155,8 +158,8 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
     /**
      * You should never set this outside {@link tgif_global}.
      *
-     * @params $offset integer|string offset to modify
-     * @params $value mixed new value
+     * @param $offset integer|string offset to modify
+     * @param $value mixed new value
      */
     function offsetSet($offset,$value)
     {
@@ -169,7 +172,7 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
     // }}}
     // {{{ - offsetUnset($offset)
     /**
-     * @params $offset integer|string offset to delete
+     * @param $offset integer|string offset to delete
      */
     function offsetUnset($offset)
     {

@@ -11,6 +11,9 @@
  */
 // imports {{{
 if (!function_exists('apc_fetch')) {
+    /**
+     * Need apc_* user cache functions (or emulators)
+     */
     require_once LIB_FUNC_DIRD.'cache.php';
 }
 // }}}
@@ -57,6 +60,9 @@ if (!function_exists('apc_fetch')) {
  * "intuitive." It reads configurations via the directory iterator and can
  * detect different file types within the directory. I apologize for the
  * over cleverness of this package.
+ *
+ * @package tgiframework
+ * @subpackage global
  */
 // }}}
 class tgif_global
@@ -471,8 +477,8 @@ class tgif_global
     /**
      * Helper function for showglobals admin tool.
      *
-     * @params $variableName string the global variable to look for
-     * @params $arguments array If it is a collection, these are the paremters
+     * @param $variableName string the global variable to look for
+     * @param $arguments array If it is a collection, these are the paremters
      *  that define it.
      * @return tgif_global_object|false
      */
@@ -483,8 +489,8 @@ class tgif_global
     // }}}
     // {{{ - _getLoader($variableName,$arguments)
     /**
-     * @params $variableName string the global variable to look for
-     * @params $arguments array If it is a collection, these are the paremters that define it.
+     * @param $variableName string the global variable to look for
+     * @param $arguments array If it is a collection, these are the paremters that define it.
      * @return tgif_global_object|false
      */
     private function _getLoader($variableName, $arguments, $noCollections=false)

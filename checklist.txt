@@ -1,4 +1,4 @@
-[ ] bs/boostrap.sh to install PEAR and PECL libraries
-[ ] add "extension" to the php.ini file
+[ ] (edit and execute) ./bs/boostrap.sh to install PEAR and PECL libraries and build samples
+[ ] add extensions to the php.ini file
 [ ] put samples/www somewhere in web path of apache
-[ ] add .htaccess to <Directory> in http.conf or make sure AllowOverrides is set (to use htaccess) for samples
+[ ] add .htaccess information to <Directory> in http.conf or make sure AllowOverrides is set (to use htaccess) for samples
