@@ -52,15 +52,14 @@ define('TGIF_CLASS_DIR', TGIF_DIR.DIRECTORY_SEPARATOR.'class');
 /**
  * Lookup function for objects
  */
-$callback_func = ini_get('unserialize_callback_func');
-if (strcmp($callback_func,'__autoload')===0) {
-    // set in php.ini, but need to load
+if (!function_exists('__autoload')) {
+    // Load the default callback so that the framework works
     require_once TGIF_FUNC_DIRD.'__autoload.php';
-} elseif (!$callback_func) {
-    // load default callback so that framework works
-    require_once TGIF_FUNC_DIRD.'__autoload.php';
+} // else you must have written and defined your own autoloader
+if (strcmp(ini_get('unserialize_callback_func'),'__autoload')!==0) {
+    // Didn't set the serialze to autoload in php.ini
     ini_set('unserialize_callback_func','__autoload');
-} // else you must have decided to write your own autoloader
+}
 // }}}
 // global config and variables {{{
 if (empty($symbol)) {

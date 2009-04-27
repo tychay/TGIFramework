@@ -39,6 +39,7 @@ MEMCACHE='memcache'
 SAVANT='http://phpsavant.com/Savant3-3.0.0.tgz'
 FIREPHP_CHANNEL='pear.firephp.org'
 FIREPHP='FirePHPCore'
+PHPDOC='PhpDocumentor'
 
 WEBGRIND='webgrind'
 WEBGRIND_VERSION='1.0'
@@ -148,6 +149,13 @@ if [ `pear_installed firephp/FirePHPCore` ]; then
 else
     $SUDO pear channel-discover $FIREPHP_CHANNEL
     $SUDO pear install firephp/$FIREPHP
+fi
+# }}}
+# Install PEAR::PhpDocumentor {{{
+if [ `pear_installed PhpDocumentor` != '0' ]; then
+    $SUDO pear upgrade $PHPDOC
+else
+    $SUDO pear install $PHPDOC
 fi
 # }}}
 # Install samples {{{

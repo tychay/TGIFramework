@@ -11,31 +11,43 @@
  * @author terry chay <tychay@php.net>
  */
 // {{{  __autoload($class_name)
+// comments {{{
 /**
  * See {@link http://www.php.net/autoload}
  *
  * I am using this to minimize unnecessary file inclusion and reduce memory
  * usage of the page (in PHP 5, we are using 20MB to display the homepage, 22MB
  * to display my profile page). In order to ensure backward compatibility with
- * the current site, I allow a map table as possible check. This map table
- * is stored in var_export format as a free energy include.
+ * an original codebase (the original Tagged framework), I allow a map table as
+ * possible check. This map table is stored in var_export format as a free
+ * energy include.
+ *
+ * For obvious reasons, it's best to write this function anyway in order to bind
+ * it as the unserialize_callback_func of the site
  *
  * There is no need to {@link require_once()} as this is only called when
  * the class definition is missing.
  *
- * All classes (and files) must be lowercase and in a "namespace" (as per pre
- * PHP 5.3 convention) for the autoloader to work without a map table.
+ * Until a hook is written, probably the best way to get at the classmap table
+ * in a live site is to use
+ * {@link http://php.net/manual/en/book.inclued.php inclued}.
+ *
+ * All classes (and files) must be lowercase and in a "namespace" (as per
+ * pre-PHP 5.3 convention) for the autoloader to work without a map table.
  *
  * @author terry chay <tychay@php.net>
  * @param $class_name string The name of a class that is needed but not loaded
- * @uses TGIF_CLASS_DIR & APP_CLASS_DIR for normal loading (framework and non
+ * @uses TGIF_CLASS_DIR  for framework load path
+ * @uses APP_CLASS_DIR for non-framework load path
+ * @uses APP_INC_DIR for backward compatibility load path
  *      framework)
  * @uses $_TAG->classmaps if normal loading fails
- * @todo log what forces a load of classmaps
+ * @todo log what forces a load of classmaps (use inclued
  */
+// }}}
 function __autoload($class_name)
 {
-    global $_TAG;
+    //global $_TAG; //runkit enabeld superglobals
     static $map_table;
     //printf('Autoloading %s...',$class_name);
     // No need to require_once since this will only be called when the
@@ -70,8 +82,8 @@ function __autoload($class_name)
     }
     // PEAR style {{{
     if (__autoload_xform($class_name)) { return; }
-
-    // PEAR_Error is messed because it has a '_' which triggers the system to try to find the file. Except it's actually in PEAR.php!
+    // PEAR_Error is messed because it has a '_' which triggers the system to
+    // try to find the file. Except it's actually in PEAR.php!
     if ($lower_class_name == 'pear_error') { return; }
     // }}}
     trigger_error(sprintf('Cannot find class: %s',$class_name));
