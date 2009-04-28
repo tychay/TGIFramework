@@ -31,6 +31,9 @@ if [ `$PHP_VERSION_TEST 5.2` ]; then
 fi
 # }}}
 APC='apc'
+if [ `$PHP_VERSION_TEST 5.3` ]; then
+    APC='apc-beta'
+fi
 #APC='http://pecl.php.net/get/APC'
 INCLUED='inclued-alpha'
 XDEBUG='xdebug'
@@ -54,7 +57,9 @@ fi
 # Install/update PEAR {{{
 if [ `which pear` ]; then
     $SUDO pear config-set php_bin $PHP
-    $SUDO pear upgrade pear
+    $SUDO pear upgrade-all
+    $SUDO pear channel-update pear.php.net
+    $SUDO pear channel-update pecl.php.net
 else
     $SUDO $PHP -q bs/go-pear.php
 fi
@@ -82,7 +87,7 @@ if [ `$PHP_EXT_TEST runkit` ]; then
 else
     echo '### INSTALLING RUNKIT';
 # TODO: add test for PHP 5.2
-    if [ $RUNKIT == 'cvs' ]; then
+    if [ $RUNKIT != 'cvs' ]; then
         $SUDO pecl install $RUNKIT
         RUNKIT="$BASE_DIR/packages/pecl/runkit"
     else
@@ -92,6 +97,7 @@ else
             fi
             pushd pecl/runkit
                 cvs update
+                make distclean
                 phpize
                 ./configure --enable-runkit
                 make
@@ -194,9 +200,8 @@ pushd samples/www
         fi
     popd
 popd
-
-echo "### Running phpdoc"
-./bs/phpdoc.sh
+#echo "### Running phpdoc"
+#./bs/phpdoc.sh
 # }}}
 echo '### You may need to add  stuff to your php.ini and restart'
 $SUDO $APACHECTL restart
