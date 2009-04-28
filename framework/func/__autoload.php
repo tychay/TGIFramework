@@ -143,8 +143,8 @@ function __autoload_maptable()
 function __autoload_xform($class_name ,$base_dird='')
 {
     $filename = $base_dird.str_replace('_',DIRECTORY_SEPARATOR,$class_name).'.php';
-    require($filename);
-    return (class_exists($class_name));
+    @require($filename);
+    return (class_exists($class_name,false));
     /* // fstat calls are slow
     if (file_exists($filename)) {
         require($filename);
