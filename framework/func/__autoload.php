@@ -88,7 +88,7 @@ function __autoload($class_name)
        if (!$map_table = @$_TAG->classmaps) {
             // this should never be called. {{{
             $map_table = (defined('APP_CLASSMAP_PATH'))
-                       ? include(APP_CLASSMAP_PATH);
+                       ? include(APP_CLASSMAP_PATH)
                        : array();
             // }}}
         }
