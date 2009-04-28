@@ -5,8 +5,7 @@
  * Initialize the configuration on every page in the TGIFramework samples. This
  * is called automatically on the page.
  *
- * @package tgiframework
- * @subpackage samples
+ * @package tgisamples
  * @copyright 2009 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>

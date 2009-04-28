@@ -7,7 +7,7 @@
  * Test global config and variables
  *
  * @package tgisamples
- * @subpackage test
+ * @subpackage testing
  * @copyright 2009 terry chay <tychay@php.net>
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>

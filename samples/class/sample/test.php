@@ -4,8 +4,8 @@
 /**
  * Test object (for globals)
  *
- * @package tgif_samples
- * @subpackage test
+ * @package tgisamples
+ * @subpackage testing
  * @copyright 2009 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
@@ -13,8 +13,8 @@
 /**
  * Test object (for globals loading)
  *
- * @package tgif_samples
- * @subpackage test
+ * @package tgisamples
+ * @subpackage testing
  */
 class sample_test {
     private $_foo = 'spam';

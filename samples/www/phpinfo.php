@@ -2,8 +2,8 @@
 /**
  * phpinfo (what else?)
  *
- * @package tgiframework
- * @subpackage samples
+ * @package tgisamples
+ * @subpackage admin
  */
 phpinfo();
 ?>
