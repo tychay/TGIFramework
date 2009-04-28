@@ -73,3 +73,4 @@ include_once(TGIF_DIR.'/inc/preinclude.php');
 // Start session
 // PEAR + Smarty
 ?>
+XXXXX
