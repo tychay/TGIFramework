@@ -1,5 +1,14 @@
 php_value auto_prepend_file '{{{BASE_DIR}}}/samples/config.php'
 php_value unserialize_callback_func '__autoload'
+
+#<http://talks.php.net/show/froscon08/23>
+#
+# If a default time zone isn't set in PHP configuration, any call to the date()
+# function generates a guess_timezone() command that both throws a supressed
+# error (in VERBOSE mode) and makes a system call date_default_timezone_set().
+# These calls add up
+php_value date.timezone 'America/Los_Angeles'
+
 # APC ##########################################################################
 # Monitor this using apc.php, set in php.ini
 #php_value apc.shm_segments 1
