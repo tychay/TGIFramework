@@ -582,6 +582,7 @@ class tgif_global
      *
      * Do not call from the outside. This is called internally but needs to be
      * public because it is called from callback.
+     * @todo Migrate to an {@link http://docs.php.net/functions.anonymous anonymous function} MUCH later (don't want to do it yet because of PHP 5.3 requirement).
      */
     public function config_replace($matches)
     {

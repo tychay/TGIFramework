@@ -13,6 +13,9 @@
  * @copyright 2007 Tagged, Inc., 2009 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
+ * @todo consider moving function definitions to separate files. Not sure if
+ * APC is properly opcode caching this because functions are conditionally
+ * defined. (I don't know because this code does nothing if APC is installed.)
  */
 if (function_exists('apc_fetch')) {
     //echo "apc\n";

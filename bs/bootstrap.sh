@@ -8,12 +8,16 @@ SUDO='sudo'
 BASE_DIR=`pwd`
 PHP=`which php`
 APACHECTL=`which apachectl`
+LIBMEMCACHED=""
 PHP_INI=/etc/php.ini # check php --ini
 # MacPorts
 #PHP=/opt/local/bin/php
 APACHECTL=/opt/local/apache2/bin/apachectl
 #PHP_INI=/opt/local/etc
 PHP_INI=/opt/local/etc/php.ini
+
+# Path to libmemcached (to use php-memcached instead of php-memcache)
+#LIBMEMCACHED=/opt/local
 # }}}
 # UTILS {{{
 PHP_EXT_TEST=$BASE_DIR/bs/extension_installed.php
@@ -37,7 +41,12 @@ fi
 #APC='http://pecl.php.net/get/APC'
 INCLUED='inclued-alpha'
 XDEBUG='xdebug'
+MEMCACHE_PKG='memcache'
 MEMCACHE='memcache'
+if [ $LIBMEMCACHED ]; then
+    MEMCACHE='memcached-beta'
+    MEMCACHE_PKG='memcached'
+fi
 
 SAVANT='http://phpsavant.com/Savant3-3.0.0.tgz'
 FIREPHP_CHANNEL='pear.firephp.org'
@@ -48,10 +57,15 @@ WEBGRIND='webgrind'
 WEBGRIND_VERSION='1.0'
 WEBGRIND_PKG="${WEBGRIND}-release-${WEBGRIND_VERSION}"
 WEBGRIND_URL="http://webgrind.googlecode.com/files/${WEBGRIND_PKG}.zip"
+
+PACKAGES_INSTALLED=""
 # }}}
 # Make directories {{{
 if [ ! -d packages ]; then
     mkdir packages
+fi
+if [ ! -d build ]; then
+    mkdir build
 fi
 # }}}
 # Install/update PEAR {{{
@@ -130,13 +144,34 @@ else
 fi
 # }}}
 # Install memcache {{{
-if [ `$PHP_EXT_TEST memcache` ]; then
-    echo '### MEMCACHE INSTALLED';
-    $SUDO pecl upgrade $MEMCACHE
+if [ `$PHP_EXT_TEST $MEMCACHE_PKG` ]; then
+    if [ $MEMCACHE_PKG == 'memcache']; then
+        echo "### UPGRADING ${MEMCACHE_PKG}...";
+        $SUDO pecl upgrade $MEMCACHE
+    else
+        echo "### $MEMCACHE_PKG ALREADY INSTALLED";
+    fi
 else
-    echo '### INSTALLING MEMCACHE';
-    $SUDO pecl install $MEMCACHE
-    echo 'be sure to add to your php.ini: extension=memcache.so'
+    echo "### INSTALLING ${MEMCACHE_PKG}...";
+    if [ $MEMCACHE_PKG == 'memcache' ]; then
+        $SUDO pecl install $MEMCACHE
+    else
+        pushd packages
+            pecl download $MEMCACHE
+        popd
+        pushd build
+            rm -rf *
+            gzip -dc ../packages/${MEMCACHE_PKG}*.tgz | tar xf -
+            pushd ${MEMCACHE_PKG}*
+                phpize
+                ./configure --with-libmemcached-dir=${LIBMEMCACHED}
+                make
+                $SUDO make install
+            popd
+        popd.
+    fi
+    $PACKAGES_INSTALLED = "$MEMCACHE_PKG $PACKAGES_INSTALLED"
+    echo "### Be sure to add to your php.ini: extension=${MEMCACHE_PKG}.so"
 fi
 # }}}
 # Install PEAR::Savant3 {{{
@@ -164,7 +199,7 @@ else
     $SUDO pear install $PHPDOC
 fi
 # }}}
-# Install samples {{{
+# Install sampopd.ples {{{
 pushd samples
     if [ ! -d traces ]; then
         mkdir traces
