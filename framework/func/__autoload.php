@@ -78,7 +78,7 @@ function __autoload($class_name)
         if (__autoload_xform($class_name)) { return; }
         // }}}
     }
-    // backward compatibility map table load {{{
+    // ackward compatibility map table load {{{
     if (empty($map_table)) {
         //sprintf('__autoload(): %s forced load of classmaps',$class_name);
         //$map_table = include(APP_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php');
@@ -108,6 +108,9 @@ function __autoload($class_name)
  * This may be called during the construction of $_TAG->classmaps so I have to
  * put it in this file just in case
  *
+ * The file_exists() call is okay here because this will probably be pulled from
+ * smem cache on a good day.
+ *
  * @return array The old classes mapping table.
  * @uses APP_CLASSMAP_PATH which is the full path to the var_export return of
  * the class map table (hash).
@@ -135,11 +138,15 @@ function __autoload_maptable()
 function __autoload_xform($class_name ,$base_dird='')
 {
     $filename = $base_dird.str_replace('_',DIRECTORY_SEPARATOR,$class_name).'.php';
+    require($filename);
+    return (class_exists($class_name));
+    /* // fstat calls are slow
     if (file_exists($filename)) {
         require($filename);
         return true;
     }
     return false;
+     */
 }
 // }}}
 ?>
