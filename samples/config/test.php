@@ -23,17 +23,5 @@ return array(
     'testConf'          => 'testing',
     // }}}
     'firephp_enable'   => true,
-    // $classmaps {{{
-    'gld_classmaps'     => array(
-        'construct'         => '__autoload_maptable',
-        'version'           => 1,
-        'shouldShard'       => true,  //different installs should be seperate'
-        'isSmemable'        => true,
-        'isMemcacheable'    => false, // I tried this with TRUE for testing. Works only if we deal with the commenting issues elsewhere
-        'memcacheChannel'   => '___',
-        'memcacheKey'       => false,
-        'deferCache'        => false, //don't try to call a defer cache. it's ugly
-    ),
-    // }}}
 );
 ?>

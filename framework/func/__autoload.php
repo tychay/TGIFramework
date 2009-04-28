@@ -22,30 +22,33 @@
  * possible check. This map table (hash) is stored in var_export format as a
  * free energy include.
  *
- * For obvious reasons, it's best to write this function anyway in order to bind
- * it as the unserialize_callback_func of the site
- *
- * There is no need to {@link require_once()} as this is only called when
- * the class definition is missing.
- *
  * Until a hook is written, probably the best way to know what is loading your
  * classmap table is to use {@link http://php.net/manual/en/book.inclued.php inclued}.
  * in a live site.
+ *
+ * For obvious reasons, it's best to write this function anyway in order to bind
+ * it as the unserialize_callback_func of the site. There is no need to
+ * {@link require_once()} in the code as this is only called when a class
+ * definition is missing.
  *
  * All classes (and files) must be lowercase and in a "namespace" (as per
  * pre-PHP 5.3 convention) for the autoloader to work without a map table.
  * The only exception is the PEAR style naming convention (case sensitive)
  * which isn't recommended because of case-insensitive file systems (Mac)
  * and casing issues in old versions of PHP. Furthermore, PEAR-style will
- * generate at least one fstat call too many.
+ * generate at least one fstat call too many (as it navigates your load path).
+ *
+ * There is a parameter "autoload_stubs" that you can set to true to have this
+ * system throw an exception and generate a stub class on class load failure.
+ * Normally it just triggers a user error.
  *
  * @author terry chay <tychay@php.net>
  * @param $class_name string The name of a class that is needed but not loaded
  * @uses TGIF_CLASS_DIR  for framework load path
  * @uses APP_CLASS_DIR for non-framework load path
- * @uses APP_INC_DIR for backward compatibility load path
- *      framework)
- * @uses $_TAG->classmaps if normal loading fails
+ * @uses $_TAG->classmaps if normal loading fails for backward compatibility of
+ *  framework.
+ * @uses APP_CLASSMAP_PATH when $_TAG->classmaps is not set (should not happen).
  * @todo Make a switch to enable alternate "stub" class load
  * @todo Log what class forces a load of classmaps table (use inclued)
  */
@@ -78,15 +81,16 @@ function __autoload($class_name)
         if (__autoload_xform($class_name)) { return; }
         // }}}
     }
-    // ackward compatibility map table load {{{
+    // Backward compatibility map table load {{{
     if (empty($map_table)) {
         //sprintf('__autoload(): %s forced load of classmaps',$class_name);
         //$map_table = include(APP_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php');
        if (!$map_table = @$_TAG->classmaps) {
-            // this should never be called.
-            $map_table = (defined('APP_INC_DIR'))
-                       ? include(APP_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php')
+            // this should never be called. {{{
+            $map_table = (defined('APP_CLASSMAP_PATH'))
+                       ? include(APP_CLASSMAP_PATH);
                        : array();
+            // }}}
         }
     }
     if (array_key_exists($lower_class_name,$map_table)) {
@@ -94,11 +98,12 @@ function __autoload($class_name)
         return;
     }
     // }}}
+    if ($_TAG->config('autoload_stubs')) {
+        eval(sprintf('class %s {}',$class_name));
+        throw new Exception(sprintf('Cannot find class: %s',$class_name));
+        return;
+    }
     trigger_error(sprintf('Cannot find class: %s',$class_name));
-    /* //alternate way of loading a stub class
-    eval(sprintf('class %s {}',$class_name));
-    throw new Exception(sprintf('Cannot find class: %s',$class_name));
-    /* */
 }
 // }}}
 // {{{ __autoload_maptable()
