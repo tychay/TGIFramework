@@ -496,7 +496,7 @@ class tgif_global
     private function _getLoader($variableName, $arguments, $noCollections=false)
     {
         $params = $this->config('gld_'.$variableName);
-        //var_dump(array($this->_globals,$variableName,$params));
+        //var_dump(array($variableName,$params));
         if (!$params) { return false; }
         $params['name']          = $variableName;
         $params['configPrefix']  = $this->_configPrefix;
@@ -532,26 +532,32 @@ class tgif_global
      * For instance, for tagged, TGIF_CONF_PATH would be:
      * LIB_CONF_DIR.'/common:/home/html/tagconfig:'.LIB_CONF_DIR.'/local:/etc/tagconfig-local'
      * This is because
-     * 1) <LIB_CONF_DIR>/common: The application configuration common directory
-     * 2) /home/html/tagconfig: nfsmount'd PROD, STAGE, or DEV config
+     * 1. <LIB_CONF_DIR>/common: The application configuration common directory
+     * 2. /home/html/tagconfig: nfsmount'd PROD, STAGE, or DEV config
      *      settings
-     * 3) <LIB_CONF_DIR>/local: local dev checkout override
-     * 4) /etc/tagconfig-local: PROD per machine overrride (life site debugging)
+     * 3. <LIB_CONF_DIR>/local: local dev checkout override
+     * 4. /etc/tagconfig-local: PROD per machine overrride (life site debugging)
      *
      * This does some simple magic config file replacement where it will macro
      * expand {{{config_param}}} automagically. Note that it currently won't
      * introspect the array.
      *
-     * @todo introspect 1 level of array in config
+     * Note that there are two very special config parameters:
+     * - readConfig: set to true to prevent the config files from getting
+     *   reparsed
+     * - configFiles: contains a list of config files that have been parsed
+     *   to generate config
+     *
+     * @todo introspect 1 level of array in config for expansion
      */
     private function _loadConfigs()
     {
-        //echo "called _loadConfigs()\n";
         $configs = array();
+        $filelist = array();
         $config_dirs = explode(':',TGIF_DIR.DIRECTORY_SEPARATOR.'conf'.':'.TGIF_CONF_PATH);
         //var_dump($config_dirs);
         foreach ($config_dirs as $config_dir) {
-            $this->_loadConfigDir($config_dir, $configs);
+            $this->_loadConfigDir($config_dir, $configs, $filelist);
         }
         // macro expansion {{{
         $this->_temps = $configs;
@@ -568,11 +574,15 @@ class tgif_global
         }
         unset($this->_temps);
         // }}}
+        // set "configFiles" configuration
+        $configs['configFiles'] = $filelist;
+        // store configs in and in global space {{{
         foreach ($configs as $key=>$value) {
             $name = $this->_configPrefix.'_'.$key;
             $this->_globals[$name] = $value;
             apc_store($name, $value, 0);
         }
+        // }}}
     }
     // }}}
     // {{{ - config_replace($matches)
@@ -592,21 +602,27 @@ class tgif_global
         throw new Exception(sprintf('Unknown config parameter %s via %s.',$matches[1],$matches[0]));
     }
     // }}}
-    // {{{ - _loadConfigDir($dir,$configs)
+    // {{{ - _loadConfigDir($dir,$configs,$files)
     /**
      * Load all the configurations in a directory overriding all parameters that
      * have already been written to.
      *
      * @param $dir string the directory to load from
      * @param $configs array the array to load configs into
+     * @return array a list of file names that were processed
      * @todo consider reading through the nesting of arrays.
      */
-    private function _loadConfigDir($dir, &$configs)
+    private function _loadConfigDir($dir, &$configs, &$files)
     {
         if (!is_dir($dir)) { return; }
         foreach (new DirectoryIterator($dir) as $item) {
             $file_data = $this->_readConfigFile($item);
-            if (!is_array($file_data)) { trigger_error(sprintf('%s::_loadConfigDir(): Config file %s is improperly formatted',get_class($this), $item), E_USER_ERROR); }
+            if (!is_array($file_data)) {
+                trigger_error(sprintf('%s::_loadConfigDir(): Config file %s is improperly formatted',get_class($this), $item), E_USER_ERROR);
+            } elseif($item) {
+                // file sucessfully recognized and read (else null)
+                $files[] = $item->getPathname();
+            }
             $configs = array_merge($configs, $file_data);
         }
     }
@@ -625,24 +641,29 @@ class tgif_global
      * - .ini = ini configuration files (no processing of sections)
      *
      * @param DirectoryIterator|string If it is a string, it assumes this
-     *     is the name of a file and loads a directory iterator on it.
+     *     is the name of a file and loads a directory iterator on it. After
+     *     running, this will be transformed it into a DirectoryIterator. If
+     *     not parsed, this will return a null
      * @return array
      */
-    private function _readConfigFile($file)
+    private function _readConfigFile(&$file)
     {
         if (is_string($file)) { $file = new DirectoryIterator($file); }
-        if (!$file->isFile()) { return array(); }
+        if (!$file->isFile()) { $file=null; return array(); }
         $parts = explode('.',$file->getFilename());
 
-        // only parse the file if it's not a hidden file (begins with '.', thus the first part is blank)
+        // Only parse the file if it's not a hidden file (begins with '.',
+        // thus the first part is blank)
         if ($parts[0] != '') {
             $extension = $parts[count($parts)-1];
             switch ($extension) {
-                case 'disabled' : return array();
+                case 'disabled' : $file=null; return array();
                 case 'php': return include($file->getPathname());
                 case 'ini': parse_ini_file($file->getPathname());
             }
         }
+        // failed to recognize extension
+        $file = null;
         return array();
     }
     // }}}

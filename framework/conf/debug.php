@@ -14,9 +14,9 @@ return array(
 // {{{ readConfig: set to true to cache configuration (instead of reparse)
 'readConfig'    => false,
 // }}}
-// {{{ $_TAG->firebug
-'gld_firebug' => array(
-    'construct'         => array('tgif_debug_firephp','get_instance'),
+// {{{ $_TAG->firephp
+'gld_firephp' => array(
+    'construct'         => array('tgif_debug_firephp','_x_get_instance'),
     'version'           => 1,
     'shouldShard'       => false,
     'isSmemable'        => false,

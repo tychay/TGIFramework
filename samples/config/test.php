@@ -22,7 +22,7 @@ return array(
     ),
     'testConf'          => 'testing',
     // }}}
-    'firephp_enable;'   => true,
+    'firephp_enable'   => true,
     // $classmaps {{{
     'gld_classmaps'     => array(
         'construct'         => '__autoload_maptable',

@@ -75,6 +75,8 @@ $_TAG = tgif_global::get_instance($symbol);
 // Turn on queue and diagnostics {{{
 $_TAG->queue = new tgif_queue();
 register_shutdown_function(array($_TAG->queue,'publish'),'shutdown');
+// Here temporarily until diagnostics goes online
+ob_start();
 /*
 // diagnostics {{{
 if (defined('DISABLE_DIAGNOSTICS') && DISABLE_DIAGNOSTICS) {

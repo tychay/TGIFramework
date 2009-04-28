@@ -145,7 +145,7 @@ fi
 # }}}
 # Install memcache {{{
 if [ `$PHP_EXT_TEST $MEMCACHE_PKG` ]; then
-    if [ $MEMCACHE_PKG == 'memcache']; then
+    if [ $MEMCACHE_PKG == 'memcache' ]; then
         echo "### UPGRADING ${MEMCACHE_PKG}...";
         $SUDO pecl upgrade $MEMCACHE
     else
@@ -189,6 +189,7 @@ if [ `pear_installed firephp/FirePHPCore` ]; then
     $SUDO pear upgrade firephp/$FIREPHP
 else
     $SUDO pear channel-discover $FIREPHP_CHANNEL
+    #sudo pear channel-discover pear.firephp.org
     $SUDO pear install firephp/$FIREPHP
 fi
 # }}}

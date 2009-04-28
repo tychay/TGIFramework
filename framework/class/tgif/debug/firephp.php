@@ -2,7 +2,7 @@
 // vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 /**
- * Container for {@link tgif_debug_firebug}.
+ * Container for {@link tgif_debug_firephp}.
  *
  * @package tgiframework
  * @subpackage debugging
@@ -10,7 +10,7 @@
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net> 
  */
-// {{{ tgif_debug_firebug
+// {{{ tgif_debug_firephp
 /**
  * Wrapper for the {@link http:www.firephp.org/ FirePHP} debugging interface.
  *
@@ -20,13 +20,15 @@
  * @package tgiframework
  * @subpackage debugging
  */
-class tgif_debug_firebug
+class tgif_debug_firephp
 {
-    // {{{ + get_instance()
+    // {{{ + _x_get_instance()
     /**
-     * Bind the firephp system
+     * Bind the firephp system.
+     *
+     * Should only be called by global system
      */
-    public static function get_instance()
+    public static function _x_get_instance()
     {
         global $_TAG;
         if ($_TAG->config('firephp_enable')) {
