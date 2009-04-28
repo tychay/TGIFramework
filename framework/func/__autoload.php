@@ -19,8 +19,8 @@
  * usage of the page (in PHP 5, we are using 20MB to display the homepage, 22MB
  * to display my profile page). In order to ensure backward compatibility with
  * an original codebase (the original Tagged framework), I allow a map table as
- * possible check. This map table is stored in var_export format as a free
- * energy include.
+ * possible check. This map table (hash) is stored in var_export format as a
+ * free energy include.
  *
  * For obvious reasons, it's best to write this function anyway in order to bind
  * it as the unserialize_callback_func of the site
@@ -48,7 +48,6 @@
  * @uses $_TAG->classmaps if normal loading fails
  * @todo Make a switch to enable alternate "stub" class load
  * @todo Log what class forces a load of classmaps table (use inclued)
- * @todo if something has already been compiled in apc, will fstat be bypassed?
  */
 // }}}
 function __autoload($class_name)
@@ -110,12 +109,13 @@ function __autoload($class_name)
  * put it in this file just in case
  *
  * @return array The old classes mapping table.
- * @uses APP_INC_DIR where a local class map table needs to be located
+ * @uses APP_CLASSMAP_PATH which is the full path to the var_export return of
+ * the class map table (hash).
  */
 function __autoload_maptable()
 {
-    if (!defined('APP_INC_DIR')) { return array(); }
-    $filename = APP_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php';
+    if (!defined('APP_CLASSMAP_PATH')) { return array(); }
+    $filename = APP_CLASSMAP_PATH;
     if (!file_exists($filename)) { return array(); }
     return include($filename);
 }
@@ -129,6 +129,8 @@ function __autoload_maptable()
  * @param $base_dird string the base directory (with an ending dir separator)
  *      of the class path
  * @return if file found
+ * @todo if something has already been compiled in apc, will fstat be bypassed?
+ *  if not, then change this code to allow an "override" ability.
  */
 function __autoload_xform($class_name ,$base_dird='')
 {

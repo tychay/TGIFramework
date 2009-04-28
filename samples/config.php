@@ -37,6 +37,18 @@ define('APP_DIR', BASE_DIR.DIRECTORY_SEPARATOR.'samples');
  */
 define('APP_CLASS_DIR', APP_DIR.DIRECTORY_SEPARATOR.'class');
 // }}}
+// APP_INC_DIR {{{
+/**
+ * The directory where free energy includes are stored
+ */
+define('APP_INC_DIR', APP_DIR.DIRECTORY_SEPARATOR.'inc');
+// }}}
+// APP_CLASSMAP_PATH {{{
+/**
+ * The file
+ */
+define('APP_CLASSMAP_PATH', APP_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php');
+// }}}
 // SYMBOL_FILE {{{
 /*
  * Where to find the symbol file
