@@ -162,6 +162,8 @@ class tgif_global
     // {{{ + reinit()
     /**
      * Quick code to reinitialize the global system
+     * @author Mark Jen <markjen@tagged.com>
+     * @author terry chay <tychay@tagged.com> reinit the queue shutdown function
      */
     public static function reinit()
     {
@@ -374,6 +376,7 @@ class tgif_global
      * @return object|null it returns null if not in cache.
      * variable is already loaded into the global store before resorting to
      * this.
+     * @author Mark Jen <markjen@tagged.com> added getFromLocalCache() call
      */
     function getObjectIfInCache($variableName, $params=array())
     {
@@ -403,6 +406,7 @@ class tgif_global
      * @param $variableName string the global variable to look for
      * @param $params array If it is a collection, these are the paremters that define it.
      * @return boolean success or failure
+     * @author Mark Jen <markjen@tagged.com>
      */
     function deleteFromCache($variableName, $params=array())
     {
@@ -481,6 +485,7 @@ class tgif_global
      * @param $arguments array If it is a collection, these are the paremters
      *  that define it.
      * @return tgif_global_object|false
+     * @author Rahul Caprihan <rahulcap@gmail.com>
      */
     function adminGetLoader($variableName, $arguments)
     {
