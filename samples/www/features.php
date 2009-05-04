@@ -1,4 +1,5 @@
-<?php
+<html><head><title>Some examples of framework features</title>
+<body><?php
 // vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 /**
@@ -70,3 +71,11 @@ $var = array('i'=>10, 'j'=>20);
 //$firephp->log($var, 'Iterators');
 $_TAG->firephp->log($var, 'Iterators');
 ?>
+<h2>Memcache</h3>
+<?php
+$_TAG->memcached->set('foo','bar');
+var_dump($_TAG->memcached->get('foo'));
+
+?>
+</body>
+</html>

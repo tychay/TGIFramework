@@ -22,13 +22,13 @@
  */
 class tgif_debug_firephp
 {
-    // {{{ + _x_get_instance()
+    // {{{ + _X_create_object()
     /**
      * Bind the firephp system.
      *
      * Should only be called by global system
      */
-    public static function _x_get_instance()
+    public static function _X_create_object()
     {
         global $_TAG;
         if ($_TAG->config('firephp_enable')) {

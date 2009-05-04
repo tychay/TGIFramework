@@ -120,7 +120,7 @@ class tgif_global
      * config on every reuest, else set it to true and we'll only do it after
      * the shared memory has been cleared (server restart et. al.).
      *
-     * @param $config_prefix string The three letter code to put in front of
+     * @param string $config_prefix The three letter code to put in front of
      *     any configuration parameter. If less than three characters are there
      *     it will pad them with "_".
      */
@@ -144,10 +144,10 @@ class tgif_global
      * in a global called {@link $_TAG} so be forewarned! In fact, tgiframework
      * assumes that $_TAG is a superglobal (via runkit)!
      *
-     * @param $config_prefix string A three letter "channel" to use to prevent
+     * @param string $config_prefix A three letter "channel" to use to prevent
      * conflicts with other instances of the framework or other installs of
      * the app.
-     * @param $create_fresh boolean Set to true to re-initialize the global
+     * @param boolean $create_fresh Set to true to re-initialize the global
      * system (in general, a really bad idea)
      */
     static function get_instance($config_prefix='___', $create_fresh=false)
@@ -177,9 +177,9 @@ class tgif_global
     // ACCESSING: MAGIC METHODS
     // {{{ - __set($name,$value)
     /**
-     * @param $name string the property to set (normal property naming rules
+     * @param string $name the property to set (normal property naming rules
      * apply).
-     * @param $value mixed
+     * @param mixed $value
      * @see http://php.net/manual/en/language.oop5.overloading.php
      */
     function __set($name, $value)
@@ -201,7 +201,7 @@ class tgif_global
      *
      * In the case of all other "globals" it first goes to shared memory cache,
      *
-     * @param $name string the global to get (normal property naming rules
+     * @param string $name the global to get (normal property naming rules
      * apply). The first three characters are special since they define the
      * channel type used
      * @return mixed the value
@@ -292,8 +292,8 @@ class tgif_global
     /**
      * Access config parameters
      *
-     * @param $name string the config parameter to get
-     * @param $subproperty string Some config parameters are more like
+     * @param string $name the config parameter to get
+     * @param string $subproperty Some config parameters are more like
      *     namespaces with multiple subconfigurations. If specified, then it
      *     will grab the subproperty. This allows quick access to subproperties
      *     without you having to write heinous code.
@@ -314,9 +314,9 @@ class tgif_global
     /**
      * Register a global to be pulled from memory
      *
-     * @param $varname string the global variable to preload.
-     * @param $arguments mixed arguments to pull in
-     * @return boolean successfully can require or not�
+     * @param string $varname the global variable to preload.
+     * @param mixed $arguments arguments to pull in
+     * @return boolean successfully can require or not?
      */
     function requires($varname)
     {
@@ -327,8 +327,9 @@ class tgif_global
             // TODO: handle second requires() here.
             return true;
         }
-        $this->_requires[$varname] = $this->_getLoader($varname,$arguments);
-        if (!$this->_requires[$varname]) { unset($this->_requires[$varname]); }
+        $loader = $this->_getLoader($varname,$arguments);
+        if (!$loader) { return false; }
+        $this->_requires[$varname] = $loader;
         return true;
     }
     // }}}
@@ -371,8 +372,8 @@ class tgif_global
      * objects in sync, but don't want to force a memcache write unless it is
      * already there!
      *
-     * @param $variableName string the global variable to look for
-     * @param $params array If it is a collection, these are the parameters that define it.
+     * @param string $variableName the global variable to look for
+     * @param array $params If it is a collection, these are the parameters that define it.
      * @return object|null it returns null if not in cache.
      * variable is already loaded into the global store before resorting to
      * this.
@@ -403,8 +404,9 @@ class tgif_global
      * It is best to avoid this and use the loadLoader property to allow the
      * object to maintain itself as this is not so fast.
      *
-     * @param $variableName string the global variable to look for
-     * @param $params array If it is a collection, these are the paremters that define it.
+     * @param string $variableName the global variable to look for
+     * @param array $params If it is a collection, these are the paremters
+     * that define it.
      * @return boolean success or failure
      * @author Mark Jen <markjen@tagged.com>
      */
@@ -428,9 +430,9 @@ class tgif_global
      * It is best to avoid this and use the loadLoader property to allow the
      * object to maintain itself as this is not so fast.
      *
-     * @param $variableName string the global variable to look for
-     * @param $data mixed the data to save to cache.
-     * @param $params array If it is a collection, these are the paremters that
+     * @param string $variableName the global variable to look for
+     * @param mixed $data the data to save to cache.
+     * @param array $params If it is a collection, these are the paremters that
      *      define it.
      * @return boolean success or failure
      */
@@ -443,8 +445,8 @@ class tgif_global
     // {{{ - _getFromLocalCache($variableName,$params)
     /**
      * Attempt to grab somehting if it's already in the global registry
-     * @param $variableName string the name of the global to grab
-     * @param $params array() paramterization of the global in the case of
+     * @param string $variableName the name of the global to grab
+     * @param array $params paramterization of the global in the case of
      *  a colletction
      */
     private function _getFromLocalCache($variableName, $params)
@@ -481,8 +483,8 @@ class tgif_global
     /**
      * Helper function for showglobals admin tool.
      *
-     * @param $variableName string the global variable to look for
-     * @param $arguments array If it is a collection, these are the paremters
+     * @param string $variableName the global variable to look for
+     * @param array $arguments If it is a collection, these are the paremters
      *  that define it.
      * @return tgif_global_object|false
      * @author Rahul Caprihan <rahulcap@gmail.com>
@@ -494,8 +496,9 @@ class tgif_global
     // }}}
     // {{{ - _getLoader($variableName,$arguments)
     /**
-     * @param $variableName string the global variable to look for
-     * @param $arguments array If it is a collection, these are the paremters that define it.
+     * @param string $variableName the global variable to look for
+     * @param array $arguments If it is a collection, these are the paremters
+     * that define it.
      * @return tgif_global_object|false
      */
     private function _getLoader($variableName, $arguments, $noCollections=false)
@@ -518,7 +521,7 @@ class tgif_global
     /**
      * Returns whether the parameter is a configurtion parameter
      *
-     * @param $name string
+     * @param string $name
      * @return boolean
      */
     private function _isConfig($name)
@@ -612,8 +615,8 @@ class tgif_global
      * Load all the configurations in a directory overriding all parameters that
      * have already been written to.
      *
-     * @param $dir string the directory to load from
-     * @param $configs array the array to load configs into
+     * @param string $dir the directory to load from
+     * @param array $configs the array to load configs into
      * @return array a list of file names that were processed
      * @todo consider reading through the nesting of arrays.
      */

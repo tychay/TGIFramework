@@ -57,10 +57,12 @@ function __autoload($class_name)
 {
     //global $_TAG; //runkit enabled superglobals
     static $map_table;
-    //printf('Autoloading %s...',$class_name);
     // No need to require_once since this will only be called when the
     // class doesn't exist.
     $lower_class_name = strtolower($class_name);
+    //if (isset($_TAG) && isset($_TAG->firephp)) {
+    //    $_TAG->firephp->log($lower_class_name,'__autoload class');
+    //}
     // Every class must be in a "namespace" (in pre-5.3 convention)
     $has_namespace = (strpos($class_name,'_')!==false);
     if ($has_namespace) {
@@ -132,7 +134,11 @@ function __autoload_maptable()
 /**
  * Does a simple load and return.
  *
- * We have strict class names -> mapping rules. This implements it.
+ * We have strict class names -> mapping rules. This implements it. Note that
+ * if you try to require something that doesn't exist, you’ll get a fatal error
+ * so there will be issues in the framework code as the file_exists() has been
+ * eliminated in order to get the apc.stat=0 speedup.
+ *
  * @param $class_name string the class directory
  * @param $base_dird string the base directory (with an ending dir separator)
  *      of the class path
@@ -143,7 +149,7 @@ function __autoload_maptable()
 function __autoload_xform($class_name ,$base_dird='')
 {
     $filename = $base_dird.str_replace('_',DIRECTORY_SEPARATOR,$class_name).'.php';
-    @require($filename);
+    require($filename); //fatal error so not... @require($filename);
     return (class_exists($class_name,false));
     /* // fstat calls are slow
     if (file_exists($filename)) {

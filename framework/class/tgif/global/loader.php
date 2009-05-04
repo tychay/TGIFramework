@@ -27,53 +27,51 @@ if (!function_exists('apc_fetch')) {
  * Load globals automagically
  *
  * All possible parameters (defaults):
- * - params (0): if non-zero this defines the nesting of globals as array objects
+ * - params (0): if non-zero this defines the nesting of globals as array
+ *   objects
  * - construct (): The callback function to call as the constructor. This must
- *      always be provided to bootstrap the system.
+ *   always be provided to bootstrap the system.
  * - shouldShard (false): If true, the built in cache key generator will create
- *      keys unique to the installation checkout (different dev systems will
- *      have different keys) for that object
+ *   keys unique to the installation checkout (different dev systems will
+ *   have different keys) for that object
  * - loaderLoader (): method of the constructed object to pass the loader to
- *      after construction. This is done so the loader has access to the
- *      shared memory storage and other functions of the loader class. Note that
- *      it is bad mojo to serialize this with the object, so you should consider
- *      using __sleep() to filter this parameter out.
+ *   after construction. This is done so the loader has access to the
+ *   shared memory storage and other functions of the loader class. Note that
+ *   it is bad mojo to serialize this with the object, so you should consider
+ *   using __sleep() to filter this parameter out.
  * - version (0): the version number to append to the cache keys to allow
- *      for hot updates of the information.
+ *   for hot updates of the information.
  * - manualCache (false): if set to true, it will not write the memcache
- *      automatically at all.
+ *   automatically at all.
  * - deferCache (true): if set to true, it will not write the memcache until
- *      page shutdown (via event system).
+ *   page shutdown (via event system).
  * - checkCache (): method to call that returns a boolean on whether or not
- *      (after wakeup) the wakeup function may have changed the data and
- *      need to be set.
+ *   (after wakeup) the wakeup function may have changed the data and
+ *   need to be set.
  * - isSmemable (false): whether or not this global can be stored into
- *      the shared memory segment of the server's user cache. Note: never
- *      serialize any user/profile data, only sitewide globals, etc.
+ *   the shared memory segment of the server's user cache. Note: never
+ *   serialize any user/profile data, only sitewide globals, etc.
  * - smemKey (false): the callback to generate the shared memory key. If false,
- *     then it will use a built-in generator.
+ *   then it will use a built-in generator.
+ * - smemcacheLifetime (false): the amount of time to store value in shared
+ *   memory. By default, this is forever (i.e., until service restart).
  * - isMemcacheable (false): whether or not this global can be stored into
- *      memcache.
- * - memcacheChannel (___): the memcache pool to use. Note that if this is
- *      an array, then the first element specifies which parameter provides
- *      the pool affinity key. If it is two elements, then the second element
- *      is the character to specify an independant pool (other than the profile
- *      pool which is 'p').
+ *   memcache.
+ * - memcacheChannel (___): the memcache pool to use.
  * - memcacheKey (false): the callback to generate the memory cache key. This
- *      must return an array (key,channel). If false, then it will use a
- *      built-in generator.
- * - memcacheLifetime (false): the amount of time to store the value in memcache.
- *      By default, this uses the default value of the memcachePool
- * - smemcacheLifetime (false): the amount of time to store value in shared memory.
- *      By default, this is forever (i.e., until service restart).
- * - memcacheGet (unserialize): a callback to run after data is returned from
- *      memcache. Since we are using the memcache extension, we shouldn't
- *      need to use unserialize() here, but we do because if you pass an
- *      object, it saves it as an associative array
- * - memcacheSet (serialize): a callback to run before data is stored to
- *      memcache. Since we are using the memcache extension, we shouldn't need
- *      to use serialize() here, but we do becasue it saves objects as
- *      associative arrays.
+ *   must may return an array (key,serverkey[,pool]). If false, then it will
+ *   use a built-in generator.
+ * - memcacheLifetime (false): the amount of time to store the value in
+ *   memcache. By default, this uses the default value of the memcachePool
+ * - memcacheGet (null): a callback to run after data is returned from
+ *   memcache. Since we are using the memcache extension, we shouldn't need to
+ *   use unserialize() here, but you can if you pass an object, it saves it as
+ *   an associative array. The default handler is determined by
+ *   {@link tgif_memcached}.
+ * - memcacheSet (null): a callback to run before data is stored to  memcache.
+ *   Since we are using the memcache extension, we shouldn't need to use
+ *   serialize() here, but we can becasue it saves objects as associative
+ *   arrays. The default handler is determined by {@link tgif_memcached}.
  *
  * There is a special rule for callbacks in that if the callback is an array
  * with a single function it will call "new" on the element instead of
@@ -102,12 +100,10 @@ class tgif_global_loader extends tgif_global_object
      * allow for backward compatibility, this is not called when the generator
      * is bypassed.
      *
-     *  Previous versions:
+     * Previous versions:
      * - "": original
-     * - "0": use memcaches internal serialize and deserialize by default,
-     *       default version is an empty string instead of 0.
      */
-    const _global_version = '0';
+    const _global_version = '';
     // }}}
     // PUBLIC PROPERTIES
     // {{{ - $self
@@ -152,7 +148,7 @@ class tgif_global_loader extends tgif_global_object
     // }}}
     // {{{ - $_construct
     /**
-     * The callback to call to create the object from scratch when it can�t
+     * The callback to call to create the object from scratch when it can't
      * be found in the other stores (including the database!)
      * @var mixed
      */
@@ -234,6 +230,15 @@ class tgif_global_loader extends tgif_global_object
      */
     private $_smemKey = false;
     // }}}
+    // {{{ - $_smemcacheLifetime
+    /**
+     * The lifetime of the smemcache key in seconds.
+     *
+     * When false, the key lives until service restart.
+     * @var mixed.
+     */
+    private $_smemcacheLifetime = false;
+    // }}}
     // {{{ - $_isMemcacheable
     /**
      * Should we persist this object into memcached?
@@ -277,15 +282,6 @@ class tgif_global_loader extends tgif_global_object
      * @var mixed.
      */
     private $_memcacheLifetime = false;
-    // }}}
-    // {{{ - $_smemcacheLifetime
-    /**
-     * The lifetime of the smemcache key in seconds.
-     *
-     * When false, the key lives until service restart.
-     * @var mixed.
-     */
-    private $_smemcacheLifetime = false;
     // }}}
     // {{{ - $_memcacheGet
     /**
@@ -391,10 +387,10 @@ class tgif_global_loader extends tgif_global_object
      * Unsupported parameters:
      * - smemCallback: like memcacheCallback but for shared memory segment
      * - onDispatch: set this if you need to do work after dispatch (ex. loading
-     *      class libraries
+     *   class libraries
      * - dirtyCallback: what call hander to register when it receives a cache
-     *      dirty (this should either update itself to smem,memcache, or it
-     *      should delete itself from cache).
+     *   dirty (this should either update itself to smem,memcache, or it
+     *   should delete itself from cache).
      * - isPersist: does this have a way to save/persist to database
      * - dbCallback: what to call to grab data from database and make global
      * @var mixed The callback to call when there is no variable. This should
@@ -426,7 +422,8 @@ class tgif_global_loader extends tgif_global_object
     // ACCESSORS
     // {{{ - _defaultKeyGen()
     /**
-     * Generate a simple key including support for configurable parameter passing
+     * Generate a simple key including support for configurable parameter
+     * passing.
      *
      * @return string
      */
@@ -514,10 +511,9 @@ class tgif_global_loader extends tgif_global_object
             // get from memcached {{{
             if ($this->_isMemcacheable) {
                 try {
-                    $memcache_pool = $_TAG->memcachePool;
+                    $memcache_pool = $_TAG->memcached;
                     $key = $this->memcacheKey();
-                    $cache = $memcache_pool->getMemcache($key[0],$key[1]);
-                    $data = $cache->get($key[0]);
+                    $data = $memcache_pool->get($key); //TODO: add pool
                     // handle you can save strings only (temporary) {{{
                     if (is_array($data)) {
                         $data = (array_key_exists($key[0],$data))
@@ -608,6 +604,8 @@ class tgif_global_loader extends tgif_global_object
            return null;
         }
         // run callback constructor on data {{{
+        // If you don't see any errors, then check to make sure __autoload()
+        // doesn't have error suppression
         if (!$this->__callback) {
             $return = $this->__data;
         } elseif(is_array($this->__callback) && (count($this->__callback)==1)) {

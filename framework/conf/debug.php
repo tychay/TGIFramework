@@ -16,7 +16,8 @@ return array(
 // }}}
 // {{{ $_TAG->firephp
 'gld_firephp' => array(
-    'construct'         => array('tgif_debug_firephp','_x_get_instance'),
+    'params'            => 0,
+    'construct'         => array('tgif_debug_firephp','_X_create_object'),
     'version'           => 1,
     'shouldShard'       => false,
     'isSmemable'        => false,
