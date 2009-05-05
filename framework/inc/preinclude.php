@@ -51,7 +51,7 @@ define('TGIF_CLASS_DIR', TGIF_DIR.DIRECTORY_SEPARATOR.'class');
 /**
  * The directory where framework binaries are stored.
  */
-define('TGIF_CLASS_DIR', TGIF_DIR.DIRECTORY_SEPARATOR.'bin');
+define('TGIF_BIN_DIR', TGIF_DIR.DIRECTORY_SEPARATOR.'bin');
 // }}}
 // }}}
 // bind autoload {{{

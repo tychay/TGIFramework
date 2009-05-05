@@ -39,7 +39,7 @@ function test_runkit()
 {
 ?>
 <ul>
-<li>'_TAG->foo' config is <?php var_dump($_TAG->foo); ?></li>
+<li>'_TAG->foo' is <?php var_dump($_TAG->foo); ?></li>
 <li>'foo' global is <?php var_dump($foo); ?></li>
 </ul>
 <?php

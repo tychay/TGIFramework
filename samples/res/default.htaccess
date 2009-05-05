@@ -1,4 +1,4 @@
-php_value auto_prepend_file '{{{BASE_DIR}}}/samples/config.php'
+php_value auto_prepend_file '{{{BASE_DIR}}}/samples/prepend.php'
 php_value unserialize_callback_func '__autoload'
 
 # Interferes with XML files.

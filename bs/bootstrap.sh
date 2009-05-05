@@ -229,7 +229,7 @@ pushd packages
     fi
 popd
 pushd build
-    if [ ! -f ${YUIC_BIN} ]; then
+    if [ ! -d ${YUIC_BIN} ]; then
         echo "### Unpacking ${YUIC_PKG}..."
         unzip $BASE_DIR/packages/${YUIC_PKG}
     fi
@@ -252,7 +252,7 @@ pushd samples
         chmod 777 inclued
     fi
     if [ ! -f www/.htaccess ]; then
-        echo "### Building .htaccess file for samples"
+        echo "### Building .htaccess file for samples...."
         cat res/default.htaccess | sed "s|{{{BASE_DIR}}}|${BASE_DIR}|" >www/.htaccess
     fi
 popd
