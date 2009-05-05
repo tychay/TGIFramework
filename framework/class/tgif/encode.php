@@ -57,8 +57,8 @@ class tgif_encode {
      * 15 is an optimal # of digits to use from md5 because it's 60 bits which 
      * fits as an int and can easily be converted to base64 (a 10-char base64). 
      * However, any length between 1 and 32 will work (md5s are 128-bit which
-     * is 32 x 4-bit).
-     *
+     * is 32 x 4-bit). I'm changing the default length to 8 so that crc32()
+     * hashing will kick in.
      *
      * There may be a negative sign cycle in the crc32() hash. Beware! Small
      * fix, we grab from the end of the number because if we grab from the
@@ -69,7 +69,7 @@ class tgif_encode {
      * @param int $length how large a string to return
      * @return string base64 encoded md5 of the string
      */
-    public static function create_key($string, $length=10)
+    public static function create_key($string, $length=8)
     {
         if ($length == 10) {
             $hexdigits = 15;
@@ -80,7 +80,7 @@ class tgif_encode {
             $hexdigits = min(ceil($length/2)*3,32);
         }
         // md5 the string as the key
-        $num64 = ($hexdigits <= 8)
+        $num64 = ($hexdigits <= 8) // 8 * 4(base 16) = 32
                ? substr(self::int_to_base64(crc32($string)), -$length)
                : self::hex_to_base64(substr(md5($string), 0, $hexdigits));
         return str_pad($num64, $length, '0', STR_PAD_LEFT);
