@@ -4,10 +4,8 @@
  * Container for {@link tgif_page}
  *
  * @package tgiframework
- * @subpackage templating
+ * @subpackage ui
  * @copyright 2007 Tagged, Inc. <http://www.tagged.com/>, 2009 terry chay <tychay@php.net>
- * @author terry chay <tychay@php.net>
- * @author Mark Jen <markjen@tagged.net>
  * @todo Since Savant doesn't seem to be maintained anymore and I don't use
  * much of it's features, consider just forking the codebase.
  */
@@ -22,7 +20,9 @@ require_once 'Savant3.php';
  * Handle the presentation layer when using Savant to display web pages.
  *
  * @package tgiframework
- * @subpackage templating
+ * @subpackage ui
+ * @author terry chay <tychay@php.net>
+ * @author Mark Jen <markjen@tagged.net>
  */
 class tgif_page
 {

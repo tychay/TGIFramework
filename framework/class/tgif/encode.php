@@ -5,7 +5,7 @@
  *
  * @package tgiframework
  * @subpackage global
- * @copyright 2008 Tagged Inc. 2009 terry chay
+ * @copyright 2008-2009 Tagged Inc. 2009 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  */
 // {{{ tgif_encode

@@ -47,6 +47,12 @@ define('TGIF_FUNC_DIRD', TGIF_DIR.DIRECTORY_SEPARATOR.'func'.DIRECTORY_SEPARATOR
  */
 define('TGIF_CLASS_DIR', TGIF_DIR.DIRECTORY_SEPARATOR.'class');
 // }}}
+// TGIF_BIN_DIR {{{
+/**
+ * The directory where framework binaries are stored.
+ */
+define('TGIF_CLASS_DIR', TGIF_DIR.DIRECTORY_SEPARATOR.'bin');
+// }}}
 // }}}
 // bind autoload {{{
 /**

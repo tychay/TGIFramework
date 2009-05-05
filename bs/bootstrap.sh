@@ -25,6 +25,7 @@ PHP_VERSION_TEST=$BASE_DIR/bs/version_compare.php
 pear_installed () { pear list -a | grep ^$1 | wc -l ; }
 # }}}
 # PACKAGES {{{
+# php extensions {{{
 # RUNKIT {{{
 #RUNKIT='runkit'
 # Runkit is still in beta.
@@ -34,30 +35,50 @@ if [ `$PHP_VERSION_TEST 5.2` ]; then
     RUNKIT='cvs'
 fi
 # }}}
+# APC {{{
 APC='apc'
 if [ `$PHP_VERSION_TEST 5.3` ]; then
     APC='apc-beta'
 fi
 #APC='http://pecl.php.net/get/APC'
+# }}}
 INCLUED='inclued-alpha'
 XDEBUG='xdebug'
+# MEMCACHE {{{
 MEMCACHE_PKG='memcache'
 MEMCACHE='memcache'
 if [ $LIBMEMCACHED ]; then
     MEMCACHE='memcached-beta'
     MEMCACHE_PKG='memcached'
 fi
-
+# }}}
+# }}}
+# pear packages {{{
 SAVANT='http://phpsavant.com/Savant3-3.0.0.tgz'
+# FIREPHP {{{
 FIREPHP_CHANNEL='pear.firephp.org'
 FIREPHP='FirePHPCore'
+# }}}
 PHPDOC='PhpDocumentor'
-
+# }}}
+# downloads {{{
+# WEBGRIND {{{
+YUIC='yuicompressor'
+YUIC_VERSION='2.4.2'
+YUIC_BIN="${YUIC}-${YUIC_VERSION}"
+YUIC_PKG="${YUIC_BIN}.zip"
+YUIC_URL="http://www.julienlecomte.net/yuicompressor/${YUIC_PKG}"
+# }}}
+# }}}
+# web software {{{
+# WEBGRIND {{{
 WEBGRIND='webgrind'
 WEBGRIND_VERSION='1.0'
-WEBGRIND_PKG="${WEBGRIND}-release-${WEBGRIND_VERSION}"
-WEBGRIND_URL="http://webgrind.googlecode.com/files/${WEBGRIND_PKG}.zip"
-
+WEBGRIND_BIN="${WEBGRIND}-release-${WEBGRIND_VERSION}"
+WEBGRIND_PKG="${WEBGRIND_BIN}.zip"
+WEBGRIND_URL="http://webgrind.googlecode.com/files/${WEBGRIND_PKG}"
+# }}}
+# }}}
 PACKAGES_INSTALLED=""
 # }}}
 # Make directories {{{
@@ -84,7 +105,7 @@ fi
 # }}}
 # Install APC {{{
 if [ `$PHP_EXT_TEST apc` ]; then
-    echo '### APC INSTALLED';
+    echo '### UPGRADING APC...';
     $SUDO pecl upgrade $APC
 else
     echo '### INSTALLING APC';
@@ -94,7 +115,7 @@ fi
 # }}}
 # Install runkit {{{
 if [ `$PHP_EXT_TEST runkit` ]; then
-    echo '### RUNKIT INSTALLED';
+    echo '### UPGRADING RUNKIT....';
     if [ $RUNKIT != 'cvs' ]; then
         $SUDO pecl upgrade $RUNKIT
     fi
@@ -125,7 +146,7 @@ fi
 # }}}
 # Install XDEBUG {{{
 if [ `$PHP_EXT_TEST xdebug` ]; then
-    echo '### XDEBUG INSTALLED';
+    echo '### UPGRADING XDEBUG...';
     $SUDO pecl upgrade $XDEBUG
 else
     echo '### INSTALLING XDEBUG';
@@ -135,7 +156,7 @@ fi
 # }}}
 # Install inclued {{{
 if [ `$PHP_EXT_TEST inclued` ]; then
-    echo '### INCLUED INSTALLED';
+    echo '### UPGRADING INCLUED...';
     $SUDO pecl upgrade $INCLUED
 else
     echo '### INSTALLING INCLUED';
@@ -200,7 +221,27 @@ else
     $SUDO pear install $PHPDOC
 fi
 # }}}
-# Install sampopd.ples {{{
+# Install YUI Compressor {{{
+pushd packages
+    if [ ! -f ${YUIC_PKG} ]; then
+        echo "### Downloading $YUIC_URL..."
+        curl -O $YUIC_URL;
+    fi
+popd
+pushd build
+    if [ ! -f ${YUIC_BIN} ]; then
+        echo "### Unpacking ${YUIC_PKG}..."
+        unzip $BASE_DIR/packages/${YUIC_PKG}
+    fi
+popd
+pushd framework/bin
+    if [ ! -f ${YUIC_BIN}.jar ]; then
+        echo "### INSTALLING ${YUIC_BIN}.jar..."
+        cp $BASE_DIR/build/$YUIC_BIN/build/${YUIC_BIN}.jar .
+    fi
+popd
+# }}}
+# Install samples {{{
 pushd samples
     if [ ! -d traces ]; then
         mkdir traces
@@ -218,15 +259,15 @@ popd
 # }}}
 # Install WebGrind {{{
 pushd packages
-    if [ ! -f ${WEBGRIND_PKG}.zip ]; then
-        echo "### Downloading $WEBGRIND_URL"
+    if [ ! -f ${WEBGRIND_PKG} ]; then
+        echo "### Downloading $WEBGRIND_URL..."
         curl -O $WEBGRIND_URL;
     fi
 popd
 pushd samples/www
     if [ ! -d ${WEBGRIND} ]; then
-        echo "### Unpacking ${WEBGRIND_PKG}.zip"
-        unzip $BASE_DIR/packages/${WEBGRIND_PKG}.zip
+        echo "### Unpacking ${WEBGRIND_PKG}..."
+        unzip $BASE_DIR/packages/${WEBGRIND_PKG}
     fi
     pushd $WEBGRIND
         if [ ! -f .htaccess ]; then
@@ -236,8 +277,8 @@ pushd samples/www
         fi
     popd
 popd
+# }}}
 #echo "### Running phpdoc"
 #./bs/phpdoc.sh
-# }}}
 echo '### You may need to add  stuff to your php.ini and restart'
 $SUDO $APACHECTL restart
