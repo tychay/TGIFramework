@@ -39,6 +39,20 @@ return array(
     // }}}
     // }}}
     // diagnostics {{{
+    // {{{ diagnostics_monitor
+    /**
+     * Should we send diagnostics information to the monitoring service
+     */
+    'diagnostics_monitor' => false,
+    // }}}
+    // {{{ diagnostics_monitorEvent
+    /**
+     * If diagnostics_monitor is true, should we send diagnostics information 
+     * of the events to the monitoring service? (was
+     * diagnostics_should_send_event)
+     */
+    'diagnostics_monitorEvent' => false,
+    // }}}
     // {{{ diagnostics_memcache
     /**
      * Should we do diagnostics timing on memcache calls (timings will also
@@ -49,6 +63,9 @@ return array(
      */
     'diagnostics_memcache' => false,
     // }}}
+    // }}}
+    // debugging {{{
+    'firephp_diagnostics'    => true,    //log diagnostics to firephp
     // }}}
     // memcache {{{
     // {{{ $_TAG->memcached

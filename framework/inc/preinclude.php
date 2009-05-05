@@ -75,21 +75,22 @@ $_TAG = tgif_global::get_instance($symbol);
 // Turn on queue and diagnostics {{{
 $_TAG->queue = new tgif_queue();
 register_shutdown_function(array($_TAG->queue,'publish'),'shutdown');
-// Here temporarily until diagnostics goes online
-ob_start();
-/*
 // diagnostics {{{
 if (defined('DISABLE_DIAGNOSTICS') && DISABLE_DIAGNOSTICS) {
-    // skip logging when running mail_queus, etc.
+    // tgif_diagnostics starts up it's own buffer
+    ob_start();
+    // skip logging when running mail_queus, etc. (remember you have to include
+    // this prepend script manually so you have ample time to set the diagnostic
+    // variable off
     $_TAG->diagnostics = new tgif_diagnostics_null();
 } else {
-    // think of moving this to the tag_queue system
+    $_TAG->diagnostics = new tgif_diagnostics();
+    // contemplate moving this line to the tag_queue system
     register_shutdown_function(array($_TAG->diagnostics,'shutdown'));
-    $_TAG->diagnostics->setPageTimer($_start_time);
-    unset($_start_time);
+    $_TAG->diagnostics->setPageTimer($GLOBALS['_start_time']);
+    unset($GLOBALS['_start_time']);
 }
 // }}}
-*/
 // }}}
-// Exceptions and error handlign
+// Exceptions and error handling
 ?>
