@@ -612,9 +612,9 @@ class tgif_diagnostics
      * accurate of a timer.
      *
      * The numbers:
-     * 1) is the time to generate the page (in msec), the second
-     * 2) is the peak memory usage (if possible) in MB
-     * 3) last two digits of IP of server that served the page
+     * 1. is the time to generate the page (in msec), the second
+     * 2. is the peak memory usage (if possible) in MB
+     * 3. last two digits of IP of server that served the page
      *
      * @return string diagnostics
      */
