@@ -71,11 +71,15 @@ $var = array('i'=>10, 'j'=>20);
 //$firephp->log($var, 'Iterators');
 $_TAG->firephp->log($var, 'Iterators');
 ?>
-<h2>Memcache</h3>
+<h2>Memcache</h2>
 <?php
 $_TAG->memcached->set('foo','bar');
 var_dump($_TAG->memcached->get('foo'));
 
+?>
+<h2>Diagnostics</h2>
+<?php
+echo $_TAG->diagnostics->summary();
 ?>
 </body>
 </html>
