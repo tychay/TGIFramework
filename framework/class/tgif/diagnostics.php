@@ -7,8 +7,6 @@
  * @subpackage debugging
  * @copyright Copyright 2007 Tagged, Inc, 2009 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
- * @author terry chay <tychay@php.net>
-
  */
 // {{{ tgif_diagnostics
 // docs {{{
@@ -32,6 +30,7 @@
  *
  * @package tgiframework
  * @subpackage debugging
+ * @author terry chay <tychay@php.net>
  */
 // }}}
 class tgif_diagnostics
@@ -44,7 +43,7 @@ class tgif_diagnostics
      * collision on this id is effectively zero and it has no possibility
      * of being generated the same way twice (like a guid).
      *
-     * @var $guid string
+     * @var string
      */
     public $guid;
     // }}}
@@ -57,7 +56,7 @@ class tgif_diagnostics
     // {{{ - $pid
     /**
      * What process id we're running on
-     * @var $pid integer
+     * @var integer
      */
     public $pid;
     // }}}
@@ -65,14 +64,14 @@ class tgif_diagnostics
     /**
      * This is the peak memory usage. Pretty much valid only in PHP 5, but
      * during diagnostics we sample at multiple locations to keep upping it.
-     * @var $memory integer
+     * @var integer
      */
     public $memory = 0;
     // }}}
     // {{{ - $server
     /**
      * The IP of the server, or its uname if run from the command line.
-     * @var $server string
+     * @var string
      */
     public $server;
     // }}}
@@ -81,13 +80,13 @@ class tgif_diagnostics
      * The url of this page.
      *
      * If called from the command line, it will contain the name of the binary
-     * @var $url string
+     * @var string
      */
     public $url;
     // }}}
     // {{{ - $timerInfo
     /**
-     * @var $timerInfo array
+     * @var array
      * This consists of an array of arrays representing the timer names and
      * each timer in that array and then a hash of contents in that.
      */
@@ -97,20 +96,20 @@ class tgif_diagnostics
     // {{{ - $_timers
     /**
      * Storage of all <b>currently running</b> timers by name.
-     * @var $_timers array
+     * @var array
      */
     private $_timers = array();
     // }}}
     // {{{ - $_timerStuff
     /**
      * Storage of stuff to record with the timer
-     * @var $_timerStuff array
+     * @var array
      */
     private $_timerStuff = array();
     // }}}
     // {{{ - $_snaps
     /**
-     * @var $_snaps array
+     * @var array
      * Storage of snapshot data
      */
     private $_snaps = array();
@@ -171,18 +170,18 @@ class tgif_diagnostics
         $datasize = strlen(ob_get_contents());
         $this->setPeakMemory();
         // UDP Log page statistics {{{
-        // Must call it before stopTimer because we need the $_timers variable
-        // to exist.
+        // Must call logger before stopTimer because we need the $_timers
+        // variable to exist.
         if ($_TAG->config('diagnostics_monitor')) {
             self::_monitor_event('end', array(
                 'guid'          => $this->guid,
                 'server'        => $this->server,
                 'process-id'    => $this->pid,
-                'end-time'      => self::microtime_float(microtime()),
+                'end-time'      => tgif_benchmark_timer::microtime_float(microtime()),
                 'output-size'   => (int) $datasize,
                 'memory'        => $this->memory,
                 'error'         => 'false',
-                'start-time'    => self::microtime_float($this->_timers['page']),
+                'start-time'    => $this->_timers['page']->startTime,
                 'url'           => $this->url
             ));
         }
@@ -219,43 +218,6 @@ class tgif_diagnostics
     }
     // }}}
     // STATIC METHODS
-    // {{{ + microtime_subtract()
-    /**
-     * subtracts two microtime strings
-     * @return string the time difference in seconds (can be interpreted as a
-     * float)
-     */
-    static function microtime_subtract($time1,$time2)
-    {
-        list($end_usec, $end_sec) = explode(' ', $time1);
-        list($start_usec, $start_sec) = explode(' ',$time2);
-        $usec = $end_usec - $start_usec;
-        $carry = 0;
-        if ($usec < 0) {
-            $usec = 1 + $usec;
-            $carry = 1;
-        }
-        $sec = $end_sec - $start_sec - $carry;
-        //return $sec.substr($usec,1).' = '.$time1.' - '.$time2;
-        return $sec.substr($usec,1);
-    }
-    // }}}
-    // {{{ + microtime_float([$microtime])
-    /**
-     * Emulates microtime(true) for PHP < 4
-     * @param $microtime string the time to convert. If false, then it will
-     *      assume you want this instant.
-     * @return string a GMP formatted microtime string
-     */
-    static function microtime_float($microtime=false)
-    {
-        if ($microtime === false) {
-            $microtime = microtime();
-        }
-        list($usec, $sec) = explode(' ', $microtime);
-        return $sec.substr($usec,1);
-    }
-    // }}}
     // {{{ + memory_usage()
     /**
      */
@@ -265,27 +227,6 @@ class tgif_diagnostics
             return memory_get_peak_usage();
         }
         return memory_get_usage();
-    }
-    // }}}
-    // {{{ + file_put_contents($filename,$data)
-    /**
-     * A race safe version of file_put_contents.
-     *
-     * I don't implement any of the optional parameters.
-     */
-    static function file_put_contents($filename,$data)
-    {
-        $tmpfname = tempnam('/tmp','td');
-        $fp = fopen($tmpfname,'w');
-        fwrite($fp, $data);
-        fclose($fp);
-        if (file_exists($filename)) {
-            @unlink($filename);
-        }
-        link($tmpfname, $filename);
-        unlink($tmpfname);
-        chmod($filename,0666);
-        return;
     }
     // }}}
     // ACCESSORS
@@ -326,15 +267,15 @@ class tgif_diagnostics
      */
     function setPageTimer($time)
     {
-        $this->_timers['page'] = $time;
         $this->_diagStart();
+        $this->_timers['page']->startTime = $time;
         // UDP log page start event
         if ($_TAG->config('diagnostics_monitor')) {
             self::_monitor_event('start', array(
                 'guid'          => $this->guid,
                 'server'        => $this->server,
                 'process-id'    => $this->pid,
-                'start-time'    => self::microtime_float($this->_timers['page']),
+                'start-time'    => $this->_timers['page']->startTime, //it's been transformed on get!
                 'url'           => $this->url
             ));
         }
@@ -364,9 +305,9 @@ class tgif_diagnostics
         //if ($_TAG->config('firephp_diagnostics') && ($timer_name!='diagnostics')) { $_TAG->firephp->log(sprintf('started %s',$timer_name),'timer'); }
         // don't record if page already shut down
         if ((strcmp($timer_name,'page')!==0)  && !array_key_exists('page',$this->_timers)) { return; }
-        $this->_timerStuff[$timer_name] = array($name, $stuff);
-        $this->_timers[$timer_name] = microtime();
         $this->_diagStart();
+        $this->_timerStuff[$timer_name] = array($name, $stuff);
+        $this->_timers[$timer_name] = new tgif_benchmark_timer(true);
         $this->_diagStop();
     }
     // }}}
@@ -385,11 +326,11 @@ class tgif_diagnostics
         // don't record if page already shut down
         if (!array_key_exists('page',$this->_timers)) { return; }
         if(!array_key_exists($timer_name,$this->_timers)){ return;}
+        $this->_diagStart();
         // compute execute time {{{
         // gmp_sub is broken
-        $time_stamp = $this->_timers[$timer_name];
-        $time_diff = $this->_lapTime($timer_name);
-        $this->_diagStart();
+        $this->_timers[$timer_name]->stop();
+        $timer = $this->_timers[$timer_name];
         unset($this->_timers[$timer_name]);
         // }}}
         // initialize timerInfo element {{{
@@ -399,8 +340,8 @@ class tgif_diagnostics
         // }}}
         // save data {{{
         $data = array(
-            'time_stamp'    => $time_stamp,
-            'time_taken'    => $time_diff,
+            'time_stamp'    => $timer->startTime,
+            'time_taken'    => $timer->timeTaken,
             'name'          => $this->_timerStuff[$timer_name][0],
             'stuff'         => array_merge(
                 is_array($this->_timerStuff[$timer_name][1])?
@@ -423,51 +364,15 @@ class tgif_diagnostics
                 'server'        => $this->server,
                 'process-id'    => $this->pid,
                 'memory'        => $this->memory,
-                'start-time'    => self::microtime_float($data['time_stamp']),
-                'end-time'      => self::microtime_float(microtime()),
+                'start-time'    => $data['time_stamp'],
+                'end-time'      => tgif_benchmark_timer::microtime_float(microtime()),
                 'url'           => $this->url,
                 //'user-id'       => tgif_login::get_user_id(),
                 ));
             self::_monitor_event($timer_name, $send_data);
             // }}}
+            $this->_diagStop();
         }
-    }
-    // }}}
-    // {{{ - setCacheEvent($cache_key,$cache_hit[,$error_or_data])
-    /**
-     * Safe log the cache event
-     * @deprecated I don't think this is ever called anymore except by sj26. Probably should remove it as we have recording already (also remove diagnostic_lmhm)
-     * @access public
-     * @param $cache_key string the cache key used
-     * @param $cache_hit boolean hit or miss?
-     */
-    function setCacheEvent($cache_key, $cache_hit, $error_or_data='')
-    {
-        if (!$this->_logMemcacheHitMiss) { return; }
-        $this->_diagStart();
-
-        if ($cache_hit) {
-                $hit_string = 'HIT';
-                $data = (is_object($error_or_data) || is_array($error_or_data))
-                        ? serialize($error_or_data)
-                        : $error_or_data;
-                $extra = strlen($data);
-                if (!$extra) { $hit_string = 'MIS'; } // no data is a miss!
-        } else {
-                $hit_string = ($error_or_data) ? 'ERR' : 'MIS';
-                $extra = $error_or_data;
-        }
-
-
-        $data = sprintf("%s %s %s\n",
-                       $hit_string,
-                       $cache_key,
-                       $extra
-                      );
-
-        $filename = $this->_baseDir.'/memcache.log';
-        $this->_appendToLog($this->_baseDir.'/memcache.log',$data);
-        $this->_diagStop();
     }
     // }}}
     // {{{ - _diagStart()
@@ -476,28 +381,8 @@ class tgif_diagnostics
      */
     private function _diagStart()
     {
-        $this->_timers['diagnostic'] = microtime();
+        $this->_timers['diagnostic'] = new tgif_benchmark_timer(true);
         //$this->setPeakMemory();
-    }
-    // }}}
-    // {{{ - _lapTime($timerName)
-    /**
-     * Calulate a time difference without destorying it.
-     * @param $timerName the timer to compute start from
-     * @return string the time marker from the start of the timer (can be
-     *      interpreted as float)
-     */
-    private function _lapTime($timerName)
-    {
-        //if (!isset($this->_timers[$timerName])) { return 0; }
-        return self::microtime_subtract(microtime(),$this->_timers[$timerName]);
-        /*
-        if (function_exists('gmp_sub')) {
-            return gmp_strval(gmp_sub(self::microtime_float(), $this->_timers[$timerName]));
-        } else {
-            return microtime(true) - $this->_timers[$timerName];
-        }
-        */
     }
     // }}}
     // {{{ - _diagStop()
@@ -507,13 +392,12 @@ class tgif_diagnostics
     private function _diagStop()
     {
         if (!array_key_exists('page',$this->_timers)) { return; }
-        $this->_timers['diagnostic'] = microtime();
-        $time_stamp = $this->_timers['diagnostic'];
-        $time = self::microtime_subtract(microtime(),$time_stamp);
+        $timer = $this->_timers['diagnostic'];
         unset($this->_timers['diagnostic']);
+        $timer->stop();
         $this->timerInfo['diagnostic'][] = array(
-            'time_stamp'    => $time_stamp,
-            'time_taken'    => $time,
+            'time_stamp'    => $timer->startTime,
+            'time_taken'    => $timer->timeTaken,
             'name'          => '-',
             'stuff'         => array()
             );
@@ -580,7 +464,7 @@ class tgif_diagnostics
         if (!array_key_exists($snapshotId, $this->_snaps)) { $this->_diagStop(); return; }
         $returns = $this->_snaps[$snapshotId];
         unset($this->_snaps[$snapshotId]);
-        $returns['time'] = self::microtime_subtract(microtime(),$returns['time']);
+        $returns['time'] = tgif_benchmark_timer::microtime_subtract(microtime(),$returns['time']);
         $old_info = $returns['snapshot'];
         $current_info = $this->timerInfo;
         $returns['snapshot'] = array();
@@ -623,12 +507,13 @@ class tgif_diagnostics
     {
         $peak = (function_exists('memory_get_peak_usage')) ? '' : '?';
         $server_parts = explode('.',$this->server);
-        $server = (count($server_parts) > 3 )
-                ? $server_parts[2].'.'.$server_parts[3]
+        $server = (count($server_parts) > 3)
+                ? sprintf('%d.%d', $server_parts[2],$server_parts[3])
                 : $this->server;
+        $this->_timers[$timerName]->stop(); // stop is the same as a "lap" timer
         return sprintf(
             '%d %.1f%s %s',
-            $this->_lapTime($timerName)*1000,
+            $this->_timers[$timerName]->timeTaken*1000,
             $this->setPeakMemory()/1024/1024,
             $peak,
             $server

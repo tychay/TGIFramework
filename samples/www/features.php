@@ -77,6 +77,55 @@ $_TAG->memcached->set('foo','bar');
 var_dump($_TAG->memcached->get('foo'));
 
 ?>
+<h2>Benchmarking</h2>
+<?php
+//mimic production
+$error_level = error_reporting(E_ALL);
+// {{{ date()
+ini_set('date.timezone',false);
+$b1 = new tgif_benchmark_iterate(true);
+$b1->run(10000, 'date', 'c');
+$b1->description = 'date("c")';
+// }}}
+// {{{ date() + date.timezone
+ini_set('date.timezone','America/Los_Angeles');
+$b2 = new tgif_benchmark_iterate(true);
+$b2->run(10000, 'date', 'c');
+$b2->description = 'date("c") + date.timezone';
+// }}}
+// {{{ date() + date_default_timezone_set
+ini_set('date.timezone',false);
+date_default_timezone_set('America/Los_Angeles');
+$b3 = new tgif_benchmark_iterate(true);
+$b3->run(10000, 'date', 'c');
+$b3->description = 'date("c") + date_default_timezone_set()';
+// }}}
+// {{{ iterate date() + ini_set
+date_default_timezone_set('');
+ini_set('date.timezone',false);
+function ini_and_date() {
+    ini_set('date.timezone','America/Los_Angeles');
+    date('c');
+}
+$b4 = new tgif_benchmark_iterate(true);
+$b4->run(10000, 'ini_and_date');
+$b4->description = 'iterate date("c") + ini_set';
+// }}}
+// {{{ iterate date() + date_default_timezone_set
+date_default_timezone_set('');
+ini_set('date.timezone',false);
+function set_and_date() {
+    date_default_timezone_set('America/Los_Angeles');
+    date('c');
+}
+$b5 = new tgif_benchmark_iterate(true);
+$b5->run(10000, 'set_and_date');
+$b5->description = 'iterate date("c") + date_default_timezone_set';
+// }}}
+echo tgif_benchmark_iterate::format($b1->compare($b2,$b3,$b4,$b5));
+// restore
+error_reporting($error_level);
+?>
 <h2>Diagnostics</h2>
 <?php
 echo $_TAG->diagnostics->summary();
