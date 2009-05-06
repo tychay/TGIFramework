@@ -3,7 +3,10 @@
 // vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
 /**
  * Generate a config file that generates a {@link global_version} based on
- * the subversion version and it into the file specified by $1
+ * the subversion version and it into the file specified by $1.
+ *
+ * This is done using the
+ * {@link http://svnbook.red-bean.com/en/1.1/re57.html svnversion} command.
  *
  * @package tgiframework
  * @subpackage bootstrap
