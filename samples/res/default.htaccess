@@ -1,3 +1,19 @@
+# MOD_DEFLATE ##################################################################
+<IfModule deflate_module>
+# Compress everything except a few things...
+SetOutputFilter DEFLATE
+SetEnvIfNoCase Request_URI \.(?:gif|jpe?g|png)$ \
+    no-gzip dont-vary
+SetEnvIfNoCase Request_URI \
+    \.(?:exe|t?gz|zip|bz2|sit|rar)$ \
+    no-gzip dont-vary
+SetEnvIfNoCase Request_URI \.pdf$ no-gzip dont-vary
+# Ignore broken browsers
+BrowserMatch ^Mozilla/4 gzip-only-text/html
+BrowserMatch ^Mozilla/4\.0[678] no-gzip
+BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+</IfModule>
+
 php_value auto_prepend_file '{{{BASE_DIR}}}/samples/prepend.php'
 php_value unserialize_callback_func '__autoload'
 
