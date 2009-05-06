@@ -222,7 +222,8 @@ class tgif_diagnostics
     // {{{ + microtime_subtract()
     /**
      * subtracts two microtime strings
-     * @string the time difference in seconds (can be interpreted as a float)
+     * @return string the time difference in seconds (can be interpreted as a
+     * float)
      */
     static function microtime_subtract($time1,$time2)
     {

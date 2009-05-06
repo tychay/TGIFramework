@@ -412,7 +412,7 @@ class tgif_compiler
     // }}}
     // {{{ - _generateKeyFromFiles($files)
     /**
-     * @params array $files a list of files to be compiled
+     * @param array $files a list of files to be compiled
      */
     private function _generateKeyFromFiles($files)
     {
@@ -636,7 +636,7 @@ class tgif_compiler
     protected $_html_with_id = '%1$s id:%2$s';
     /**
      * Mapping when outputting a url to html
-     * @const string
+     * @var string
      */
     protected $_html = '%s';
     // }}}

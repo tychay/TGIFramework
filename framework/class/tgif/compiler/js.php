@@ -233,7 +233,7 @@ class tgif_compiler_js extends tgif_compiler
      * Returns a list of urls for the YUI compile
      *
      * This has special handling for the case where we have YUI libs
-     * @params $fileListData an array of libs consisting of...
+     * @param $fileListData an array of libs consisting of...
      * - name: the name of the library in the dependency tree
      * - is_file: false
      * - map: the name of the library as a part of the url
