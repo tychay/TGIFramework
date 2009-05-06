@@ -79,8 +79,11 @@ var_dump($_TAG->memcached->get('foo'));
 ?>
 <h2>Benchmarking</h2>
 <?php
+//$error_level = error_reporting(E_ALL | E_STRICT);
+//ini_set('date.timezone',false);
+//echo date('c');
 //mimic production
-$error_level = error_reporting(E_ALL);
+$error_level = error_reporting(0);
 // {{{ date()
 ini_set('date.timezone',false);
 $b1 = new tgif_benchmark_iterate(true);
@@ -93,15 +96,8 @@ $b2 = new tgif_benchmark_iterate(true);
 $b2->run(10000, 'date', 'c');
 $b2->description = 'date("c") + date.timezone';
 // }}}
-// {{{ date() + date_default_timezone_set
-ini_set('date.timezone',false);
-date_default_timezone_set('America/Los_Angeles');
-$b3 = new tgif_benchmark_iterate(true);
-$b3->run(10000, 'date', 'c');
-$b3->description = 'date("c") + date_default_timezone_set()';
-// }}}
 // {{{ iterate date() + ini_set
-date_default_timezone_set('');
+//date_default_timezone_set('');
 ini_set('date.timezone',false);
 function ini_and_date() {
     ini_set('date.timezone','America/Los_Angeles');
@@ -111,8 +107,15 @@ $b4 = new tgif_benchmark_iterate(true);
 $b4->run(10000, 'ini_and_date');
 $b4->description = 'iterate date("c") + ini_set';
 // }}}
+// {{{ date() + date_default_timezone_set
+ini_set('date.timezone',false);
+date_default_timezone_set('America/Los_Angeles');
+$b3 = new tgif_benchmark_iterate(true);
+$b3->run(10000, 'date', 'c');
+$b3->description = 'date("c") + date_default_timezone_set()';
+// }}}
 // {{{ iterate date() + date_default_timezone_set
-date_default_timezone_set('');
+//date_default_timezone_set('');
 ini_set('date.timezone',false);
 function set_and_date() {
     date_default_timezone_set('America/Los_Angeles');

@@ -14,7 +14,7 @@
  * Similar to PEAR {@link Benchmark_Iterate}, except it doesn’t violate the
  * substitution principle and doesn't have timer start/top overhead
  *
- * Run the date 100 times
+ * Run the date 100 times and compare it with timezone set date run 1000 times
  * <code>
  * <?php
  * $error_level = error_reporting(0); //mimic production
@@ -30,7 +30,7 @@
  * $b2->run(1000, 'date', 'c');
  * $b2->description = 'date("c") with date.timezone set';
  *
- * var_dump($b2->compare($b1));
+ * echo tgif_benchmark_iterate::format($b2->compare($b1));
  *
  * error_reporting($error_level); //restore errors
  * ?>
@@ -231,7 +231,13 @@ class tgif_benchmark_iterate
     // }}}
     // {{{ + _hex_color($value,$min,$max)
     /**
-     * @return string the hex code of the output on a red yellow green spectrum
+     * Turn a time into a color.
+     *
+     * @param float $value a value between $min and $max
+     * @param float $max the largest value in a spectrum ($value renders red)
+     * @param float $min the smallest value in a specturm ($value renders green)
+     * @return string the hex code of the output on a red yellow (really brown)
+     * green spectrum
      */
     static private function _hex_color($value, $min, $max)
     {
