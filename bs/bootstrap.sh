@@ -242,6 +242,8 @@ pushd framework/bin
 popd
 # }}}
 # Install samples {{{
+echo "### Building global_version config...."
+./framework/bin/generate_global_version.php samples/config/global_version.php
 pushd samples
     if [ ! -d traces ]; then
         mkdir traces

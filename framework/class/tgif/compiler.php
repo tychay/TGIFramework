@@ -446,7 +446,7 @@ class tgif_compiler
             if (!file_exists($filePath)) { return false; }
             return md5(file_get_contents($filePath));
             case 'global':
-            return $_TAG->config('global_static_ver');
+            return $_TAG->config('global_version');
             case 'filemtime':
             default:
             if (!file_exists($filePath)) { return false; }
@@ -495,7 +495,7 @@ class tgif_compiler
     protected function _generateSourceUrl($fileName)
     {
         //global $_TAG; //runkit
-        return $_TAG->url->chrome($this->_resourceDir.'/'.$fileName.'?v='.$_TAG->config('global_static_ver'));
+        return $_TAG->url->chrome($this->_resourceDir.'/'.$fileName.'?v='.$_TAG->config('global_version'));
     }
     // }}}
     // {{{ - _generateTargetUrl($fileName)
