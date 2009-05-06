@@ -82,6 +82,7 @@ var_dump($_TAG->memcached->get('foo'));
 //$error_level = error_reporting(E_ALL | E_STRICT);
 //ini_set('date.timezone',false);
 //echo date('c');
+
 //mimic production
 $error_level = error_reporting(0);
 // {{{ date()
