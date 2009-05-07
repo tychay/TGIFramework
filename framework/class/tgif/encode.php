@@ -57,21 +57,23 @@ class tgif_encode {
      * 15 is an optimal # of digits to use from md5 because it's 60 bits which 
      * fits as an int and can easily be converted to base64 (a 10-char base64). 
      * However, any length between 1 and 32 will work (md5s are 128-bit which
-     * is 32 x 4-bit). I'm changing the default length to 8 so that crc32()
+     * is 32 x 4-bit). Also consider the default length as 5 so that crc32()
      * hashing will kick in.
      *
      * There may be a negative sign cycle in the crc32() hash. Beware! Small
      * fix, we grab from the end of the number because if we grab from the
-     * beginning, we may lose the 0 digits!
+     * beginning, we may lose the 0 digits in the randomizer
      *
      * @author terry chay <tychay@php.net> added crc32 switch
      * @param string $string arbitrary string to create key from
      * @param int $length how large a string to return
      * @return string base64 encoded md5 of the string
      */
-    public static function create_key($string, $length=8)
+    public static function create_key($string, $length=10)
     {
-        if ($length == 10) {
+        if ($length == 5) { //when the crc32 kicks in
+            $hexdigits = 8; //it's a little off but it'll work fine
+        } elseif ($length == 10) { //fits in a base64 int
             $hexdigits = 15;
         } else {
             // max length is 22 base64 digits

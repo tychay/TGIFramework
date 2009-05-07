@@ -154,19 +154,19 @@ function gen_guid_data() {
 // }}}
 // md5 {{{
 $b1 = new tgif_benchmark_iterate(true);
-//$b1->startStop = true; (takes too long to compute)
-$b1->runGenerator(100000, 'md5', 'gen_guid_data');
+//$b1->startStop = true; //(so small get division by 0)
+$b1->runGenerator(1000, 'md5', 'gen_guid_data');
 // }}}
 //echo var_dump($b1->summary);die;
 // crc32 {{{
 $b2 = new tgif_benchmark_iterate(true);
-//$b2->startStop = true; (takes too long to compute)
-$b2->runGenerator(100000, 'crc32', 'gen_guid_data');
+//$b2->startStop = true; //(so small get division by 0)
+$b2->runGenerator(1000, 'crc32', 'gen_guid_data');
 // }}}
 // md5 {{{
 $b3 = new tgif_benchmark_iterate(true);
-//$b3->startStop = true; (takes too long to compute)
-$b3->runGenerator(100000, 'sha1', 'gen_guid_data');
+//$b3->startStop = true; //(so small get division by 0)
+$b3->runGenerator(1000, 'sha1', 'gen_guid_data');
 // }}}
 echo tgif_benchmark_iterate::format($b1->compare($b2,$b3));
 // }}}
