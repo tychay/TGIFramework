@@ -79,6 +79,7 @@ var_dump($_TAG->memcached->get('foo'));
 ?>
 <h2>Benchmarking</h2>
 <?php
+// date test {{{
 //$error_level = error_reporting(E_ALL | E_STRICT);
 //ini_set('date.timezone',false);
 //echo date('c');
@@ -88,12 +89,15 @@ $error_level = error_reporting(0);
 // {{{ date()
 ini_set('date.timezone',false);
 $b1 = new tgif_benchmark_iterate(true);
+//$b1->startStop = true;
 $b1->run(10000, 'date', 'c');
 $b1->description = 'date("c")';
 // }}}
+//echo var_dump($b1->summary);die;
 // {{{ date() + date.timezone
 ini_set('date.timezone','America/Los_Angeles');
 $b2 = new tgif_benchmark_iterate(true);
+//$b2->startStop = true;
 $b2->run(10000, 'date', 'c');
 $b2->description = 'date("c") + date.timezone';
 // }}}
@@ -105,6 +109,7 @@ function ini_and_date() {
     date('c');
 }
 $b4 = new tgif_benchmark_iterate(true);
+//$b4->startStop = true;
 $b4->run(10000, 'ini_and_date');
 $b4->description = 'iterate date("c") + ini_set';
 // }}}
@@ -112,6 +117,7 @@ $b4->description = 'iterate date("c") + ini_set';
 ini_set('date.timezone',false);
 date_default_timezone_set('America/Los_Angeles');
 $b3 = new tgif_benchmark_iterate(true);
+//$b3->startStop = true;
 $b3->run(10000, 'date', 'c');
 $b3->description = 'date("c") + date_default_timezone_set()';
 // }}}
@@ -123,12 +129,47 @@ function set_and_date() {
     date('c');
 }
 $b5 = new tgif_benchmark_iterate(true);
+//$b5->startStop = true;
 $b5->run(10000, 'set_and_date');
 $b5->description = 'iterate date("c") + date_default_timezone_set';
 // }}}
 echo tgif_benchmark_iterate::format($b1->compare($b2,$b3,$b4,$b5));
 // restore
 error_reporting($error_level);
+// }}}
+
+// hash test {{{
+// emulate diagnostic guid hash
+$pid    = getmypid();
+$server = (isset($_SERVER['SERVER_ADDR'])) ? $_SERVER['SERVER_ADDR'] : php_uname('n');
+// {{{ gen_guid_data()
+/**
+ * Generator to generate test data similar to guid in {@link tgif_diagnostics}.
+ * @return string
+ */
+function gen_guid_data() {
+    global $pid, $server;
+    return uniqid(rand(),true).$server.$pid;
+}
+// }}}
+// md5 {{{
+$b1 = new tgif_benchmark_iterate(true);
+//$b1->startStop = true; (takes too long to compute)
+$b1->runGenerator(100000, 'md5', 'gen_guid_data');
+// }}}
+//echo var_dump($b1->summary);die;
+// crc32 {{{
+$b2 = new tgif_benchmark_iterate(true);
+//$b2->startStop = true; (takes too long to compute)
+$b2->runGenerator(100000, 'crc32', 'gen_guid_data');
+// }}}
+// md5 {{{
+$b3 = new tgif_benchmark_iterate(true);
+//$b3->startStop = true; (takes too long to compute)
+$b3->runGenerator(100000, 'sha1', 'gen_guid_data');
+// }}}
+echo tgif_benchmark_iterate::format($b1->compare($b2,$b3));
+// }}}
 ?>
 <h2>Diagnostics</h2>
 <?php

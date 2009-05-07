@@ -14,12 +14,11 @@ BrowserMatch ^Mozilla/4\.0[678] no-gzip
 BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
 </IfModule>
 
+# PHP.INI #####################################################################
 php_value auto_prepend_file '{{{BASE_DIR}}}/samples/prepend.php'
 php_value unserialize_callback_func '__autoload'
-
 # Interferes with XML files.
 php_flag short_open_tag 0
-
 #<http://talks.php.net/show/froscon08/23>
 #
 # If a default time zone isn't set in PHP configuration, any call to the date()

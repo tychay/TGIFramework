@@ -67,10 +67,20 @@ class tgif_benchmark_iterate
     // }}}
     // {{{ - $_functionName
     /**
-     * $_functionName
+     * The name of the function called (or a description if modified)
      * @var string
      */
     private $_functionName;
+    // }}}
+    // {{{ - $_defaultBehavior
+    /**
+     * If set to true, this will start and stop the timer on every iteration
+     * just like PEAR::Benchmark::Iterate. That setting is recommended in the
+     * case of doing a random data mark where the randomize function takes
+     * time to execute.
+     * @var string
+     */
+    private $_defaultBehavior = false;
     // }}}
     // RESERVED METHODS
     // {{{- __construct()
@@ -103,38 +113,133 @@ class tgif_benchmark_iterate
         $args     = func_get_args();
         $max      = (int) array_shift($args);
         $function = array_shift($args);
-        // generate functionName and callback {{{
+        $this->_functionName = self::_parse_callback($function);
+        $this->_numIteration = $max;
+        if ($this->_defaultBehavior) {
+            // clear the timers {{{
+            $this->_timer->start();
+            $this->_timer->stop();
+            $this->_nullTimer->start();
+            $this->_nullTimer->stop();
+            // }}}
+            // time run {{{
+            for ($i=0; $i<$max; ++$i) {
+                $this->_timer->start();
+                call_user_func_array($function, $args);
+                $this->_timer->stop(true);
+            }
+            // }}}
+            // time null {{{
+            for ($i=0; $i<$max; ++$i) {
+                $this->_nullTimer->start();
+                $this->_nullTimer->stop(true);
+            }
+            // }}}
+        } else {
+            // time run {{{
+            $this->_timer->start();
+            for ($i=0; $i<$max; ++$i) {
+                call_user_func_array($function, $args);
+            }
+            $this->_timer->stop();
+            // }}}
+            // time null {{{
+            $this->_nullTimer->start();
+            for ($i=0; $i<$max; ++$i) {
+            }
+            $this->_nullTimer->stop();
+            // }}}
+        }
+    }
+    // }}}
+    // {{{ - runGenerator()
+    /**
+     * Benchmark a function or method assuming the first parameter is a callback
+     * data generator on every iteration
+     *
+     * The parameters are done through func_get_args() so they are defined
+     * as follows:
+     * 1. (int) the number of iterations to execute
+     * 2. (mixed) the function to execute (will be parsed a la Benchmark_Iterate
+     * 3. first argument to provide callback to random argument generator
+     * 4... arguments go into random argument generator
+     */
+    function runGenerator()
+    {
+        $args      = func_get_args();
+        $max       = (int) array_shift($args);
+        $function  = array_shift($args);
+        $generator = array_shift($args);
+        $this->_functionName = self::_parse_callback($function);
+        $this->_numIteration = $max;
+        if ($this->_defaultBehavior) {
+            // clear the timers {{{
+            $this->_timer->start();
+            $this->_timer->stop();
+            $this->_nullTimer->start();
+            $this->_nullTimer->stop();
+            // }}}
+            // time run {{{
+            for ($i=0; $i<$max; ++$i) {
+                $fargs = call_user_func_array($generator, $args);
+                $this->_timer->start();
+                call_user_func_array($function, $fargs);
+                $this->_timer->stop(true);
+            }
+            // }}}
+            // time null {{{
+            for ($i=0; $i<$max; ++$i) {
+                $fargs = call_user_func_array($generator, $args);
+                $this->_nullTimer->start();
+                $this->_nullTimer->stop(true);
+            }
+            // }}}
+        } else {
+            // time run {{{
+            $this->_timer->start();
+            for ($i=0; $i<$max; ++$i) {
+                $fargs = call_user_func_array($generator, $args);
+                call_user_func_array($function, $fargs);
+            }
+            $this->_timer->stop();
+            // }}}
+            // time null {{{
+            $this->_nullTimer->start();
+            for ($i=0; $i<$max; ++$i) {
+                $fargs = call_user_func_array($generator, $args);
+            }
+            $this->_nullTimer->stop();
+            // }}}
+        }
+    }
+    // }}}
+    // {{{ + _parse_callback($function)
+    /**
+     * Generate the function name and make the callback callable.
+     *
+     * @param mixed $function this will be transformed into a callable php
+     * function
+     * @return string the name of the callback for user rendering
+     */
+    static private function _parse_callback(&$function)
+    {
         if (is_string($function)) {
-            $this->_functionName = $function.'()';
+            $return = $function.'()';
             if (strstr($function, '::')) {
                 $function = explode('::', $function_name);
             } elseif (strstr($function, '->')) {
                 $function = explode('->', $function_name);
                 $function[0] = $GLOBALS[$function[0]];
-                $this->_functionName = '$'.$this->_functionName;
+                return '$'.$return;
             }
+            return $return;
         } else { //it must be an array
             if (is_string($function[0])) {
-                $this->_functionName = sprintf('%s::%s()', $function[0], $function[1]);
+                return sprintf('%s::%s()', $function[0], $function[1]);
             } else {
-                $this->_functionName = sprintf('$_->%s()', $function[1]);
+                return sprintf('$_->%s()', $function[1]);
             }
         }
-        // }}}
-        $this->_numIteration = $max;
-        // time run {{{
-        $this->_timer->start();
-        for ($i=0; $i<$max; ++$i) {
-            call_user_func_array($function, $args);
-        }
-        $this->_timer->stop();
-        // }}}
-        // time null {{{
-        $this->_nullTimer->start();
-        for ($i=0; $i<$max; ++$i) {
-        }
-        $this->_nullTimer->stop();
-        // }}}
     }
     // }}}
     // OUTPUT
@@ -263,6 +368,9 @@ class tgif_benchmark_iterate
             case 'functionname':
             case 'description':
             return $this->_functionName;
+            case 'defaultbehavior':
+            case 'startstop':
+            return $this->_defaultBehavior;
             case 'starttime':
             case 'begintime':
             case 'endtime':
@@ -273,7 +381,7 @@ class tgif_benchmark_iterate
             case 'rtimetaken':
             case 'stimetaken':
             case 'utimetaken':
-            return $this->_timer->{$name} - $this->_nullTimer->{$name};
+            return tgif_benchmark_timer::bc_sub($this->_timer->{$name},$this->_nullTimer->{$name});
             case 'summary':
             return array(
                 'name'  => $this->functionName,
@@ -298,6 +406,9 @@ class tgif_benchmark_iterate
             case 'functionname':
             case 'description':
             $this->_functionName = $value;
+            case 'defaultbehavior':
+            case 'startstop':
+            $this->_defaultBehavior = $value;
             return;
         }
         trigger_error(sprintf('Unknown property %s',$name), E_USER_WARNING);

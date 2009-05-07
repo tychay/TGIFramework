@@ -99,25 +99,62 @@ class tgif_benchmark_timer
         }
     }
     // }}}
-    // {{{ - stop()
+    // {{{ - stop([$sumTotal])
     /**
      * Stops the timer.
+     *
+     * Moved the math function around the timers to make the timers slightly
+     * more accurate. Also improved the adding function to not lose precision.
+     *
+     * @param boolean $sumTotal should summary keep a running total?
      */
-    function stop()
+    function stop($sumTotal=false)
     {
+        // stop timers {{{
         if ($this->_trackRusage) {
             $this->_stopRusage = getrusage();
-            $this->_summary = array(
-                'utime' => self::microtime_subtract(self::rusage_to_microtime($this->_stopRusage,'ru_utime.tv'),self::rusage_to_microtime($this->_startRusage,'ru_utime.tv')),
-                'stime' => self::microtime_subtract(self::rusage_to_microtime($this->_stopRusage,'ru_stime.tv'),self::rusage_to_microtime($this->_startRusage,'ru_stime.tv')),
-            );
-            // there can be loss of precision here, but who cares.
-            $this->_summary['rtime'] = $this->_summary['utime'] + $this->_summary['stime'];
-        } else {
-            $this->_summary = array();
         }
         $this->_stopTime = microtime();
-        $this->_summary['time'] = self::microtime_subtract($this->_stopTime, $this->_startTime);
+        // }}}
+        // compute time taken {{{
+        $time = self::microtime_subtract($this->_stopTime, $this->_startTime);
+        if ($this->_trackRusage) {
+            $utime = self::microtime_subtract(self::rusage_to_microtime($this->_stopRusage,'ru_utime.tv'),self::rusage_to_microtime($this->_startRusage,'ru_utime.tv'));
+            $stime = self::microtime_subtract(self::rusage_to_microtime($this->_stopRusage,'ru_stime.tv'),self::rusage_to_microtime($this->_startRusage,'ru_stime.tv'));
+            $rtime = self::bc_add($utime,$stime);
+        }
+        // }}}
+        // add to total {{{
+        if (!$sumTotal && !$this->_trackRusage) {
+            $this->_summary = array('time' => $time);
+        } elseif (!$sumTotal) { //rusage
+            $this->_summary = array(
+                'time'  => $time,
+                'utime' => $utime,
+                'stime' => $stime,
+                'rtime' => $rtime,
+            );
+        } else {
+            // zero out array {{{
+            if (empty($this->_summary) && !$this->_trackRusage) {
+                $this->_summary = array('time' => '0.0');
+            } else {
+                $this->_summary = array(
+                    'time'  => '0.0',
+                    'utime' => '0.0',
+                    'stime' => '0.0',
+                    'rtime' => '0.0',
+                );
+            }
+            // }}}
+            $this->_summary['time'] = self::bc_add($this->_summary['time'],$time);
+            if ($this->_trackRusage) {
+                $this->_summary['utime'] = self::bc_add($this->_summary['utime'],$utime);
+                $this->_summary['stime'] = self::bc_add($this->_summary['stime'],$stime);
+                $this->_summary['rtime'] = self::bc_add($this->_summary['rtime'],$rtime);
+            }
+        }
+        // }}}
     }
     // }}}
     // ACCESSORS
@@ -186,6 +223,61 @@ class tgif_benchmark_timer
         } else {
             return '0.'.$rusageArray[$indexName.'_usec'] . ' ' . $rusageArray[$indexName.'_sec'];
         }
+    }
+    // }}}
+    // {{{ + bc_add($time1,$time2)
+    /**
+     * Add two precision strings
+     *
+     * @param string $time1 addend in bc format
+     * @param string $time2 addend in bc format
+     * @return string the sum of times seconds (can be interpreted as a
+     * float)
+     */
+    static function bc_add($time1,$time2)
+    {
+        // use bc math to do subtraction if available {{{
+        if (extension_loaded('bcmath')) {
+            return bcadd($time1, $time2, 6);
+        }
+        // }}}
+        list($end_usec, $end_sec) = explode('.', $time1);
+        list($start_usec, $start_sec) = explode('.',$time2);
+        $usec = ('0.'.$end_usec) + ('0.'+$start_usec);
+        $carry = ($usec > 1)  ? 1 : 0;
+        $sec = $end_sec + $start_sec + $carry;
+        return $sec.substr($usec,1);
+    }
+    // }}}
+    // {{{ + bc_sub($time1,$time2)
+    /**
+     * Subtracts two precision strings
+     *
+     * Enhanced to use bcmath if available.
+     *
+     * @param string $time1 end time in bc format
+     * @param string $time2 start time in bc format
+     * @return string the time difference in seconds (can be interpreted as a
+     * float)
+     */
+    static function bc_sub($time1,$time2)
+    {
+        // use bc math to do subtraction if available {{{
+        if (extension_loaded('bcmath')) {
+            return bcsub($time1, $time2, 6);
+        }
+        // }}}
+        list($end_usec, $end_sec) = explode('.', $time1);
+        list($start_usec, $start_sec) = explode('.',$time2);
+        $usec = ('0.'.$end_usec) - ('0.'.$start_usec);
+        $carry = 0;
+        if ($usec < 0) {
+            $usec = 1 + $usec;
+            $carry = 1;
+        }
+        $sec = $end_sec - $start_sec - $carry;
+        //return $sec.substr($usec,1).' = '.$time1.' - '.$time2;
+        return $sec.substr($usec,1);
     }
     // }}}
     // {{{ + microtime_subtract($time1,$time2)
