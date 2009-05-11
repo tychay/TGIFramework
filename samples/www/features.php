@@ -133,11 +133,26 @@ $b5 = new tgif_benchmark_iterate(true);
 $b5->run(10000, 'set_and_date');
 $b5->description = 'iterate date("c") + date_default_timezone_set';
 // }}}
-echo tgif_benchmark_iterate::format($b1->compare($b2,$b3,$b4,$b5));
+echo tgif_benchmark_iterate::format($b1->compare($b2,$b3,$b4,$b5)),"\n";
 // restore
 error_reporting($error_level);
 // }}}
 
+// internal time vs server time
+// {{{ date() on internal time
+$b1 = new tgif_benchmark_iterate(true);
+//$b1->startStop = true;
+$b1->run(10000, 'date', 'c');
+$b1->description = 'date("c") internal time';
+// }}}
+// {{{ date() on server time
+$b2 = new tgif_benchmark_iterate(true);
+//$b2->startStop = true;
+$b2->run(10000, 'date', 'c', $_SERVER['REQUEST_TIME']);
+$b2->description = 'date("c") server time';
+// }}}
+echo tgif_benchmark_iterate::format($b1->compare($b2)),"\n";
+// }}}
 // hash test {{{
 // emulate diagnostic guid hash
 $pid    = getmypid();
