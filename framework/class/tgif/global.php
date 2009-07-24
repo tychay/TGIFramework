@@ -618,11 +618,14 @@ class tgif_global
      * @param string $dir the directory to load from
      * @param array $configs the array to load configs into
      * @return array a list of file names that were processed
+     * @author terry chay <tychay@php.net>
+     * @author Joshual Ball (added warning if configs overlap in same directory)
      * @todo consider reading through the nesting of arrays.
      */
     private function _loadConfigDir($dir, &$configs, &$files)
     {
         if (!is_dir($dir)) { return; }
+        $dir_configs = array();
         foreach (new DirectoryIterator($dir) as $item) {
             $file_data = $this->_readConfigFile($item);
             if (!is_array($file_data)) {
@@ -631,8 +634,13 @@ class tgif_global
                 // file sucessfully recognized and read (else null)
                 $files[] = $item->getPathname();
             }
-            $configs = array_merge($configs, $file_data);
+            $overlap = array_intersect_key($dir_configs, $file_data);
+            if (count($overlap) > 0) {
+                trigger_error(sprintf('%s::_loadConfigDir(): Config file %s has overlapping keys %s',get_class($this), $item, var_export(array_keys($overlap), true)), E_USER_ERROR);
+            }
+            $dir_configs = array_merge($dir_configs, $file_data);
         }
+        $configs = array_merge($configs, $dir_configs);
     }
     // }}}
     // {{{ - _readConfigFile($file)
