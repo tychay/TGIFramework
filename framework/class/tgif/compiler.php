@@ -72,14 +72,21 @@ class tgif_compiler
      * Whether or not we should save intermediate data to shared memory segments
      * @var boolean
      */
-    private $_useSmem = false;
+    protected $_useSmem = false;
     // }}}
     // {{{ - $_useMemcache
     /**
      * Whether or not we should save intermediate data to memcache
      * @var boolean
      */
-    private $_useMemcache = true;
+    protected $_useMemcache = true;
+    // }}}
+    // {{{ - $_useReleaseName
+    /**
+     * Whether or not we should use the release name as part of the file path
+     * @var boolean
+     */
+    protected _useReleaseName = false;
     // }}}
     // {{{ - $_signatureMode
     /**
@@ -150,6 +157,7 @@ class tgif_compiler
                 case 'use_service'  : $this->_useService    = $value; break;
                 case 'use_smem'     : $this->_useSmem       = $value; break;
                 case 'use_memcache' : $this->_useMemcache   = $value; break;
+                case 'use_release_name' : $this->_useReleaseName = $value; break;
                 case 'signature_mode' :
                 if (in_array($value, array('global','filemtime','md5'))) {
                     $this->_signatureMode = $value;
@@ -157,6 +165,26 @@ class tgif_compiler
                 break;
             }
         }
+    }
+    // }}}
+    // {{{ __sleep()
+    /**
+     * Make sure temporary structures aren't stored between saves.
+     */
+    function _sleep()
+    {
+        return array('_resourceDir','_targetDir','_trackFile','_useCat','_useCompiler','_useService','_useSmem','_useMemcache','_useReleaseName','_signatureMode');
+    }
+    // }}}
+    // {{{ __wakeup()
+    /**
+     * Restore missing defaults
+     */
+    function __wakeup()
+    {
+        $this->_fileData    = array();
+        $this->_queues      = array();
+        $this->_outputList  = array();
     }
     // }}}
     // PUBLIC METHODS
@@ -178,34 +206,48 @@ class tgif_compiler
     /**
      * Generate the url of the a single file to call (no dependencies)
      * @param $files string|array a list of files to turn into a single file
-     * @return string the file to call. If no file then empty
+     * @return array The first parameter is either true or false. If true,
+     * then the second param is the URL to redirect to. If false, then the
+     * second param is the data itself.
      */
     function generateSingle($files)
     {
-
         $file_list_data = array();
-        // build list of files and dependencies
-        if (is_array($files)) {
-            // group file compile {{{
-            $file_list_data = array();
+        // build list of files and dependencies {{{
+        if (!is_array($files)) { $files = array($files); }
+        foreach ($files as $file) {
+            $this->_grabFileData($file);
+            if (!array_key_exists($file,$this->_fileData)) { continue; }
+            $file_list_data[$file] = $this->_fileData[$file];
+        }
+        // }}}
+        if (empty($file_list_data)) { return array(false,''); }
+        $files = $this->_buildFiles($file_list_data, true);
+        if (count($files) > 1) {
+            // more than one file? return the contents of all of them {{{
+            $data = '';
             foreach ($files as $file) {
-                $this->_grabFileData($file);
-                if (!array_key_exists($file,$this->_fileData)) { continue; }
-                $file_list_data[$file] = $this->_fileData[$file];
+                if ($file[1]) {
+                    $data .= file_get_contents($file[0]);
+                } else {
+                    $file_data = $file[0];
+                    if ($file_data['is_file']) {
+                        $data .= file_get_contents($file_data['file_path']);
+                    }
+                }
             }
-            if (empty($file_list_data)) { return ''; }
+            return array (false, $data);
             // }}}
         } else {
-            // single file compile {{{
-            $this->_grabFileData($files);
-            if (!array_key_exists($files,$this->_fileData)) { return ''; }
-            // ignore dependencies and restore a single file compile
-            $file_list_data = array($files=>$this->_fileData[$files]);
+            // one file? return its url {{{
+            $file = $files[0];
+            if ($file[1]) {
+                return array(true, $this->_generateTargetUrl($file[0]));
+            } else {
+                return array(true, $this->_generateSourceUrl($file[0]));
+            }
             // }}}
         }
-        // queue has been emptied
-        $urls = $this->_buildUrls($file_list_data);
-        return $urls[0];
     }
     // }}}
     // {{{ - generate([$queue])
@@ -423,9 +465,13 @@ class tgif_compiler
     // {{{ - _generateKey($fileName)
     /**
      * Turn a filename into a key array
+     *
+     * This is now protected because tag_compiler_js needs this function to
+     * update the filedata when handling i18n intermediate compile
+     * 
      * @return array
      */
-    private function _generateKey($fileName)
+    protected function _generateKey($fileName)
     {
         //global $_TAG; //runkit
         return array(get_class($this).'_'.tgif_encode::create_key($fileName), $_TAG->symbol());
@@ -436,6 +482,7 @@ class tgif_compiler
      * Generate a signature from the file.
      *
      * This only gets called if the file data "is_file" parameter is true.
+     *
      * @return string
      */
     private function _generateSignature($filePath)
@@ -462,7 +509,15 @@ class tgif_compiler
     private function _generateFilePath($fileName)
     {
         //global $_TAG; //runkit
-        $file_path = sprintf('%s/%s', $this->_resourceDir, $fileName);
+        if($this->_useReleaseName) {
+            $file_path = sprintf('%s/%s%s/%s',
+                $_TAG->config('release_dir'),
+                $_TAG->config('release_name'),
+                $this->_resourceDir,
+                $fileName);
+        } else {
+            $file_path = sprintf('%s%s/%s', $_TAG->config('dir_static'), $this->_resourceDir, $fileName);
+        }
         if (!file_exists($file_path)) { return false; }
         return $file_path;
     }
@@ -495,7 +550,9 @@ class tgif_compiler
     protected function _generateSourceUrl($fileName)
     {
         //global $_TAG; //runkit
-        return $_TAG->url->chrome($this->_resourceDir.'/'.$fileName.'?v='.$_TAG->config('global_version'));
+        return (empty($fileData['url']))
+               ? $_TAG->url->chrome($this->_resourceDir.'/'.$fileData['name'].'?v='.$_TAG->config('global_version'))
+               : $_TAG->url->chrome($fileData['url'].'?v='.$_TAG->config('global_version'));
     }
     // }}}
     // {{{ - _generateTargetUrl($fileName)
@@ -526,8 +583,8 @@ class tgif_compiler
      * Note that if the {@link $_signatureMode} is changed, then this
      * will assume the file doesn't exist!
      *
-     * @param $fileName string the name of the file to use for the compiled file.
-     *      This is unique across a file list.
+     * @param $fileName string the name of the file to use for the compiled
+     *      file. This is unique across a file list.
      * @param $fileListData array the data of the files that need to be compiled
      *      in an order such that dependencies are resolved correctly.
      * @return boolean returns success or failure
@@ -535,7 +592,7 @@ class tgif_compiler
     protected function _compileFiles($fileName, $fileListData)
     {
         //global $_TAG; //runkit
-        $file_path = sprintf('%s/%s', $this->_targetDir, $fileName);
+        $file_path = sprintf('%s%s/%s', $_TAG->config('dir_static'), $this->_targetDir, $fileName);
         // check shared cache for whether file has been marked as existing {{{
         $cache_key = $this->_generateKey($file_path);
         $file_exists_signature = tgif_global_loader::get_from_cache($cache_key,$this->_useSmem,$this->_useMemcache);
@@ -594,7 +651,9 @@ class tgif_compiler
         //global $_TAG; //runkit
         $base_dir = dirname($filePath);
         // ensure path to source exists
-        @mkdir($base_dir, 0777, true);
+        if (!file_exists($base_dir)) {
+            mkdir($base_dir, 0777, true);
+        }
         // generate temp file in the path
         // cat all data together {{{
         $cat_path = tempnam($base_dir,'cat_');
@@ -617,7 +676,12 @@ class tgif_compiler
         // }}}
         // atomic file copy {{{
         if ($success) {
-            @link($source_file, $filePath);
+            // link effectively copies files atomically in linux. however,
+            // when running in a local vmware environment on windows host,
+            // link doen't work. thus, we fail through to copy (which works :))
+            if (!link($filePath, $source_file)) {
+                copy($source_file, $filePath);
+            }
             chmod($filePath,0666);
         }
         unlink($source_file);
@@ -655,7 +719,7 @@ class tgif_compiler
     /**
      * Turns a list of files into urls.
      *
-     * This code asumes that all {@link $fileListData} has 'is_file' set to
+     * This code assumes that all {@link $fileListData} has 'is_file' set to
      * true (they are all files). So if this is the case, there is no need to
      * ovverride this function.
      *
@@ -666,14 +730,50 @@ class tgif_compiler
         // don't even think of generating an empty compiled file!
         $returns = array();
         if (empty($fileListData)) { return $returns; }
-        if ($this->_useCat) {
+        $files = $this->_buildFiles($fileListData);
+        foreach ($files as $file_parts) {
+            if(!is_array($file_parts)) {
+                $returns[] = $file_parts;
+            } else if ($file_parts[1]) {
+                $returns[] = $this->_generateTargetUrl($file_parts[0]);
+            } else {
+                $returns[] = $this->_generateSourceUrl($file_parts[0]);
+            }
+        }
+        return $returns;
+    }
+    // }}}
+    // {{{ - _buildFiles($fileListData[,$forceCat])
+    /**
+     * Turns a list of files into a new list of files (compiled and catted)
+     *
+     * This code assumes that all {@link $fileListData} has 'is_file' set to
+     * true (they are all files). So if this is the case, there is no need to
+     * ovverride this function.
+     *
+     * @param array $fileListData the list of files to compile/catenate
+     * @param boolean $forceCat Set to true to force catenation (used by i18n
+     * code) to turn the urls into a single file.
+     * @return array a list of urls consisting of two parts, the second part
+     * is true for target file or false for source files. If the second part
+     * is true, then the first part is the target filename, if the second part
+     * is false, then the second part is the file data (it seems weird but this
+     * allows building via {@link _generateSourceUrl()} and
+     * {@link _generateTargetUrl}.
+     */
+    protected function _buildFiles($fileListData, $forceCat=false)
+    {
+        // don't even think of generating an empty compiled file!
+        $returns = array();
+        if (empty($fileListData)) { return $returns; }
+        if ($this->_useCat || $forceCat) {
             $target_file = $this->_generateTargetFileName($fileListData);
             $success = $this->_compileFiles($target_file,$fileListData);
             if ($success) {
-                $returns[] = $this->_generateTargetUrl($target_file);
+                $returns[] = array($target_file,true);
             } else {
                 foreach($fileListData as $filename=>$file_data) {
-                    $returns[] = $this->_generateSourceUrl($file_data['name']);
+                    $returns[] = array($file_data,false);
                 }
             }
             return $returns;
@@ -684,14 +784,14 @@ class tgif_compiler
                 $target_file = $this->_generateTargetFileName($temp);
                 $success = $this->_compileFiles($target_file,$temp);
                 if ($success) {
-                    $returns[] = $this->_generateTargetUrl($target_file);
+                    $returns[] = array($target_file,true);
                 } else {
-                    $returns[] = $this->_generateSourceUrl($file_data['name']);
+                    $returns[] = array($file_data,false);
                 }
             }
         } else {
            foreach($fileListData as $filename=>$file_data) {
-               $returns[] = $this->_generateSourceUrl($file_data['name']);
+               $returns[] = array($file_data,false);
             }
         }
         return $returns;

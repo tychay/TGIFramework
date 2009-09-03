@@ -57,12 +57,45 @@ class tgif_compiler_js extends tgif_compiler
                 case 'yui_combine'      : $this->_yuiSettings['combine']    = $value; break;
                 case 'yui_optional'     : $this->_yuiSettings['optional']   = $value; break;
                 case 'yui_cdn'          : $this->_yuiSettings['cdn']        = $value; break;
+                case 'l10n_dir'         : $this->_l10nDir       = $value; break;
+                case 'l10n_target_dir'  : $this->_l10nTargetDir = $value; break;
+                case 'l10n_target_url'  : $this->_l10nTargetUrl = $value; break;
+                case 'l10n_generator'   : $this->_l10nGenerator = $value; break;
             }
         }
         $this->_useCat      = ($this->_yuiSettings['combine']);
         $this->_useCompiler = ($this->_javaCmd && $this->_yuiCompressor && (strcmp($this->_yuiSettings['filter'],'min')===0));
         $this->_yuiModules  = include(sprintf('%s/yui-%s.php',dirname(__FILE__),$this->_yuiSettings['version']));
         parent::__construct($options);
+    }
+    // }}}
+    // {{{ __sleep()
+    /**
+     * Make sure temporary structures aren't stored between saves.
+     *
+     * This includes {@link $_strings}.
+     */
+    function _sleep()
+    {
+        return array_merge(parent::__sleep(), array( '_html', '_html_with_id', '_javaCmd', '_yuiCompressor','_l10nDir', '_l10nTargetDir', '_l10nTargetUrl', '_l10nGenerator','_yuiSettings','_yuiModules'));
+    }
+    // }}}
+    // {{{ __wakeup()
+    /**
+     * Restore missing defaults
+     */
+    function __wakeup()
+    {
+        parent::__wakeup();
+        $this->_strings = array();
+    }
+    // }}}
+    // {{{ _loadYuiModuleInfo($version)
+    private function _loadYuiModuleInfo($version)
+    {
+        return json_decode(file_get_contents(sprintf('%s/%s.json',dirname(__FILE__), $version)),true);
+        // oudated
+        //return include(sprintf('%s/yui-%s.php',dirname(__FILE__),$version));
     }
     // }}}
     // {{{ - _compileFileExec($targetPath, $sourcePath)
@@ -142,6 +175,139 @@ class tgif_compiler_js extends tgif_compiler
         return sprintf('%s/%s.js', substr($signature,0,1), substr($signature,1,10));
     }
     // }}}
+    // i18n support
+    // {{{ - $_l10nDir
+    /**
+     * The base dir for finding localizations in PHP
+     * @var string
+     */
+    private $_l10nDir = '';
+    // }}}
+    // {{{ - $_l10nTargetDir
+    /**
+     * The dir to write localized javascript strings
+     * @var string
+     */
+    private $_l10nTargetDir = '';
+    // }}}
+    // {{{ - $_l10nTargetUrl
+    /**
+     * The dir of target url accessible from the web
+     * @var string
+     */
+    private $_l10nTargetUrl = '';
+    // }}}
+    // {{{ - $_l10nGenerator
+    /**
+     * Name of function that will generate a localization into a target.
+     * The function takes two values the source string table and the target
+     * file name.
+     * @var string|array
+     */
+    private $_l10nGenerator = array('tag_compiler_js','export_strings');
+    // }}}
+    // {{{ - _l10nFilename($fileData)
+    /**
+     * Generate a target filename to write the javascript file to given the
+     * filedata to start with.
+     *
+     * Depending on the {@link $_signatureMode}:
+     * global:    = filename + global version + language code
+     * md5:       = signature of file data + language code
+     * filemtime: = filename + lmtime + language code
+     *
+     * @param array $file_data the significant one is the l10n_path
+     * @return string
+     */
+    private function _l10nFilename($fileData)
+    {
+        global $_TAG;
+        $file_path = $fileData['l10n_path'];
+        switch ($this->_signatureMode) {
+            case 'md5':
+                $base = md5(file_get_contents($file_path).tag_intl::get_locale());
+                break;
+            case 'create_key':
+                $base = tag_encode::create_key(file_get_contents($file_path).tag_intl::get_locale());
+                break;
+            case 'global':
+                $base = tag_encode::create_key($file_path.$_TAG->config('global_static_ver').tag_intl::get_locale());
+                break;
+            case 'filemtime':
+            default:
+                $base = tag_encode::create_key($file_path.filemtime($file_path).tag_intl::get_locale());
+        }
+        // Write to target directory
+        return sprintf('%s/%s/%s.js', $this->_l10nTargetDir, substr($base,0,1), substr($base,1));
+    }
+    // }}}
+    // {{{ - _l10nTargetToUrl($filePath)
+    /**
+     * Hack to generate URL from path name
+     *
+     * @param string $filePath Path to the file
+     * @return string
+     */
+    private function _l10nTargetToUrl($filePath)
+    {
+        $basename_d = substr($filePath, strlen($this->_l10nTargetDir));
+        return $this->_l10nTargetUrl.$basename_d;
+    }
+    // }}}
+   // {{{ - export_strings($feFile,$outfile)
+    /**
+     * Generates an output javascript file for localized string export.
+     *
+     * @param string $feFile path to the input string file (free energy).
+     * @param string $outfile path to the output file to write to.
+     * @todo It's hard to read the tag_encode::js value (whcih is fragile
+     * anyway). Let's change this to use json_encode and then do the heavy
+     * lifting in javascript like in the strings.php file. :-)
+     */
+    public function export_strings($infile, $outfile)
+    {
+        // path to directory...
+        $dirname = dirname($outfile);
+        if (!file_exists($dirname)) {
+            mkdir(dirname($outfile),0777,true);
+        }
+        $fp = fopen($outfile,'w');
+        fwrite($fp,self::get_strings($infile));
+        fclose($fp);
+        // make sure the file is read/writeable by all
+        chmod($outfile,0777);
+    }
+    // }}}
+    // {{{ + get_strings($file)
+    /**
+     * Returns the json encoded contents of file.
+     * 
+     * @param string $file path to input string file
+     * @return void
+     */
+    public static function get_strings($file) 
+    {
+        $strings = include($file);
+        return sprintf('tagged.loadStringsDirect(%s);', json_encode($strings));
+    }
+    // }}}
+    // {{{ - getString($stringPath[,$loadFile])
+    /**
+     * @param string $stringPath the string to lookup
+     * @param string $loadFile The name of the js file it would have been located in
+     */
+    function getString($stringPath,$loadFile=null)
+    {
+        if (!is_null($loadFile)) {
+            if (substr($loadFile,-3) == '.js') {
+                $loadFile = substr($loadFile, 0, -3).'.php'; // strip .js
+            }
+            $loadFile = 'js' . DIRECTORY_SEPARATOR . $loadFile;
+        }
+
+        return tag_strings::get($stringPath, $loadFile);
+    }
+    // }}}
     // YUI support
     // {{{ - $_yuiSettings
     /**
@@ -149,7 +315,7 @@ class tgif_compiler_js extends tgif_compiler
      * @var array
      */
     private $_yuiSettings = array(
-        'version'       => '2.6.0',
+        'version'       => '2.7.0',
         'rollup'        => true,    // does nothing currently
         'filter'        => 'min',   // could also be 'debug' or nothing
         'combine'       => true,    // when more than one file combine into a single
@@ -164,105 +330,50 @@ class tgif_compiler_js extends tgif_compiler
      * Note that this isn't entirely accurate because earlier
      * versions of YUI might have slightly different dependencies.
      *
-     * The current version is 2.6.0, but we are using 2.5.3 because
-     * find as you type needs to be updated.
+     * The current version is 2.7.0, but we are using 2.5.3 because
+     * find as you type needs to be updated using the script
+     * {@link jsonifyyui.html} and {@link _loadYuiModuleInfo()} called in the
+     * constructor.
+     *
+     * 
      * @var array
      */
     private $_yuiModules = array();
-    // }}}
-    // {{{ - _buildUrls($fileListData)
-    /**
-     * Returns a list of files into urls.
-     *
-     * This has special handling for the case where we have YUI libs
-     */
-    protected function _buildUrls($fileListData)
-    {
-        $files = array();
-        $yui_libs = array();
-        foreach ($fileListData as $file_data) {
-            if ($file_data['is_file']) {
-                $files[] = $file_data;
-            } else {
-                $yui_libs[] = $file_data;
-            }
-        }
-        $lib_urls = array();
-        // do YUI libs first!
-        return array_merge($this->_generateYuiUrls($yui_libs), parent::_buildUrls($files));
-    }
-    // }}}
-    // {{{ - _generateFileData($fileName)
-    /**
-     * Generate file data.
-     *
-     * This version works differently if the library is YUI
-     */
-    protected function _generateFileData($fileName)
-    {
-        if (strcmp(substr($fileName,0,6), 'YAHOO/')!==0) {
-            return parent::_generateFileData($fileName);
-        }
-        $lib_name = substr($fileName,6);
-        if (!array_key_exists($lib_name, $this->_yuiModules)) {
-            return false;
-        }
-        $returns = $this->_yuiModules[$lib_name];
-        $returns['name'] = $fileName;
-        $returns['is_file'] = false;
-        if (!array_key_exists('core',$returns)) {
-            $returns['core'] = $lib_name;
-        }
-        if (!array_key_exists('map',$returns)) {
-            $returns['map'] = $lib_name;
-        }
-        // need to deal with rollup library missing things {{{
-        if (!array_key_exists('dependencies',$returns)) {
-            $returns['isExperimental'] = true; // already minable
-            $returns['dependencies'] = array();
-        }
-        // }}}
-        if ($this->_yuiSettings['optional'] && !empty($returns['optionals'])) {
-            $returns['dependencies'] = array_merge($returns['dependencies'],$returns['optionals']);
-        }
-        return $returns;
-    }
     // }}}
     // {{{ - _generateYuiUrls($fileListData)
     /**
      * Returns a list of urls for the YUI compile
      *
      * This has special handling for the case where we have YUI libs
-     * @param $fileListData an array of libs consisting of...
-     * - name: the name of the library in the dependency tree
-     * - is_file: false
-     * - map: the name of the library as a part of the url
-     * - isCore: whether library is a core library
-     * - isLoaderCore: whether library is yui laoder + core
-     * - isUtil: whether library is part of utilities
-     * - isExperimental: whether library is experimental (not min/debug able)
-     * - dependencies: the dependencies of the library (already exhausted)
-     * - optionals: optional dependencies of library (already exhasted)
+     * @params $fileListData an array of libs consisting of...
      *
-     * In some cases, the library is a rollup, in these cases the first three
-     * params above are in there +:
-     * - lookup: which of the names above are to be looked up for already
-     *      marked dependencies
+     * The new format is based on the YUI loader format ths is an array of libs
+     * indexed by library name, and consisting of...
+     * - name(added): the name of the library in the dependency tree
+     * - dependencies: the dependencies of the library (already exhausted) from
+     *   requires and optional below.
+     * - type: should be "js" or ignored
+     * - path: the path to the file (includes the -min version)
+     * - requires (deleted): the dependencies of the library
+     * - optional (merged into dependencies): optional dependencies of library
+     * - supersedes: if a rollup these are the libraries to mark as already
+     *   loaded
+     * - rollup: the number of libraries this rolls up
      */
     private function _generateYuiUrls($fileListData)
     {
         global $_TAG;
         if (empty($fileListData)) { return array(); }
         $paths = array();
-        foreach ($fileListData as $file_data) {
+        foreach ($fileListData as $name => $file_data) {
+            $path = $file_data['path'];
             // handle extension {{{
             switch ($this->_yuiSettings['filter']) {
-                case 'min'   : $extension =  '-min'; break;
-                case 'debug' : $extension = '-debug'; break;
-                default      : $extension = '';
+                case 'min'   : break;
+                case 'debug' : $path = str_replace('-min','-debug',$path);
+                default      : $path = str_replace('-min','',$path);
             }
-            // experimental libraries have no min/debug version
-            if ($file_data['isExperimental']) { $extension = ''; }
+            // experimental libraries have no min/debug version (not true anymore?)
             // }}}
             // edge case double rollup: {{{
             // handle edge case where we include both a rollup and a file inside
@@ -272,20 +383,17 @@ class tgif_compiler_js extends tgif_compiler
             if (in_array($file_data['name'],$this->_outputList)) {
                 continue;
             }
+            // only handle js files
+            if (!strcmp('js',$file_data['type'])===0) { continue; }
             // }}}
-            $paths[] = sprintf('%s/build/%s/%s%s.js',
+            $paths[] = sprintf('%s/build/%s',
                 $this->_yuiSettings['version'],
-                $file_data['core'],
-                $file_data['map'],
-                $extension
+                $path
                 );
             // if rollup, make sure output list is updated with all libraries {{{
-            if (array_key_exists('lookup', $file_data)) {
-                $lookup = $file_data['lookup'];
-                foreach ($this->_yuiModules as $key=>$temp_data) {
-                    if (array_key_exists($lookup,$temp_data) && $temp_data[$lookup]) {
-                        $this->_outputList[] = 'YAHOO/'.$key;
-                    }
+            if (array_key_exists('rollup', $file_data)) {
+                foreach ($file_data['supersedes'] as $library) {
+                    $this->_outputList[] = 'YAHOO/'.$library;
                 }
             }
             // }}}
@@ -303,11 +411,116 @@ class tgif_compiler_js extends tgif_compiler
                 case 'tagged': $cdn = $_TAG->url->chrome($_TAG->config('local_yui_relpath')); break;
                 default: $cdn = 'http://yui.yahooapis.com/';
             }
+            // }}}
         }
-        // }}}
         foreach ($paths as $path) {
             $returns[] = $cdn.$path;
         }
+        return $returns;
+    }
+    // }}}
+    // OVERRIDES TO INJECT YUI and i18n
+    // {{{ - _buildFiles($fileListData[, $forceCat])
+    /**
+     * Returns a list of files into urls.
+     *
+     * This has special handling for the case where we have YUI libraries.
+     * It also has handles the case where files have localizations. Note
+     * that in order for this to work, we assume (as is the case) that you've
+     * already called {@link tag_intl::set_locale()}.
+     */
+    protected function _buildFiles($fileListData, $forceCat = false)
+    {
+        global $_TAG;
+        $files = array();
+        $yui_libs = array();
+        // {{{ construct parallel lists of files (injecting and compiling strings)...
+        foreach ($fileListData as $file_data) {
+            if ($file_data['is_file']) {
+                $files[] = $file_data;
+                if (array_key_exists('l10n_path',$file_data)) {
+                    // Generate target file name
+                    $outfile = $this->_l10nFilename($file_data);
+                    // Test existence of file
+                    if (empty($file_data['exists'][$outfile])) {
+                        // Compile file for locale
+                        call_user_func($this->_l10nGenerator, $file_data['l10n_path'], $outfile);
+                        $file_data['exists'][$outfile] = true;
+                        // Update file_data in memcache
+                        $key =  $this->_generateKey($file_data['name']);
+                        tag_global_loader::save_to_cache($key, $file_data, $this->_useSmem, $this->_useMemcache);
+                    }
+                    // okay, now we can mess with the file_data hack the path
+                    // to load in the l10n javascript this time. :-)
+                    $file_data['dependencies'] = array($file_data['name']);
+                    // TODO: probably should modify signature????
+                    $file_data['name']        .= '.'.tag_intl::get_locale();
+                    $file_data['url']          = $this->_l10nTargetToUrl($outfile);
+                    $file_data['file_path']    = $outfile;
+                    $file_data['exists']       = 'l10n self'; // clear it and self identify
+                    $file_data['locale']       = tag_intl::get_locale(); // not really used
+                    $files[] = $file_data;
+                }
+            } else {
+                $yui_libs[] = $file_data;
+            }
+        }
+        // }}}
+        $lib_urls = array();
+        // do YUI libs first!
+        $return = array_merge($this->_generateYuiUrls($yui_libs), parent::_buildFiles($files, $forceCat));
+        return $return;
+    }
+    // }}}
+    // {{{ - _generateFileData($fileName)
+    /**
+     * Generate file data.
+     *
+     * This version works differently if the library is YUI. It also checks for
+     * localization stuff.
+     *
+     * Note that since signature is not modified, be sure to clear the cache
+     * storing the file data (usually smem) before adding a localization string
+     * file.
+     */
+    protected function _generateFileData($fileName)
+    {
+        global $_TAG;
+        if (strcmp(substr($fileName,0,6), 'YAHOO/')!==0) {
+            $return = parent::_generateFileData($fileName);
+            // inject in l10ns
+            $file_path = sprintf('%s/%s.php', $this->_l10nDir, substr($fileName,0,-3)); //strip out .js
+            if (!file_exists($file_path)) { return $return; }
+            //echo("path=".$file_path."\n");
+            $return['l10n_path'] = $file_path;
+            $return['exists'] = array(); // list of lang files generated
+            return $return;
+        }
+        // YAHOO UI Library case....
+        // $fileName = YAHOO/$lib_name
+        $lib_name = substr($fileName,6);
+        if (!array_key_exists($lib_name, $this->_yuiModules)) {
+            return false;
+        }
+        // JS support only
+        $returns = $this->_yuiModules[$lib_name];
+        if (strcmp('js',$returns['type'])!==0) { return false; }
+        $returns['name'] = $fileName;
+        $returns['is_file'] = false;
+        $returns['dependencies'] = array();
+        if (array_key_exists('requires',$returns)) {
+            foreach($returns['requires'] as $lib) {
+                $returns['dependencies'][] = 'YAHOO/'.$lib;
+            }
+            unset($returns['requires']);
+        }
+        if ($this->_yuiSettings['optional'] && !empty($returns['optional'])) {
+            foreach($returns['optional'] as $lib) {
+                $returns['dependencies'] = 'YAHOO/'.$lib;
+            }
+            unset($returns['optional']);
+        }
+        $returns['optional'] = array();
         return $returns;
     }
     // }}}

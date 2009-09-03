@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Generate YUI Loader</title>
+  <script type="text/javascript">
+  </script>
+  <script type="text/javascript">
+  </script>
+</head>
+<body>
+<textarea id="result" rows="40" cols="60">Result is injected here.</textarea>
+<script type="text/javascript">
+  var version = window.location.search.substring(1);
+
+  function load_js(fileUrl) {
+    var fileref=document.createElement('script');
+    fileref.setAttribute('type','text/javascript');
+    fileref.setAttribute('src',fileUrl);
+    //console.log(fileref);
+    document.getElementsByTagName('head')[0].appendChild(fileref);
+  }
+
+  if (version == '2.5.2') {
+    load_js('http://yui.yahooapis.com/'+version+'/build/yuiloader/yuiloader-beta.js');
+  } else {
+    load_js('http://yui.yahooapis.com/'+version+'/build/yuiloader/yuiloader.js');
+  }
+  load_js('http://yui.yahooapis.com/'+version+'/build/json/json.js');
+  window.onload = function() {
+    var loader = new YAHOO.util.YUILoader();
+    document.getElementById('result').innerHTML = YAHOO.lang.JSON.stringify(loader.moduleInfo); 
+  };
+</script>
+</body>
+</html>

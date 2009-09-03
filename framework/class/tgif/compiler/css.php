@@ -54,6 +54,17 @@ class tgif_compiler_css extends tgif_compiler
         parent::__construct($options);
     }
     // }}}
+    // {{{ __sleep()
+    /**
+     * Make sure temporary structures aren't stored between saves.
+     *
+     * This includes {@link $_strings}.
+     */
+    function _sleep()
+    {
+        return array_merge(parent::__sleep(), array( '_html', '_html_with_id', '_javaCmd',));
+    }
+    // }}}
     // {{{ - _compileFileExec($targetPath, $sourcePath)
     /**
      * Exec command to compile from one file to another
