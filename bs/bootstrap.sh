@@ -302,5 +302,6 @@ popd
 # }}}
 #echo "### Running phpdoc"
 #./bs/phpdoc.sh
-echo '### You may need to add  stuff to your php.ini and restart'
-$SUDO $APACHECTL restart
+echo '### You may need to add stuff to your /etc/php.ini (or etc/php.d/) and restart'
+echo '### NB: There is a bug in Savant PHP Fatal error:  Method Savant3::__tostring() cannot take arguments in /usr/share/pear/Savant3.php on line 241'
+$SUDO $APACHECTL graceful
