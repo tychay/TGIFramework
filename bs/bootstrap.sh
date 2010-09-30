@@ -1,6 +1,6 @@
 #!/bin/sh
 # vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker:
-# This boostraps the framework, be sure to execute from base directory
+# This boostraps the framework, be sure to execute from base directory (not this directory) i.e.: $ ./bs/bootstrap.sh
 # EDITME: Set the full path to binaries {{{
 # Should it run as sudo? {{{
 SUDO='sudo'
@@ -9,12 +9,17 @@ BASE_DIR=`pwd`
 PHP=`which php`
 APACHECTL=`which apachectl`
 LIBMEMCACHED=""
-PHP_INI=/etc/php.ini # check php --ini
+PHP_INI=/etc/php.ini # TODO: check php --ini
+DISTRIBUTION='fedora'
+DO_UPGRADE='' #Set this to upgrade
+
 # MacPorts
-#PHP=/opt/local/bin/php
-APACHECTL=/opt/local/apache2/bin/apachectl
-#PHP_INI=/opt/local/etc
-PHP_INI=/opt/local/etc/php.ini
+if [ $DISTRIBUTION = "macports" ]; then
+    #PHP=/opt/local/bin/php
+    APACHECTL=/opt/local/apache2/bin/apachectl
+    #PHP_INI=/opt/local/etc
+    PHP_INI=/opt/local/etc/php.ini
+fi
 
 # Path to libmemcached (to use php-memcached instead of php-memcache)
 #LIBMEMCACHED=/opt/local
@@ -105,8 +110,10 @@ fi
 # }}}
 # Install APC {{{
 if [ `$PHP_EXT_TEST apc` ]; then
-    echo '### UPGRADING APC...';
-    $SUDO pecl upgrade $APC
+    if [ $DO_UPGRADE ]; then
+        echo '### UPGRADING APC...';
+        $SUDO pecl upgrade $APC
+    fi
 else
     echo '### INSTALLING APC';
     $SUDO pecl install $APC
@@ -115,9 +122,11 @@ fi
 # }}}
 # Install runkit {{{
 if [ `$PHP_EXT_TEST runkit` ]; then
-    echo '### UPGRADING RUNKIT....';
-    if [ $RUNKIT != 'cvs' ]; then
-        $SUDO pecl upgrade $RUNKIT
+    if [ $DO_UPGRADE ]; then
+        echo '### UPGRADING RUNKIT....';
+        if [ $RUNKIT != 'cvs' ]; then
+            $SUDO pecl upgrade $RUNKIT
+        fi
     fi
 else
     echo '### INSTALLING RUNKIT';
@@ -128,36 +137,45 @@ else
     else
         pushd packages
             if [ ! -d pecl/runkit ]; then
-                cvs -d :pserver:cvsread@cvs.php.net:/repository checkout  pecl/runkit
+                # PHP migrated to svn
+                #cvs -d :pserver:cvsread@cvs.php.net:/repository checkout  pecl/runkit
+                svn co http://svn.php.net/repository/pecl/runkit/trunk/ pecl/runkit
             fi
             pushd pecl/runkit
-                cvs update
+                #cvs update
+                svn update
                 make distclean
+                # Apply patch for bug http://pecl.php.net/bugs/bug.php?id=13363
+                patch -p0 <$BASE_DIR/bs/runkit-bug13363.diff 
                 phpize
                 ./configure --enable-runkit
                 make
                 make test
                 $SUDO make install
             popd
-         popd packages
+         popd
     fi
     echo 'be sure to add to your php.ini: extension=runkit.so'
 fi
 # }}}
 # Install XDEBUG {{{
 if [ `$PHP_EXT_TEST xdebug` ]; then
-    echo '### UPGRADING XDEBUG...';
-    $SUDO pecl upgrade $XDEBUG
+    if [ $DO_UPGRADE ]; then
+        echo '### UPGRADING XDEBUG...';
+        $SUDO pecl upgrade $XDEBUG
+    fi
 else
     echo '### INSTALLING XDEBUG';
     $SUDO pecl install $XDEBUG
-    echo 'be sure to add to your php.ini: zend_extension="<something>/xdebug.so"'
+    echo 'be sure to add to your php.ini: zend_extension="<something>/xdebug.so" NOT! extension=xdebug.so'
 fi
 # }}}
 # Install inclued {{{
 if [ `$PHP_EXT_TEST inclued` ]; then
-    echo '### UPGRADING INCLUED...';
-    $SUDO pecl upgrade $INCLUED
+    if [ $DO_UPGRADE ]; then
+        echo '### UPGRADING INCLUED...';
+        $SUDO pecl upgrade $INCLUED
+    fi
 else
     echo '### INSTALLING INCLUED';
     $SUDO pecl install $INCLUED
@@ -167,8 +185,10 @@ fi
 # Install memcache {{{
 if [ `$PHP_EXT_TEST $MEMCACHE_PKG` ]; then
     if [ $MEMCACHE_PKG == 'memcache' ]; then
-        echo "### UPGRADING ${MEMCACHE_PKG}...";
-        $SUDO pecl upgrade $MEMCACHE
+        if [ $DO_UPGRADE ]; then
+            echo "### UPGRADING ${MEMCACHE_PKG}...";
+            $SUDO pecl upgrade $MEMCACHE
+        fi 
     else
         echo "### $MEMCACHE_PKG ALREADY INSTALLED";
     fi
