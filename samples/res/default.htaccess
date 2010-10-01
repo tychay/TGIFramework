@@ -25,7 +25,8 @@ php_flag short_open_tag 0
 # function generates a guess_timezone() command that both throws a supressed
 # error (in VERBOSE mode) and makes a system call date_default_timezone_set().
 # These calls add up
-php_value date.timezone 'America/Los_Angeles'
+#php_value date.timezone 'America/Los_Angeles'
+php_value date.timezone 'UTC'
 
 # APC ##########################################################################
 # Monitor this using apc.php, set in php.ini
@@ -61,8 +62,12 @@ php_flag inclued.enabled 0
 
 ############################################################ DEVELOPMENT VERSION
 # ERROR ########################################################################
-# turn every error on for debugging
-php_value error_reporting 2147483647
+# turn every error on for debugging (and disply them)
+#php_value error_reporting 2147483647
+php_value error_reporting -1
+php_flag display_errors 1
+php_flag html_errors 1
+
 # APC ##########################################################################
 # INCLUED ######################################################################
 # These don't seem to work

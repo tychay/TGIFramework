@@ -512,7 +512,7 @@ class tgif_diagnostics
                 : $this->server;
         $this->_timers[$timerName]->stop(); // stop is the same as a "lap" timer
         return sprintf(
-            '%d %.1f%s %s',
+            '%d %.1f%sMB %s',
             $this->_timers[$timerName]->timeTaken*1000,
             $this->setPeakMemory()/1024/1024,
             $peak,

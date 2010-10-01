@@ -115,7 +115,7 @@ class tgif_benchmark_iterate
         $function = array_shift($args);
         $this->_functionName = self::_parse_callback($function);
         $this->_numIteration = $max;
-        if ($this->_defaultBehavior) {
+        if ($this->_defaultBehavior) { // run timers each iteration
             // clear the timers {{{
             $this->_timer->start();
             $this->_timer->stop();
@@ -135,7 +135,7 @@ class tgif_benchmark_iterate
                 $this->_nullTimer->stop(true);
             }
             // }}}
-        } else {
+        } else { // time the overall thing only
             // time run {{{
             $this->_timer->start();
             for ($i=0; $i<$max; ++$i) {
@@ -182,6 +182,7 @@ class tgif_benchmark_iterate
             // time run {{{
             for ($i=0; $i<$max; ++$i) {
                 $fargs = call_user_func_array($generator, $args);
+                if (!is_array($fargs)) { $fargs = array($fargs); } // make sure we pass array into call_user_func_array();
                 $this->_timer->start();
                 call_user_func_array($function, $fargs);
                 $this->_timer->stop(true);
@@ -199,6 +200,7 @@ class tgif_benchmark_iterate
             $this->_timer->start();
             for ($i=0; $i<$max; ++$i) {
                 $fargs = call_user_func_array($generator, $args);
+                if (!is_array($fargs)) { $fargs = array($fargs); } //makre sure we pass array into call_user_func_array();
                 call_user_func_array($function, $fargs);
             }
             $this->_timer->stop();
@@ -275,9 +277,11 @@ class tgif_benchmark_iterate
                 $bench['compare'] = 0;
             }
             foreach (array('time','rtime','stime','utime') as $key) {
-                $ratio = 1 - abs(($bench[$key] * $count_ref) / ($bench_ref[$key] * $count));
+                $ratio = 1 - abs(($bench[$key] * $count_ref) / ($bench_ref[$key] * $count + .000000001)); //the small number add prevents division by zero
                 // if it is positive, then flip the denominator
-                if ($ratio > 0) {
+                if ($ratio == 1) {
+                    $ratio = 'Inf';
+                } elseif ($ratio > 0) {
                     $ratio = 1/(1-$ratio);
                 }
                 $bench[$key.'_diff'] = $ratio;
@@ -291,6 +295,7 @@ class tgif_benchmark_iterate
     /**
      * Format a table of output from the compare function.
      *
+     * Added mouseover with the actual times computed
      * @param array $results Output from {@link compare()}.
      * @return string HTML output
      */
@@ -323,11 +328,13 @@ class tgif_benchmark_iterate
         );
         // }}}
         foreach ($results as $result) {
-            $return .= sprintf('<tr><td>%s</td><td style="background:#%s">%.2fx</td><td style="background:#%s">%.2fx</td>',
+            $return .= sprintf('<tr><td>%s</td><td style="background:#%s" title="%f">%.2fx</td><td style="background:#%s" title="%f">%.2fx</td>',
                 $result['name'],
                 self::_hex_color($result['time']/$result['count'], $min_time, $max_time),
+                $result['time']/$result['count'],
                 $result['time_diff'],
                 self::_hex_color($result['rtime']/$result['count'],$min_rtime, $max_rtime),
+                $result['rtime']/$result['count'],
                 $result['rtime_diff']
             );
         }

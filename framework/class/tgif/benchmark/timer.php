@@ -69,7 +69,7 @@ class tgif_benchmark_timer
     private $_summary = array();
     // }}}
     // RESERVED METHODS
-    // {{{- __construct()
+    // {{{- __construct($shouldStart[$trackRSuage])
     /**
      * Constructor for object.
      *
@@ -241,6 +241,10 @@ class tgif_benchmark_timer
             return bcadd($time1, $time2, 6);
         }
         // }}}
+        if (!$time1) { $time1 = '0.0'; }
+        if (!$time2) { $time2 = '0.0'; }
+        if (!strpos($time1,'.')) { $time1 .= '.0'; }
+        if (!strpos($time2,'.')) { $time2 .= '.0'; }
         list($end_usec, $end_sec) = explode('.', $time1);
         list($start_usec, $start_sec) = explode('.',$time2);
         $usec = ('0.'.$end_usec) + ('0.'+$start_usec);
@@ -267,6 +271,10 @@ class tgif_benchmark_timer
             return bcsub($time1, $time2, 6);
         }
         // }}}
+        if (!$time1) { $time1 = '0.0'; }
+        if (!$time2) { $time2 = '0.0'; }
+        if (!strpos($time1,'.')) { $time1 .= '.0'; }
+        if (!strpos($time2,'.')) { $time2 .= '.0'; }
         list($end_usec, $end_sec) = explode('.', $time1);
         list($start_usec, $start_sec) = explode('.',$time2);
         $usec = ('0.'.$end_usec) - ('0.'.$start_usec);
@@ -301,6 +309,7 @@ class tgif_benchmark_timer
         list($end_usec, $end_sec) = explode(' ', $time1);
         list($start_usec, $start_sec) = explode(' ',$time2);
         $usec = $end_usec - $start_usec;
+        if ($usec == 0) { $usec = '0.0'; } //edge case: zero seconds (microtime not really a microtime)
         $carry = 0;
         if ($usec < 0) {
             $usec = 1 + $usec;
