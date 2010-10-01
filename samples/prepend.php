@@ -5,8 +5,13 @@
  * Initialize the configuration on every page in the TGIFramework samples. This
  * is called automatically on the page.
  *
+ * You can use this script for other sites either as-is or copy and modify.
+ * If you would like to use as-is, set the {@link APP_DIR} before calling this
+ * script and you might want to drop in a symbol file (__symbol.php) in that
+ * directory.
+ *
  * @package tgisamples
- * @copyright 2009 terry chay
+ * @copyright 2009-2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
  */
@@ -26,10 +31,12 @@ define('BASE_DIR', dirname(dirname(realpath(__FILE__))));
 define('TGIF_DIR', BASE_DIR.DIRECTORY_SEPARATOR.'framework');
 // }}}
 // APP_DIR {{{
-/**
- * The directory where app code is stored
- */
-define('APP_DIR', BASE_DIR.DIRECTORY_SEPARATOR.'samples');
+if (!defined('APP_DIR')) {
+    /**
+     * The directory where app code is stored (this can be overridden before using this script)
+     */
+    define('APP_DIR', BASE_DIR.DIRECTORY_SEPARATOR.'samples');
+}
 // }}}
 // APP_CLASS_DIR {{{
 /**
@@ -49,12 +56,19 @@ define('APP_INC_DIR', APP_DIR.DIRECTORY_SEPARATOR.'inc');
  */
 define('APP_CLASSMAP_PATH', APP_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php');
 // }}}
-// SYMBOL_FILE {{{
-/*
- * Where to find the symbol file
- */
-//define('SYMBOL_FILE', APP_DIR.DIRECTORY_SEPARATOR.'__symbol.php');
-$symbol = 'SAM'; //Samples
+// $symbol {{{
+$symbol_file = APP_DIR.DIRECTORY_SEPARATOR.'__symbol.php');
+if (file_exists($symbol_file)) {
+    /**
+     * @global string
+     * The symbol. This is a three letter code put in from of any configurations
+     * that are cached in order to prevent two applications running on the same
+     * machine and/or memcache from overwriting each others variables.
+     */
+    $symbol = include($symbol_file);
+} else {
+    $symbol = 'SAM'; //Samples
+}
 // }}}
 // TGIF_CONF_PATH {{{
 /*
