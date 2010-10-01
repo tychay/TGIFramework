@@ -24,10 +24,41 @@ fi
 # Path to libmemcached (to use php-memcached instead of php-memcache)
 #LIBMEMCACHED=/opt/local
 # }}}
+# shell function declarations {{{
+pear_installed () { pear list -a | grep ^$1 | wc -l ; }
+# {{{  pecl_update_or_install()
+# $1 = package name
+# $2 = package name in pecl (may have -beta or the like)
+pecl_update_or_install () {
+    if [ `$PHP_EXT_TEST $1` ]; then
+        if [ $DO_UPGRADE ]; then
+            if [ $DISTRIBUTION = 'fedora' ]; then
+                $SUDO yum update php-pecl-$1
+            else
+                echo "### UPGRADING $1...";
+                $SUDO pecl upgrade $2
+            fi
+        fi
+    else
+        if [ $DISTRIBUTION = 'fedora' ]; then
+            $SUDO yum install php-pecl-$1
+        else
+            echo "### INSTALLING $1";
+            $SUDO pecl install $2
+            if [ $1 = 'xdebug']; then
+                echo 'be sure to add to your php.ini: zend_extension="<something>/xdebug.so" NOT! extension=xdebug.so'
+            else
+                echo "Be sure to add to your php.ini: extension=$1.so"
+            fi
+        fi
+        $PACKAGES_INSTALLED="$1 $PACKAGES_INSTALLED"
+    fi
+}
+# }}}
+# }}}
 # UTILS {{{
 PHP_EXT_TEST=$BASE_DIR/bs/extension_installed.php
 PHP_VERSION_TEST=$BASE_DIR/bs/version_compare.php
-pear_installed () { pear list -a | grep ^$1 | wc -l ; }
 # }}}
 # PACKAGES {{{
 # php extensions {{{
@@ -97,9 +128,11 @@ fi
 # Install/update PEAR {{{
 if [ `which pear` ]; then
     $SUDO pear config-set php_bin $PHP
-    $SUDO pear upgrade-all
-    $SUDO pear channel-update pear.php.net
-    $SUDO pear channel-update pecl.php.net
+    if [ $DO_UPGRADE ]; then
+        $SUDO pear upgrade-all
+        $SUDO pear channel-update pear.php.net
+        $SUDO pear channel-update pecl.php.net
+    fi
 else
     $SUDO $PHP -q bs/go-pear.php
 fi
@@ -109,16 +142,7 @@ if [ `which pecl` ]; then
 fi
 # }}}
 # Install APC {{{
-if [ `$PHP_EXT_TEST apc` ]; then
-    if [ $DO_UPGRADE ]; then
-        echo '### UPGRADING APC...';
-        $SUDO pecl upgrade $APC
-    fi
-else
-    echo '### INSTALLING APC';
-    $SUDO pecl install $APC
-    echo 'be sure to add to your php.ini: extension=apc.so'
-fi
+pecl_update_or_install xdebug $XDEBUG
 # }}}
 # Install runkit {{{
 if [ `$PHP_EXT_TEST runkit` ]; then
@@ -159,16 +183,7 @@ else
 fi
 # }}}
 # Install XDEBUG {{{
-if [ `$PHP_EXT_TEST xdebug` ]; then
-    if [ $DO_UPGRADE ]; then
-        echo '### UPGRADING XDEBUG...';
-        $SUDO pecl upgrade $XDEBUG
-    fi
-else
-    echo '### INSTALLING XDEBUG';
-    $SUDO pecl install $XDEBUG
-    echo 'be sure to add to your php.ini: zend_extension="<something>/xdebug.so" NOT! extension=xdebug.so'
-fi
+pecl_update_or_install xdebug $XDEBUG
 # }}}
 # Install inclued {{{
 if [ `$PHP_EXT_TEST inclued` ]; then
@@ -186,8 +201,12 @@ fi
 if [ `$PHP_EXT_TEST $MEMCACHE_PKG` ]; then
     if [ $MEMCACHE_PKG == 'memcache' ]; then
         if [ $DO_UPGRADE ]; then
-            echo "### UPGRADING ${MEMCACHE_PKG}...";
-            $SUDO pecl upgrade $MEMCACHE
+            if [ $DISTRIBUTION = 'fedora' ]; then
+                $SUDO yum install php-pecl-memcache
+            else
+                echo "### UPGRADING ${MEMCACHE_PKG}...";
+                $SUDO pecl upgrade $MEMCACHE
+            fi
         fi 
     else
         echo "### $MEMCACHE_PKG ALREADY INSTALLED";
@@ -195,23 +214,31 @@ if [ `$PHP_EXT_TEST $MEMCACHE_PKG` ]; then
 else
     echo "### INSTALLING ${MEMCACHE_PKG}...";
     if [ $MEMCACHE_PKG == 'memcache' ]; then
-        $SUDO pecl install $MEMCACHE
+        if [ $DISTRIBUTION = 'fedora' ]; then
+            $SUDO yum install php-pecl-memcache
+        else
+            $SUDO pecl install $MEMCACHE
+        fi
     else
-        pushd packages
-            pecl download $MEMCACHE
-        popd
-        pushd build
-            rm -rf *
-            gzip -dc ../packages/${MEMCACHE_PKG}*.tgz | tar xf -
-            pushd ${MEMCACHE_PKG}*
-                phpize
-                ./configure --with-libmemcached-dir=${LIBMEMCACHED}
-                make
-                $SUDO make install
+        if [ $DISTRIBUTION = 'memcache' ]; then
+            $SUDO yum install php-pecl-$MEMCACHE_PKG
+        else
+            pushd packages
+                pecl download $MEMCACHE
             popd
-        popd.
+            pushd build
+                rm -rf *
+                gzip -dc ../packages/${MEMCACHE_PKG}*.tgz | tar xf -
+                pushd ${MEMCACHE_PKG}*
+                    phpize
+                    ./configure --with-libmemcached-dir=${LIBMEMCACHED}
+                    make
+                    $SUDO make install
+                popd
+            popd
+        fi
     fi
-    $PACKAGES_INSTALLED = "$MEMCACHE_PKG $PACKAGES_INSTALLED"
+    $PACKAGES_INSTALLED="$MEMCACHE_PKG $PACKAGES_INSTALLED"
     echo "### Be sure to add to your php.ini: extension=${MEMCACHE_PKG}.so"
 fi
 # }}}
