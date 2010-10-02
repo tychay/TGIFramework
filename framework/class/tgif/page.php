@@ -5,7 +5,7 @@
  *
  * @package tgiframework
  * @subpackage ui
- * @copyright 2007 Tagged, Inc. <http://www.tagged.com/>, 2009 terry chay <tychay@php.net>
+ * @copyright 2007 Tagged, Inc. <http://www.tagged.com/>, 2009-2010 terry chay <tychay@php.net>
  * @todo Since Savant doesn't seem to be maintained anymore and I don't use
  * much of it's features, consider just forking the codebase.
  */
@@ -22,7 +22,7 @@ require_once 'Savant3.php';
  * @package tgiframework
  * @subpackage ui
  * @author terry chay <tychay@php.net>
- * @author Mark Jen <markjen@tagged.net>
+ * @author Mark Jen <markjen@tagged.com>
  */
 class tgif_page
 {

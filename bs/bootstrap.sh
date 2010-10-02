@@ -2,16 +2,19 @@
 # vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker:
 # This boostraps the framework, be sure to execute from base directory (not this directory) i.e.: $ ./bs/bootstrap.sh
 # EDITME: Set the full path to binaries {{{
-# Should it run as sudo? {{{
+# Should it run as sudo? 
 SUDO='sudo'
-# }}}
+
+# execute from the base directory not this one
 BASE_DIR=`pwd`
+
 PHP=`which php`
 APACHECTL=`which apachectl`
+# Set this to php-memcached instead of php-memcache
 LIBMEMCACHED=""
 PHP_INI=/etc/php.ini # TODO: check php --ini
 DISTRIBUTION='fedora'
-DO_UPGRADE='' #Set this to upgrade
+DO_UPGRADE='1' #Set this to upgrade
 
 # MacPorts
 if [ $DISTRIBUTION = "macports" ]; then
@@ -19,10 +22,14 @@ if [ $DISTRIBUTION = "macports" ]; then
     APACHECTL=/opt/local/apache2/bin/apachectl
     #PHP_INI=/opt/local/etc
     PHP_INI=/opt/local/etc/php.ini
+    # Set path to libmemcached (to use php-memcached instead of php-memcache)
+    #LIBMEMCACHED=/opt/local
 fi
 
-# Path to libmemcached (to use php-memcached instead of php-memcache)
-#LIBMEMCACHED=/opt/local
+if [ $DISTRIBUTION = 'fedora' ]; then
+    # Set path to libmemcached (to use php-memcached instead of php-memcache)
+    LIBMEMCACHE=/usr/lib64
+fi
 # }}}
 # shell function declarations {{{
 pear_installed () { pear list -a | grep ^$1 | wc -l ; }
@@ -33,6 +40,7 @@ pecl_update_or_install () {
     if [ `$PHP_EXT_TEST $1` ]; then
         if [ $DO_UPGRADE ]; then
             if [ $DISTRIBUTION = 'fedora' ]; then
+                echo "### UPDATING $1...";
                 $SUDO yum update php-pecl-$1
             else
                 echo "### UPGRADING $1...";
@@ -40,18 +48,40 @@ pecl_update_or_install () {
             fi
         fi
     else
+        echo "### INSTALLING $1";
         if [ $DISTRIBUTION = 'fedora' ]; then
             $SUDO yum install php-pecl-$1
         else
-            echo "### INSTALLING $1";
             $SUDO pecl install $2
             if [ $1 = 'xdebug']; then
-                echo 'be sure to add to your php.ini: zend_extension="<something>/xdebug.so" NOT! extension=xdebug.so'
+                echo '### Be sure to add to your php.ini: zend_extension="<something>/xdebug.so" NOT! extension=xdebug.so'
             else
-                echo "Be sure to add to your php.ini: extension=$1.so"
+                echo "### Be sure to add to your php.ini: extension=$1.so"
             fi
         fi
-        $PACKAGES_INSTALLED="$1 $PACKAGES_INSTALLED"
+        PACKAGES_INSTALLED="$1 $PACKAGES_INSTALLED"
+    fi
+}
+# }}}
+# {{{  pear_update_or_install()
+# $1 = package name
+# $2 = package name in pear (may have -beta or the like)
+# $3 = pear channel
+pear_update_or_install () {
+    if [ $2 ]; then
+        pkg_path=$2;
+    else
+        pkg_path=$1;
+    fi
+    if [ `pear_installed $1` ]; then
+        echo "### UPGRADING $1...";
+        $SUDO pear upgrade $pkg_path
+    else
+        echo "### INSTALLING $1";
+        if [ $3 ]; then
+            $SUDO pear channel-discover $3
+        fi
+        $SUDO pear install $pkg_path
     fi
 }
 # }}}
@@ -72,13 +102,14 @@ if [ `$PHP_VERSION_TEST 5.2` ]; then
 fi
 # }}}
 # APC {{{
+#http://pecl.php.net/package/apc
 APC='apc'
 if [ `$PHP_VERSION_TEST 5.3` ]; then
     APC='apc-beta'
 fi
 #APC='http://pecl.php.net/get/APC'
 # }}}
-INCLUED='inclued-alpha'
+INCLUED='inclued-beta' #2010-02-22 it went beta, see http://pecl.php.net/package/inclued
 XDEBUG='xdebug'
 # MEMCACHE {{{
 MEMCACHE_PKG='memcache'
@@ -90,12 +121,10 @@ fi
 # }}}
 # }}}
 # pear packages {{{
-SAVANT='http://phpsavant.com/Savant3-3.0.0.tgz'
-# FIREPHP {{{
-FIREPHP_CHANNEL='pear.firephp.org'
-FIREPHP='FirePHPCore'
-# }}}
-PHPDOC='PhpDocumentor'
+#SAVANT='http://phpsavant.com/Savant3-3.0.0.tgz'
+#FIREPHP_CHANNEL='pear.firephp.org'
+#FIREPHP='FirePHPCore'
+#PHPDOC='PhpDocumentor'
 # }}}
 # downloads {{{
 # WEBGRIND {{{
@@ -142,7 +171,7 @@ if [ `which pecl` ]; then
 fi
 # }}}
 # Install APC {{{
-pecl_update_or_install xdebug $XDEBUG
+pecl_update_or_install apc $APC
 # }}}
 # Install runkit {{{
 if [ `$PHP_EXT_TEST runkit` ]; then
@@ -186,87 +215,38 @@ fi
 pecl_update_or_install xdebug $XDEBUG
 # }}}
 # Install inclued {{{
-if [ `$PHP_EXT_TEST inclued` ]; then
-    if [ $DO_UPGRADE ]; then
-        echo '### UPGRADING INCLUED...';
-        $SUDO pecl upgrade $INCLUED
-    fi
-else
-    echo '### INSTALLING INCLUED';
-    $SUDO pecl install $INCLUED
-    echo 'be sure to add to your php.ini: extension=inclued.so'
+# No fedora package for inclued
+if [ $DISTRIBUTION = 'fedora' ]; then
+    DISTRIBUTION='xfedora';
+fi
+pecl_update_or_install inclued $INCLUED
+if [ $DISTRIBUTION = 'xfedora' ]; then
+    DISTRIBUTION='fedora';
 fi
 # }}}
 # Install memcache {{{
-if [ `$PHP_EXT_TEST $MEMCACHE_PKG` ]; then
-    if [ $MEMCACHE_PKG == 'memcache' ]; then
-        if [ $DO_UPGRADE ]; then
-            if [ $DISTRIBUTION = 'fedora' ]; then
-                $SUDO yum install php-pecl-memcache
-            else
-                echo "### UPGRADING ${MEMCACHE_PKG}...";
-                $SUDO pecl upgrade $MEMCACHE
-            fi
-        fi 
-    else
-        echo "### $MEMCACHE_PKG ALREADY INSTALLED";
-    fi
-else
-    echo "### INSTALLING ${MEMCACHE_PKG}...";
-    if [ $MEMCACHE_PKG == 'memcache' ]; then
-        if [ $DISTRIBUTION = 'fedora' ]; then
-            $SUDO yum install php-pecl-memcache
-        else
-            $SUDO pecl install $MEMCACHE
-        fi
-    else
-        if [ $DISTRIBUTION = 'memcache' ]; then
-            $SUDO yum install php-pecl-$MEMCACHE_PKG
-        else
-            pushd packages
-                pecl download $MEMCACHE
-            popd
-            pushd build
-                rm -rf *
-                gzip -dc ../packages/${MEMCACHE_PKG}*.tgz | tar xf -
-                pushd ${MEMCACHE_PKG}*
-                    phpize
-                    ./configure --with-libmemcached-dir=${LIBMEMCACHED}
-                    make
-                    $SUDO make install
-                popd
-            popd
-        fi
-    fi
-    $PACKAGES_INSTALLED="$MEMCACHE_PKG $PACKAGES_INSTALLED"
-    echo "### Be sure to add to your php.ini: extension=${MEMCACHE_PKG}.so"
-fi
+pecl_update_or_install $MEMCACHE_PKG $MEMCACE
+#pushd packages
+#pecl download $MEMCACHE
+#popd
+#pushd build
+#rm -rf *
+#gzip -dc ../packages/${MEMCACHE_PKG}*.tgz | tar xf -
+#pushd ${MEMCACHE_PKG}*
+#phpize
+#./configure --with-libmemcached-dir=${LIBMEMCACHED}
+#make
+#$SUDO make install
+#popd
+#popd
 # }}}
-# Install PEAR::Savant3 {{{
-if [ `pear_installed Savant3` != '0' ]; then
-#    $SUDO pear upgrade savant/$SAVANT
-    echo "No way of upgrading Savant3"
-else
-#    $SUDO pear channel-discover savant.pearified.com
-#    $SUDO pear install savant/$SAVANT
-    $SUDO pear install $SAVANT
-fi
-# }}}
-# Install PEAR::FirePHP {{{
-if [ `pear_installed firephp/FirePHPCore` ]; then
-    $SUDO pear upgrade firephp/$FIREPHP
-else
-    $SUDO pear channel-discover $FIREPHP_CHANNEL
-    #sudo pear channel-discover pear.firephp.org
-    $SUDO pear install firephp/$FIREPHP
-fi
-# }}}
-# Install PEAR::PhpDocumentor {{{
-if [ `pear_installed PhpDocumentor` != '0' ]; then
-    $SUDO pear upgrade $PHPDOC
-else
-    $SUDO pear install $PHPDOC
-fi
+# Install PEAR packages: {{{ Savant, FirePHP, PhpDocumentor
+# Old download was: SAVANT='http://phpsavant.com/Savant3-3.0.0.tgz'
+# Old Savant PEAR repository   $SUDO pear channel-discover savant.pearified.com
+pear_update_or_install Savant3 savant/Savant3 phpsavant.com
+#echo '### NB: There is a bug in Savant PHP Fatal error:  Method Savant3::__tostring() cannot take arguments in /usr/share/pear/Savant3.php on line 241'
+pear_update_or_install FirePHPCore firephp/FirePHPCore pear.firephp.org
+pear_update_or_install PhpDocumentor
 # }}}
 # Install YUI Compressor {{{
 pushd packages
@@ -329,6 +309,8 @@ popd
 # }}}
 #echo "### Running phpdoc"
 #./bs/phpdoc.sh
-echo '### You may need to add stuff to your /etc/php.ini (or etc/php.d/) and restart'
-echo '### NB: There is a bug in Savant PHP Fatal error:  Method Savant3::__tostring() cannot take arguments in /usr/share/pear/Savant3.php on line 241'
+if [ $PACKAGES_INSTALLED ]; then
+    echo '### You may need to add stuff to your /etc/php.ini (or etc/php.d/) and restart'
+    echo "###  $PACKAGES_INSTALLED"
+fi
 $SUDO $APACHECTL graceful

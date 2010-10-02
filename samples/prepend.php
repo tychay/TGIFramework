@@ -10,6 +10,9 @@
  * script and you might want to drop in a symbol file (__symbol.php) in that
  * directory.
  *
+ * If you want to copy this file, be sure to change {@link BASE_DIR},
+ * {@link TGIF_DIR} etc.
+ *
  * @package tgisamples
  * @copyright 2009-2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
@@ -57,7 +60,7 @@ define('APP_INC_DIR', APP_DIR.DIRECTORY_SEPARATOR.'inc');
 define('APP_CLASSMAP_PATH', APP_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php');
 // }}}
 // $symbol {{{
-$symbol_file = APP_DIR.DIRECTORY_SEPARATOR.'__symbol.php');
+$symbol_file = APP_DIR.DIRECTORY_SEPARATOR.'__symbol.php';
 if (file_exists($symbol_file)) {
     /**
      * @global string
