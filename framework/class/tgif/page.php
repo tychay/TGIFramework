@@ -6,8 +6,7 @@
  * @package tgiframework
  * @subpackage ui
  * @copyright 2007 Tagged, Inc. <http://www.tagged.com/>, 2009-2010 terry chay <tychay@php.net>
- * @todo Since Savant doesn't seem to be maintained anymore and I don't use
- * much of it's features, consider just forking the codebase.
+ * @todo fork Savant (remove plugin stuff etc.)
  */
 // imports {{{
 /**
@@ -24,32 +23,26 @@ require_once 'Savant3.php';
  * @author terry chay <tychay@php.net>
  * @author Mark Jen <markjen@tagged.com>
  */
-class tgif_page
+class tgif_page extends Savant3
 {
-    // {{{ - $savant
+    // {{{ __construct($config)
     /**
-     * @var Savant The view layer.
+     * @param override savant configuration
      */
-    protected  $savant;
-    // }}}
-    // {{{ __construct()
-    /**
-     * 
-     */
-    public function __construct()
+    public function __construct($config=array())
     {
         global $_TAG;
-        $this->savant = new Savant3();
-        $this->savant->addPath('template',APP_DIR.'/savant');
-    }
-    // }}}
-    // {{{ - assign($key,$value)
-    /**
-     * Alias for Savant::assign()
-     */
-    public function assign($key,$value)
-    {
-        return $this->savant->assign($key,$value);
+        if (isset($config['template_path'])) {
+            $config['template_path'] .= PATH_SEPARATOR . APP_DIR.'/savant';
+        } else {
+            $config['template_path'] = APP_DIR.'/savant';
+        }
+        if (isset($config['resource_path'])) {
+            $config['resource_path'] .= PATH_SEPARATOR . TGIF_CLASS_DIR.'/tgif/page';
+        } else {
+            $config['resource_path'] = TGIF_CLASS_DIR.'/tgif/page';
+        }
+        parent::__construct($config);
     }
     // }}}
     // {{{ - render($template)
@@ -68,7 +61,7 @@ class tgif_page
         // this buffer is caught below.
         ob_start();
         $result = $this->fetch($template);
-        if ($this->savant->isError($result)) {
+        if ($this->isError($result)) {
             // TODO: log error and redirect
             echo print_r($result, true);
             ob_end_flush();
@@ -87,31 +80,22 @@ class tgif_page
     // {{{ - fetch($template)
     /**
      * Simple call to run template and fetch html
+     *
      * @return string html output
      */
-    function fetch($template)
-    {
+    //function fetch($template)
+    //{
         // setup the locale for the render
         //$locale = tag_intl::detect_locale();
         //tag_intl::set_locale($locale);
         // render the savant page
-        $output = $this->savant->fetch($template);
+        //return parent::fetch($template);
 
         // reset locale back the english
         //tag_intl::set_locale('en_US');
 
-        return $output;
-    }
-    // }}}
-    // {{{ - isError($result)
-    /**
-     * Simple call to run template and fetch html
-     * @return boolean
-     */
-    function isError($result)
-    {
-        return $this->savant->isError($result);
-    }
+        //return $output;
+    //}
     // }}}
     // {{{ + close_connection($event)
     /**
