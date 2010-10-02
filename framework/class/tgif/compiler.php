@@ -86,7 +86,7 @@ class tgif_compiler
      * Whether or not we should use the release name as part of the file path
      * @var boolean
      */
-    protected _useReleaseName = false;
+    protected $_useReleaseName = false;
     // }}}
     // {{{ - $_signatureMode
     /**

@@ -65,7 +65,8 @@ class tgif_compiler_js extends tgif_compiler
         }
         $this->_useCat      = ($this->_yuiSettings['combine']);
         $this->_useCompiler = ($this->_javaCmd && $this->_yuiCompressor && (strcmp($this->_yuiSettings['filter'],'min')===0));
-        $this->_yuiModules  = include(sprintf('%s/yui-%s.php',dirname(__FILE__),$this->_yuiSettings['version']));
+        //$this->_yuiModules  = include(sprintf('%s/maps/yui-%s.php',dirname(__FILE__),$this->_yuiSettings['version']));
+        $this->_yuiModules  = $this->_loadYuiModuleInfo($this->_yuiSettings['version']);
         parent::__construct($options);
     }
     // }}}
@@ -93,9 +94,7 @@ class tgif_compiler_js extends tgif_compiler
     // {{{ _loadYuiModuleInfo($version)
     private function _loadYuiModuleInfo($version)
     {
-        return json_decode(file_get_contents(sprintf('%s/%s.json',dirname(__FILE__), $version)),true);
-        // oudated
-        //return include(sprintf('%s/yui-%s.php',dirname(__FILE__),$version));
+        return json_decode(file_get_contents(sprintf('%s/maps/yui-%s.json',dirname(__FILE__), $version)),true);
     }
     // }}}
     // {{{ - _compileFileExec($targetPath, $sourcePath)

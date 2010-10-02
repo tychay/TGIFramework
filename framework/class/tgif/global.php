@@ -562,7 +562,7 @@ class tgif_global
     {
         $configs = array();
         $filelist = array();
-        $config_dirs = explode(':',TGIF_DIR.DIRECTORY_SEPARATOR.'conf'.':'.TGIF_CONF_PATH);
+        $config_dirs = explode(PATH_SEPARATOR, TGIF_DIR.DIRECTORY_SEPARATOR.'conf'.PATH_SEPARATOR.TGIF_CONF_PATH);
         //var_dump($config_dirs);
         foreach ($config_dirs as $config_dir) {
             $this->_loadConfigDir($config_dir, $configs, $filelist);

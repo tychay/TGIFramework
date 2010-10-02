@@ -65,7 +65,7 @@ class tgif_global_object
     }
     // }}}
     // {{{ + config_replace($matches)
-    public function config_replace($matches)
+    public static function config_replace($matches)
     {
         global $_TAG;
         return $_TAG->config($matches[1]);
