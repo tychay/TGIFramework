@@ -556,7 +556,7 @@ class tgif_global
      * - configFiles: contains a list of config files that have been parsed
      *   to generate config
      *
-     * @todo introspect 1 level of array in config for expansion
+     * @todo introspect 1 level (or more) of array in config for expansion
      */
     private function _loadConfigs()
     {

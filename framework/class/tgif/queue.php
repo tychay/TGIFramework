@@ -212,7 +212,7 @@ class tgif_queue
      *
      * The prequeue is labeled thusly:
      *      _q-<event class>-<event_name>
-     * where the "-" replaces the " ". FOr instance:
+     * where the "-" replaces the " ". For instance:
      *      _q-object-tgif_page-output
      * corresponds to [object][tgif_page][output]
      * This consists of an array of all the listeners that have subscribed
@@ -223,7 +223,8 @@ class tgif_queue
      */
     function _loadPrequeue($queueClasses)
     {
-        global $_TAG;
+        //global $_TAG; //runkit
+        if (empty($_TAG)) { return; } //in some places, the global might be missing.
         $this_prequeue = '_q';
         $pos =& $this->_listeners;
         foreach($queueClasses as $class) {

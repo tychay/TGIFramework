@@ -14,6 +14,10 @@
  * (Abstract) base class for managing files that can be concatenated and
  * compiled for efficiency.
  *
+ * In order for this to work, it assumes that there is a $_TAG->url global
+ * set that has a method chrome() to take a path and create a url from it.
+ * Also, you must set a config parameter dir_static.
+ *
  * @package tgiframework
  * @subpackage ui
  * @author terry chay <tychay@php.net>
@@ -101,7 +105,7 @@ class tgif_compiler
     // }}}
     // {{{ - $_fileData
     /**
-     * An array indexed byi filename of the loading data associated with the
+     * An array indexed by filename of the loading data associated with the
      * file. The following hash keys:
      * - name (required): identical to the index
      * - is_file (required): if it is a file in the filesystem (and should be
@@ -137,13 +141,15 @@ class tgif_compiler
     /**
      * This is protected because this class is actually abstract
      * @param $options array A bunch of options to set
-     * @param $targetDir string The directory to write concatenated/compiled files to
-     * @param $trackFile string If specified, this generates a updates a PHP file at runtime with a compilation list
-     * @param $signatureMode string What sort of methodology to use when determining file info staleness
-     * @param $shouldCatenate boolean Should we attempt to turn everything into a single file as often as possible?
-     * @param $shouldCompile boolean Should we try to use the compiler whenever possible?
-     * @param $useSmem boolean Should we cache file info into the shared memory segment?
-     * @param $useMemecache boolean Should we cahce file info into the memcache?
+     * - resource_dir: string where the starting files can be found
+     * - target_dir: string The directory to write concatenated/compiled files to
+     * - track_file: string If specified, this generates a updates a PHP file at runtime with a compilation list
+     * - use_cat:  boolean Should we attempt to turn everything into a single file as often as possible?
+     * - use_compiler:  boolean Should we try to use the compiler whenever possible?
+     * - use_smem: boolean Should we cache file info into the shared memory segment?
+     * - use_memcache: boolean Should we cahce file info into the memcache?
+     * - use_release_name: boolean Should we use the release name as part of the file path?
+     * - signature_mode:  string What sort of methodology to use when determining file info staleness
      */
     protected function __construct($options)
     {
@@ -648,7 +654,6 @@ class tgif_compiler
      */
     final protected function _compileFileUsingFiles($filePath, $sourceFiles)
     {
-        //global $_TAG; //runkit
         $base_dir = dirname($filePath);
         // ensure path to source exists
         if (!file_exists($base_dir)) {

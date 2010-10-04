@@ -167,6 +167,7 @@ class tgif_diagnostics
     public function shutdown()
     {
         //global $_TAG; //runkit
+        if (empty($_TAG)) { return; } //sometimes $_TAG is missing
         $datasize = strlen(ob_get_contents());
         $this->setPeakMemory();
         // UDP Log page statistics {{{

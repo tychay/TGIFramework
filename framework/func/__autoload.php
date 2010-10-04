@@ -87,7 +87,7 @@ function __autoload($class_name)
     if (empty($map_table)) {
         //sprintf('__autoload(): %s forced load of classmaps',$class_name);
         //$map_table = include(APP_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php');
-       if (!$map_table = @$_TAG->classmaps) {
+       if (!$map_table = &$_TAG->classmaps) {
             // this should never be called. {{{
             $map_table = (defined('APP_CLASSMAP_PATH'))
                        ? include(APP_CLASSMAP_PATH)
