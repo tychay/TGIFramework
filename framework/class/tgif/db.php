@@ -4,7 +4,7 @@
  * Container for {@link tgif_db}
  *
  * @package tgiframework
- * @subpackage utilities
+ * @subpackage database
  * @copyright 2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  */
@@ -22,21 +22,12 @@ class tgif_db
 {
     // {{{ + pdo(…)
     /**
-     * wrapper to PDO constructor so PDOs can be globals directly
+     * Wrapper to {@link tgif_db_pdo PDO constructor} so PDOs can be globals
+     * directly
      */
     static function pdo()
     {
-        $args = func_get_args();
-        switch( func_num_args() ) {
-        case 1:
-            return new PDO($args[0]);
-        case 2:
-            return new PDO($args[0],$args[1]);
-        case 3:
-            return new PDO($args[0],$args[1],$args[2]);
-        case 4:
-            return new PDO($args[0],$args[1],$args[2],$args[3]);
-        }
+        return new tgif_db_pdo(func_get_args());
     }
     // }}}
 }
