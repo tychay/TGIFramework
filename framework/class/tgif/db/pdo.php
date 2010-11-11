@@ -20,6 +20,13 @@
 // }}}
 class tgif_db_pdo extends pdo
 {
+    // {{{ - $insertId
+    /**
+     * The last ID inserted
+     * @var integer
+     */
+    public $insertId = -1;
+    // }}}
     // {{{ __construct(…)
     /**
      * Calls PDO constructor using a single paramter array
@@ -44,7 +51,66 @@ class tgif_db_pdo extends pdo
         }
     }
     // }}}
-    // PUBLIC METHODS
+    // CREATE
+    // {{{ - insert($table,$data[,$format])
+    /**
+     * Insert a row into a table
+     *
+     * Unlike Wordpress DB, format is not supported
+     *
+     * @param string $table the name of the table to nsert data into
+     * @param array $data date to insert by key/value (no SQL escaping)
+     * @return boolean success or failure
+     * @todo is there backquoting in PDO?
+     */
+    function insert($table, $data)
+    {
+        // format query {{{
+        $keys = array_keys($data);
+        $values = array();
+        for ($i=0,$max=count($keys); $i<$max; ++$i) {
+            $key = $keys[$i];
+            //$keys[$i] = $key;
+            $values[$i] = ':'.$key;
+            $data[':'.$key] = $data[$key];
+            unset($data[$key]);
+        }
+        $query = sprintf('INSERT INTO %s (%s) VALUES (%s)',
+            $table,
+            implode(',',$keys),
+            implode(',',$values)
+        );
+        // }}}
+        //$sth = $this->_prepareQuery($query,$data);
+        $sth = $this->prepare($query);
+        $result = $sth->execute($data);
+        //$result = $sth->execute();
+        $this->insertId = $this->lastInsertId();
+        var_dump(array($query,$data,$result,$sth,$this->errorInfo(),$this->insertId));
+        return ($result) ? true : false;
+    }
+    // }}}
+    // READ
+    // {{{ - getResults($query[,$bindings,$output_type])
+    /**
+     * Select an entire row from a database.
+     *
+     * @param string $query SQL query to execute
+     * @param array $binding bind variables
+     * @param string $output_type OBJECT, ARRAY_A, or ARRAY_N. Unlike the
+     * WordPress db, this will default to ARRAY_A
+     * @return mixed the rows from the database. If no result found then null
+     * @todo support CLASS, BOUND, INTO, LAZY fetch types?
+     */
+    function getResults($query, $bindings=array(), $output_type='ARRAY_A')
+    {
+        $sth = $this->_prepareQuery($query,$bindings);
+
+        $sth->execute();
+
+        return $sth->fetchAll($this->_guessStyle($output_type));
+    }
+    // }}}
     // {{{ - getRow($query[,$bindings,$output_type,$row_offset])
     /**
      * Select an entire row from a database.
@@ -59,12 +125,6 @@ class tgif_db_pdo extends pdo
      */
     function getRow($query, $bindings=array(), $output_type='ARRAY_A', $row_offset=0)
     {
-        $fetch_style = PDO::FETCH_BOTH;
-        switch ($output_type) {
-            case 'ARRAY_A': $fetch_style = PDO::FETCH_ASSOC; break;
-            case 'ARRAY_N': $fetch_style = PDO::FETCH_NUM; break;
-            case 'OBJECT' : $fetch_style = PDO::FETCH_OBJ; break;
-        }
         $sth = $this->_prepareQuery($query,$bindings);
 
         $sth->execute();
@@ -75,7 +135,7 @@ class tgif_db_pdo extends pdo
             if (!$success) { return null; }
         }
 
-        return $sth->fetch($fetch_style);
+        return $sth->fetch($this->_guessStyle($output_type));
     }
     // }}}
     // {{{ - getVar($query[,$bindings,$column_offset,$row_offset])
@@ -104,6 +164,25 @@ class tgif_db_pdo extends pdo
     }
     // }}}
     // PRIVATE METHODS
+    // {{{ - _guessStyle($output_type)
+    /**
+     * Return the PDO fetch style.
+     *
+     * @param string $output_type OBJECT, ARRAY_A, or ARRAY_N. Unlike the
+     * WordPress db, this will default to ARRAY_A
+     * @return integer returns the PDO::FETCH_* constant
+     * @todo support CLASS, BOUND, INTO, LAZY fetch types?
+     */
+    private function _guessStyle($output_type)
+    {
+        switch ($output_type) {
+            case 'ARRAY_A': return PDO::FETCH_ASSOC;
+            case 'ARRAY_N': return PDO::FETCH_NUM;
+            case 'OBJECT' : return PDO::FETCH_OBJ;
+        }
+        return PDO::FETCH_BOTH;
+    }
+    // }}}
     // {{{ - _prepareQuery($query[,$bindings])
     /**
      * Prepares a query
