@@ -7,6 +7,7 @@
  * @subpackage utilities
  * @copyright 2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
+ * @todo is there backquoting in PDO? If so, update queries
  */
 // {{{ tgif_db_pdo
 // docs {{{
@@ -52,7 +53,7 @@ class tgif_db_pdo extends pdo
     }
     // }}}
     // CREATE
-    // {{{ - insert($table,$data[,$format])
+    // {{{ - insert($table,$data)
     /**
      * Insert a row into a table
      *
@@ -61,7 +62,6 @@ class tgif_db_pdo extends pdo
      * @param string $table the name of the table to nsert data into
      * @param array $data date to insert by key/value (no SQL escaping)
      * @return boolean success or failure
-     * @todo is there backquoting in PDO?
      */
     function insert($table, $data)
     {
@@ -86,7 +86,99 @@ class tgif_db_pdo extends pdo
         $result = $sth->execute($data);
         //$result = $sth->execute();
         $this->insertId = $this->lastInsertId();
-        var_dump(array($query,$data,$result,$sth,$this->errorInfo(),$this->insertId));
+        return ($result) ? true : false;
+    }
+    // }}}
+    // {{{ - update($table,$data,$where)
+    /**
+     * Update a row into a table
+     *
+     * Unlike Wordpress DB, format is not supported
+     *
+     * @param string $table the name of the table to nsert data into
+     * @param array $data date to insert by key/value (no SQL escaping)
+     * @param array $where WHERE clause. Multiple clauses joined by "AND"
+     * @return boolean success or failure
+     */
+    function update($table, $data, $where)
+    {
+        // format query {{{
+        $sets = array();
+        $wheres = array();
+        foreach ($data as $key=>$value) {
+            $sets[] = sprintf('%1$s=:%1$s', $key);
+            $data[':'.$key] = $value;
+            unset($data[$key]);
+        }
+        foreach ($where as $key=>$value) {
+            $wheres[] = sprintf('%1$s=:%1$s', $key);
+            $data[':'.$key] = $value;
+        }
+        $query = sprintf('UPDATE %s SET %s WHERE %s',
+            $table,
+            implode(',',$sets),
+            implode(' AND ',$wheres)
+        );
+        var_dump($query);
+        // }}}
+        //$sth = $this->_prepareQuery($query,$data);
+        $sth = $this->prepare($query);
+        $result = $sth->execute($data);
+        //$result = $sth->execute();
+        $this->insertId = $this->lastInsertId();
+        return ($result) ? true : false;
+    }
+    // }}}
+    // {{{ - insertOrUpdate($table,$data,$where[,$autoIncrement])
+    /**
+     * Inserts a row, if it exists update a row into a table
+     *
+     * @param string $table the name of the table to nsert data into
+     * @param array $data date to insert by key/value (no SQL escaping)
+     * @param array $where WHERE clause. Multiple clauses joined by "AND"
+     * @param string $autoIncrement If set, this is the ID of the auto
+     * increment value in order to make the last_insert_id meaningful
+     * http://dev.mysql.com/doc/refman/5.0/en/insert-on-duplicate.html
+     * (note if the insert or update is different, then it will still
+     * be invalid).
+     * @return boolean success or failure
+     */
+    function insertOrUpdate($table, $data, $where, $autoIncrement='')
+    {
+        // format query {{{
+        $keys = array_keys($data);
+        $values = array();
+        $sets = array();
+        $wheres = array();
+        for ($i=0,$max=count($keys); $i<$max; ++$i) {
+            $key            = $keys[$i];
+            $value          = $data[$key];
+
+            $data[':'.$key] = $data[$key];
+            $values[$i]     = ':'.$key;
+            $sets[]         = sprintf('%1$s=:%1$s', $key);
+
+            unset($data[$key]);
+        }
+        foreach ($where as $key=>$value) {
+            $data[':'.$key] = $value;
+            $keys[$i]       = $key;
+            $values[$i]     = ':'.$key;
+            ++$i;
+            //$wheres[]       = sprintf('%s=%s', $key, $this->quote($value));
+        }
+        $query = sprintf('INSERT INTO %s (%s) VALUES (%s) ON DUPLICATE KEY UPDATE %s%s',
+            $table,
+            implode(',',$keys),
+            implode(',',$values),
+            ($autoIncrement) ? sprintf('%1$s=LAST_INSERT_ID(%1$s),', $autoIncrement) : '',
+            implode(',',$sets)
+        );
+        // }}}
+        //$sth = $this->_prepareQuery($query,$data);
+        $sth = $this->prepare($query);
+        $result = $sth->execute($data);
+        $this->insertId = ($autoIncrement) ? $this->lastInsertId($autoIncrement) : $this->lastInsertId();
         return ($result) ? true : false;
     }
     // }}}
@@ -163,6 +255,7 @@ class tgif_db_pdo extends pdo
         return $sth->fetchColumn($column_offset);
     }
     // }}}
+    // TODO: INTERCEPT AND LOG
     // PRIVATE METHODS
     // {{{ - _guessStyle($output_type)
     /**
