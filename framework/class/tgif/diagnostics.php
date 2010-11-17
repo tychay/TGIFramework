@@ -19,11 +19,12 @@
  * as <b>that</b> code is too abusive on the system and violated SRP. Wheee!
  * This has been replaced with a {@link tgif_log UDP logging system}.
  *
- * This is not necesarily ideal these timers exist in PHP userspace, but it
- * is quick, dirty, and effective.
+ * It is not necesarily ideal these timers exist in PHP userspace, but it is
+ * quick, dirty, and effective.
  *
  * The following config variables are used
- * - diagnostics_monitor: whether or not to log diagnostics data to a monitoring *      service
+ * - diagnostics_monitor: whether or not to log diagnostics data to a monitoring
+ *   service
  * - diagnostics_monitorEvent: if diagnostics_monitor is true, should we log
  *   all events (instead of just page events).
  * - firephp_diagnostics: should firephp output diagnostics?
@@ -37,7 +38,7 @@ class tgif_diagnostics
 {
     // {{{ - $guid
     /**
-     * A unique identifier of the process
+     * A globally unique identifier of the process
      *
      * Note, that this isn't exactly globally unique, but the possibility of
      * collision on this id is effectively zero and it has no possibility
@@ -63,7 +64,7 @@ class tgif_diagnostics
     // {{{ - $memory
     /**
      * This is the peak memory usage. Pretty much valid only in PHP 5, but
-     * during diagnostics we sample at multiple locations to keep upping it.
+     * during diagnostics we may sample at multiple locations to keep upping it.
      * @var integer
      */
     public $memory = 0;
@@ -122,7 +123,7 @@ class tgif_diagnostics
     {
         //global $_TAG; // runkit superglobal
         ob_start();
-        $this->startTimer('page'); //this will be modded ex post facto by
+        $this->StartTimer('page'); //this will be modded ex post facto by
                                    // setPageTimer()
         $this->pid = getmypid();
         // generate url and server{{{
@@ -192,30 +193,13 @@ class tgif_diagnostics
         // Have to have move ob_end_flush() here because we can't let
         // destruction happen before ob_flush on api
         if ($_TAG->config('firephp_diagnostics')) {
-            $this->_makeSummary();
+            // you can log this instead if you want a simpler diagnostic returned.
+            $this->summary('totals');
             $_TAG->firephp->log($this,'diagnostics');
         }
         // }}}
         ob_end_flush();
         //return $buffer;
-    }
-    // }}}
-    // {{{ - _makeSummary()
-    public function _makeSummary()
-    {
-        $summaries = array();
-        foreach ($this->timerInfo as $timer_name=>$timer_data) {
-            $time = 0;
-            for ($i=0,$count=count($timer_data); $i<$count; ++$i) {
-                if (isset($timer_data[$i]['time_taken'])) {
-                    $time += $timer_data[$i]['time_taken'];
-                }
-            }
-            $summaries[$timer_name] = array('calls'=>$count, 'time'=>$time);
-        }
-        $this->summary = $summaries;
-        // so little time spend on diagnostics, let's not record it.
-        unset($this->timerInfo['diagnostic']);
     }
     // }}}
     // STATIC METHODS
@@ -490,12 +474,50 @@ class tgif_diagnostics
     }
     // }}}
     // OUTPUT
-    // {{{ - summary([$timerName])
+    // {{{ - summary([$type])
     /**
      * Returns some diagnostics of the page
      *
+     * @param string $type Can be various things:<ul>
+     * <li><b>simple</b>: (string)
      * This replaces the old quick_diag() function. It is also slightly more
-     * accurate of a timer.
+     * accurate of a timer. The idea is to embed some diagnostics into
+     * an HTML in a relatively safe manner. Mouseover the copyright symbol
+     * on Facebook.com for an idea.
+     *
+     * The numbers:
+     * 1. is the time to generate the page (in msec), the second
+     * 2. is the peak memory usage (if possible) in MB
+     * 3. last two digits of IP of server that served the page
+     * </li>
+     * <li><b>totals</b>: (array)
+     * This returns the total number of calls and total times for each
+     * timer category. This was used to output diagnostics into
+     * firephp.
+     * </li>
+     * <li><b>data</b>: (array)
+     * Array containing complete diagnostics.
+     * The idea is to take this output and serialize into json
+     * for rendering in the browser.
+     * </li><</ul>
+     * @return mixed diagnostics (see $type above)
+     */
+    function summary($type = 'simple')
+    {
+        switch ($type) {
+        case 'totals':
+            return $this->_totalSummary();
+        case 'data':
+            return $this->_dataSummary();
+        case 'simple':
+        default:
+            return $this->_simpleSummary();
+        }
+    }
+    // }}}
+    // {{{ - _simpleSummary([$timerName])
+    /**
+     * Returns some diagnostics of the page
      *
      * The numbers:
      * 1. is the time to generate the page (in msec), the second
@@ -504,8 +526,10 @@ class tgif_diagnostics
      *
      * @return string diagnostics
      */
-    function summary($timerName = 'page')
+    private function _simpleSummary()
     {
+        $timerName = 'page';
+        //if peak memory is not installed, then append a ?
         $peak = (function_exists('memory_get_peak_usage')) ? '' : '?';
         $server_parts = explode('.',$this->server);
         $server = (count($server_parts) > 3)
@@ -519,6 +543,57 @@ class tgif_diagnostics
             $peak,
             $server
             );
+    }
+    // }}}
+    // {{{ - _dataSummary()
+    /**
+     * Generates an array containing a complete diagnostics.
+     *
+     * @return array complete diagnostics suitable for analysis
+     */
+    private function _dataSummary()
+    {
+        $this->_timers['page']->stop(); // stop is the same as a "lap" timer
+        $summary = $this->timerInfo;
+        $this->_totalSummary(); // compute summary
+        // don't clutter results with diagnostic timers
+        unset($summary['diagnostic']);
+        $returns = array(
+            'url'           => $this->url,
+            'server'        => $this->server,
+            'pid'           => $this->pid,
+            'guid'          => $this->guid,
+            'parent guid'   => $this->parentGuid,
+            'peak memory'   => $this->setPeakMemory(),
+            'summary'       => $this->summary,
+            'times'         => $this->timerInfo,
+        );
+        return $returns;
+    }
+    // }}}
+    // {{{ - _totalSummary()
+    /**
+     * Note that in addition to returning the summary data,
+     * this saves the totals to a public variable ($this->summary)
+     *
+     * @return array $this->summary.
+     */
+    private function _totalSummary()
+    {
+        $summaries = array();
+        foreach ($this->timerInfo as $timer_name=>$timer_data) {
+            $time = 0;
+            for ($i=0,$count=count($timer_data); $i<$count; ++$i) {
+                if (isset($timer_data[$i]['time_taken'])) {
+                    $time += $timer_data[$i]['time_taken'];
+                }
+            }
+            $summaries[$timer_name] = array('calls'=>$count, 'time'=>$time);
+        }
+        $this->summary = $summaries;
+        // so little time spend on diagnostics, let's not record it.
+        unset($this->timerInfo['diagnostic']);
+        return $this->summary;
     }
     // }}}
     // DATA

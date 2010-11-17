@@ -65,6 +65,7 @@ class tgif_db_pdo extends pdo
      */
     function insert($table, $data)
     {
+        $_TAG->diagnostics->startTimer('db', sprintf('%s::insert()',get_class($this)));
         // format query {{{
         $keys = array_keys($data);
         $values = array();
@@ -86,6 +87,7 @@ class tgif_db_pdo extends pdo
         $result = $sth->execute($data);
         //$result = $sth->execute();
         $this->insertId = $this->lastInsertId();
+        $_TAG->diagnostics->stopTimer('db', array( 'query' => $query ) );
         return ($result) ? true : false;
     }
     // }}}
@@ -119,7 +121,7 @@ class tgif_db_pdo extends pdo
             implode(',',$sets),
             implode(' AND ',$wheres)
         );
-        var_dump($query);
+        //var_dump($query);
         // }}}
         //$sth = $this->_prepareQuery($query,$data);
         $sth = $this->prepare($query);
@@ -217,6 +219,7 @@ class tgif_db_pdo extends pdo
      */
     function getRow($query, $bindings=array(), $output_type='ARRAY_A', $row_offset=0)
     {
+        $_TAG->diagnostics->startTimer('db', sprintf('%s::getRow()',get_class($this)));
         $sth = $this->_prepareQuery($query,$bindings);
 
         $sth->execute();
@@ -227,7 +230,9 @@ class tgif_db_pdo extends pdo
             if (!$success) { return null; }
         }
 
-        return $sth->fetch($this->_guessStyle($output_type));
+        $result = $sth->fetch($this->_guessStyle($output_type));
+        $_TAG->diagnostics->stopTimer('db', array( 'query' => $query ) );
+        return $result;
     }
     // }}}
     // {{{ - getVar($query[,$bindings,$column_offset,$row_offset])
@@ -283,9 +288,11 @@ class tgif_db_pdo extends pdo
      * @param string $query SQL query to execute
      * @param array $binding bind variables
      * @return PDOStatement a statement handle of the prepared query
+     * @todo add logging
      */
     private function _prepareQuery($query, $bindings=array())
     {
+        //var_dump($query);
         $return_obj = $this->prepare($query);
         foreach ($bindings as $key=>$value) {
             // make sure there is a : at the beginning of the bindparam
