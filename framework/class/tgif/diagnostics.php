@@ -554,10 +554,9 @@ class tgif_diagnostics
     private function _dataSummary()
     {
         $this->_timers['page']->stop(); // stop is the same as a "lap" timer
-        $summary = $this->timerInfo;
-        $this->_totalSummary(); // compute summary
+        $times = $this->timerInfo;
         // don't clutter results with diagnostic timers
-        unset($summary['diagnostic']);
+        unset($times['diagnostic']);
         $returns = array(
             'url'           => $this->url,
             'server'        => $this->server,
@@ -565,8 +564,8 @@ class tgif_diagnostics
             'guid'          => $this->guid,
             'parent guid'   => $this->parentGuid,
             'peak memory'   => $this->setPeakMemory(),
-            'summary'       => $this->summary,
-            'times'         => $this->timerInfo,
+            'summary'       => $this->_totalSummary(),
+            'times'         => $times,
         );
         return $returns;
     }
