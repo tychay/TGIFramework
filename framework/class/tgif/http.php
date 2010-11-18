@@ -38,6 +38,7 @@ class tgif_http
         //PageViewLogger::setRedirect();
 
         //echo'<plaintext>';print_r(array($GLOBALS['_TAG'],$url,$post,debug_backtrace()));die;
+        $url = self::url_fullize($url);
         if (is_null($post)) {
             header(sprintf('Location: %s', $url));
             exit;
@@ -58,24 +59,58 @@ class tgif_http
     // STATIC: URL UTILITIES
     // {{{ + self_url()
     /**
-     * Returns the URL of itself
+     * @returns string the URL of itself
      */
-    public static function parse_url($url)
+    public static function self_url()
     {
         static $self;
         if ( !$self ) {
+            $scheme = self::self_url_scheme();
+            $port = ($_SERVER['SERVER_PORT'] == '80')
+                  ? ''
+                  : (':'.$_SERVER['SERVER_PORT']);
+            $self = $scheme . '://' . $_SERVER['SERVER_NAME'] . $port . $_SERVER['REQUEST_URI'];
+        }
+        return $self;
+    }
+    // }}}
+    // {{{ + self_url_scheme()
+    /**
+     * @returns string returns http or https
+     */
+    public static function self_url_scheme()
+    {
+        static $protocol;
+        if ( !$protocol ) {
             $s = empty( $_SERVER['HTTPS'])
                ? ''
                : ($_SERVER['HTTPS'] == "on")
                ? 's'
                : '';
-            $protocol = strleft(strtolower($_SERVER['SERVER_PROTOCOL']), '/').$s;
-            $port = ($_SERVER['SERVER_PORT'] == '80')
-                  ? ''
-                  : (':'.$_SERVER['SERVER_PORT']);
-            $self = $protocol."://".$_SERVER['SERVER_NAME'].$port.$_SERVER['REQUEST_URI'];
+            $protocol = strtolower($_SERVER['SERVER_PROTOCOL']);
+            $protocol = substr($protocol, 0, strpos($protocol, '/')) . $s;
         }
-        return $self;
+        return $protocol;
+    }
+    // }}}
+    // {{{ + url_fullize($url)
+    /**
+     * Returns the URL of itself
+     */
+    public static function url_fullize($url)
+    {
+        $url_parts = self::parse_url($url);
+        if ( !isset($url_parts['scheme']) ) {
+            $url_parts['scheme']    = self::self_url_scheme();
+        }
+        if ( !isset($url_parts['host']) ) {
+            $url_parts['host']      = $_SERVER['SERVER_NAME'];
+        }
+        if ( !isset($url_parts['port']) && ($_SERVER['SERVER_PORT']!=='80') ) {
+            $url_parts['port']      = $_SERVER['SERVER_PORT'];
+        }
+        var_dump($url_parts);
+        return self::glue_url($url_parts);
     }
     // }}}
     // {{{ + parse_url($url)
