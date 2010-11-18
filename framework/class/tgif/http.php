@@ -56,6 +56,28 @@ class tgif_http
     }
     // }}}
     // STATIC: URL UTILITIES
+    // {{{ + self_url()
+    /**
+     * Returns the URL of itself
+     */
+    public static function parse_url($url)
+    {
+        static $self;
+        if ( !$self ) {
+            $s = empty( $_SERVER['HTTPS'])
+               ? ''
+               : ($_SERVER['HTTPS'] == "on")
+               ? 's'
+               : '';
+            $protocol = strleft(strtolower($_SERVER['SERVER_PROTOCOL']), '/').$s;
+            $port = ($_SERVER['SERVER_PORT'] == '80')
+                  ? ''
+                  : (':'.$_SERVER['SERVER_PORT']);
+            $self = $protocol."://".$_SERVER['SERVER_NAME'].$port.$_SERVER['REQUEST_URI'];
+        }
+        return $self;
+    }
+    // }}}
     // {{{ + parse_url($url)
     /**
      * Like {@link parse_url()} but it puts the query string into an array
