@@ -37,7 +37,6 @@ class tgif_http
         // Ugly, but until we do the right thing with logging, necessary.
         //PageViewLogger::setRedirect();
 
-        //echo'<plaintext>';print_r(array($GLOBALS['_TAG'],$url,$post,debug_backtrace()));die;
         $url = self::url_fullize($url);
         if (is_null($post)) {
             header(sprintf('Location: %s', $url));
@@ -109,7 +108,6 @@ class tgif_http
         if ( !isset($url_parts['port']) && ($_SERVER['SERVER_PORT']!=='80') ) {
             $url_parts['port']      = $_SERVER['SERVER_PORT'];
         }
-        var_dump($url_parts);
         return self::glue_url($url_parts);
     }
     // }}}
@@ -172,8 +170,10 @@ class tgif_http
      */
     public static function url_decode($data)
     {
-        if (!$data) { return array(); }
-        return parse_str($data);
+        $return = array();
+        if (!$data) { return $return; }
+        parse_str($data, $return);
+        return $return;
         /*
         $return = array();
         $query_parts = explode('&', $data);
