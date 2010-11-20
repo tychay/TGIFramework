@@ -1,6 +1,8 @@
 #!/bin/sh
 # vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker:
 # This boostraps the framework, be sure to execute from base directory (not this directory) i.e.: $ ./bs/bootstrap.sh
+# TODO: -enable-memcached-igbinary (in php-pecl-memcached), igbinary http://opensource.dynamoid.com/, settings http://ilia.ws/archives/211-Igbinary,-The-great-serializer.html#extended  
+
 # EDITME: Set the full path to binaries {{{
 # Should it run as sudo? 
 SUDO='sudo'
