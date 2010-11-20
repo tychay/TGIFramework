@@ -160,6 +160,11 @@ fi
 if [ `which pear` ]; then
     $SUDO pear config-set php_bin $PHP
     if [ $DO_UPGRADE ]; then
+        $SUDO pear list-upgrades
+        if [ $DISTRIBUTION = 'fedora' ]; then
+            $SUDO pear uninstall APC
+            $SUDO pear uninstall memcache
+        fi
         $SUDO pear upgrade-all
         $SUDO pear channel-update pear.php.net
         $SUDO pear channel-update pecl.php.net
