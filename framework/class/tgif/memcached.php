@@ -6,67 +6,118 @@
  *
  * @package tgiframework
  * @subpackage global
- * @copyright 2007 Tagged Inc. 2009 terry chay
+ * @copyright 2007 Tagged Inc. 2009-2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net> 
+ * @todo add memcache add behavior
+ * @todo add memcache delete behavior
+ * @todo add memcache flush behavior
+ * @todo add memcache replace behavior
+ * @todo add memcache checkAndSet support
+ * @todo add memcache getDelayed support
+ * @todo add memcache getMulti/setMulti support
  */
+// {{{ $_tgif_memcahed_self
+/**
+ * Singleton for {@link tgif_memcached}
+ * @global tgif_memcached
+ * @alias $_tgif_memcached_self
+ */
+$GLOBALS['_tgif_memcached_self'] = null;
+// }}}
 // {{{ tgif_memcached
 // docs {{{
 /**
  * Handle memcache and memcache pooling.
  *
+ * Usage:
+ * The memcache system is a special case since it is so instrumental in the
+ * storing and reading of objects. Because of that, it is not read and written
+ * using the standard gld_* configuration system. Instead it is accessed
+ * directly using the tag_memcached registry. To do so, you do the following:
+ * <code>
+ * $memcache = tgif_memcached::getPool($pool_name);
+ * $memcache->get($key,$group);
+ * // or...
+ * tgif_memcached::get($key,$group,$pool_name);
+ * </code>
+ *
+ * Note that if $pool_name (aka channel) does not exist, it will assume that
+ * the pool name is 'default' which should be created always. This will save
+ * it to the channel "___" which is the only case where $pool_name and channel
+ * are not identical.
+ *
+ * Note that if $key is an array, instead of a single element than the first
+ * part of the array is assumed to be the key and the second part of the array
+ * is assumed to be the $serverkey.
+ *
+ * Note that $group is allowed to prevent key conflicts (two keys can have the
+ * same name, but will not conflict if they have a different group), it is also
+ * used for logging purposes.
+ *
+ * Configuration:
+ * The following config variables can be set: They are contained in the
+ * "memcached" configuration. (XXX = $pool_name):
+ * - extension (string): Which extension to use for reading and writing
+ *   to memcache. The two values allowed are memcache and memcached (or
+ *   libmemcached). Note that the behaviour of the two are radically
+ *   different. Default is memcache.
+ * - default_port (integer): the default port number to use. Default 11211.
+ * - config_XXX (array): The config settings for various pools note that since
+ *   memcache objects are shared, the actual configuration may not match exactly
+ *   depending on how things are instantiated and where the config variable is
+ *   used. {@link $_defaultConfig description of the config elements}.
+ * - pool_XXX (array): containing the server, port, and weights of various
+ *   servers memcache objects can be attached to. Depending on how this
+ *   is marshalled this may be cached slightly differently. The array elements
+ *   contain an array of up to three elements: host, port, and weight. If no
+ *   port is given the memcache.default_port is used. If no weight is given
+ *   weight defaults to 1.
+ *
+ * History:
  * This is a near entire rewrite. The old version of this code was
  * tag_memcache. This was changed to tgif_memcached instead of tgif_memcache
  * because the new code never allows working with a memcache object directly.
  * All actions must occur through this facade which handles the pool. The old
  * version required some API compatibility in order to work with legacy code.
  * In the past, things wrapped a socket-based user-space emulator known as
- * MemcacheSJ26. This was changed to work by wrapping the
+ * MemcacheSJ26. This version works by wrapping the
  * {@link http://php.net/memcache/ memcache extension} which was very similar.
+ * Later version of the tag system used a UDP library that was hacked into
+ * the memcache extension. This code has been removed in this verison.
  *
- * The following config variables can be set:
- * - memcached_config_XXX: an array containing config settings for various pools
- *   note that since memcache objects are shared, the actual configuration may
- *   not match exactly depending on how things are instantiated and where the
- *   config variable is used. See {@link $_poolConfigs} for description.
- * - memcache_pool_XXX: an array containing the server and weights of various
- *   servvers memcache objects can be attached to. Depending on how this is
- *   marshalled this may be cached slightly differently. The array elements
- *   contain an array of up to three elements: host, port, and weight.
- * - memcached_checkStatus: should we check the server status on usage?
- * - memcached_retryTimeout: how long to disable a server before trying to
- *   add it back into the pool?
- * - memcache_logRandom: what probability should we use for instantiating
- *   a logging memcache object?
- * - diagnostics_memcache: should we do diagnostic logging for memcache calls?
+ * An alternate version wraps the
+ * {@link http://php.net/memcached/ memcached extension} that uses libmemcached
+ * (see below).
  *
- * A later version will wrap the
- * {@link http://php.net/memcached/ memcached extension} that uses libmemcached.
+ * The memcache version does correct (though inefficient) pooling, instead of
+ * the pooling system built into the memcache library. The reason for this
+ * is that affinity (server keys) need to be optionally supported and the
+ * extension does not support it.
  *
- * The current version does correct (though inefficient) pooling in the way
- * the Tagged website currently works with one major caveat which is the way
- * it handles affinity. In the Tagged version affinity was done via a second
- * parameter which had to be run through a utility method known as
- * affine_channel() in order to handle affinity pooling. This worked by mapping
- * things onto one of 64 channels with a one letter prefix in front. Each
- * channel would have its own pool and, if not provided, would go to the
+ * The consisting hashing mechamism used, is designed to better surive server
+ * deaths. At Tagged, the system was dependent on a netscaler to modify the
+ * VIP dynamically to do this. If you set memcache.hash_strategy at runtime to
+ * "Consistent", it is far less versitile and {@link http://pecl.php.net/bugs/bug.php?id=14563 it's buggy}.
+ * 
+ * The way the Tagged website currently works was that affinity. This was 
+ * done via a second parameter which had to be run through a utility method
+ * known as affine_channel() in order to handle affinity pooling. This worked
+ * by mapping things onto one of 64 channels with a one letter prefix in front.
+ * Each channel would have its own pool and, if not provided, would go to the
  * default pool. This was unnecessarily complicated, and the newer version is
- * closer to the way the memcached extension works (a second serverKey can
+ * closer to the way the memcached extension works: a second serverKey can
  * be provided in order to getByServer.
  *
- * If we use libmemcached we can (and will) do the following:
- * - use a more efficient hashing function that the cryptographic one Tagged
- *   was using (breaking backward compatibility). The memcache algorithm in
- *   memcache extension is: (binascii.crc32(key) >> 16) & 0x7fff and this code
- *   attempts to emulate that.
- * - use a consistent hashing solution to better survive server deaths insead
- *   of depending on a netscaler to modify the VIP dynamically. You can do
- *   this if you set memcache.hash_strategy at runtime to "Consistent", but
- *   it is far less versitile and {@link http://pecl.php.net/bugs/bug.php?id=14563 it's buggy}.
+ * The hashing function used in Tagged used a cryptographic hash. This is
+ * overridden by default (breaking backward compatibility). It now attempts to
+ * emulate the algorithm in memcache extension:
+ * (binascii.crc32(key) >> 16) & 0x7fff 
+ *
+ * If we use libmemcached (memcached extension), then there are some extra
+ * features we should enable at somet time:
  * - support in the above two for libketama which is used to ensure
  *   compatibility with non php-based memcaching. {@link http://blog.chris.de/archives/288-libketama-a-consistent-hashing-algo-for-memcache-clients.html}
- * - do server affinity by a separate server key. This is impossible with the
- *   current memcache library.
  * - use a non-blocking IO and callback functions
  * - use non-delaying sockets, IP caching, and other tricks
  * - use a binary based serialize instead of a slow text based one (breaking
@@ -85,72 +136,119 @@
  *
  * @package tgiframework
  * @subpackage global
- * @todo config to allow memcache extension to manage pooling
- * @todo config to allow persistent hashing strategy
- * @todo add support fo weighting to strategy
- * @todo support for memcached extension
- * @todo config to allow memcached extension
- * @todo add more memcache behaviors here (currently only support get and set)
  */
 // }}}
 class tgif_memcached
 {
     // PRIVATE PROPERTIES
+    // {{{ - $ _extension
+    /**
+     * Which php extension to use (memcache or memcached)
+     *
+     * @var string
+     */
+    private $_extension = 'memcache';
+    // }}}
     // {{{ - $ _defaultPort
     /**
      * The default TCP port to use when connecting to memcache server.
      *
+     * This can be set with the memcached.default_port configuration variable
+     * and if not used it will use the default set by memcache.default_port
+     * php.ini. nd if not that it will use 11211.
+     *
      * @var integer
      */
-    private $_defaultPort;
+    private $_defaultPort = 11211;
     // }}}
-    // {{{ - $ _poolConfigs
+    // {{{ - $ _defaultConfig
     /**
-     * The pool configuration parameters indexed by channel id
+     * The pool configuration of the default pool
      *
-     * Might as well store with the object to avoid repeated calls to
-     * {@link tgif_global::config()}.
+     * This is used as the defaults of all named pools also.
      *
-     * This is a hash indexed by pool name. It contains the following values
-     * in each element:
-     * - persist (boolean): When creating new connections, shoudl we use
+     * - persist (boolean): When creating new connections, should we use
      *   persistent connections or not? Default true.
      * - lifetime (integer): default lifetime for the keys. If 0 then persist
      *   forever. This is also known as "expire". Default is 0.
      * - timeout (integer): default wait for connection to return in seconds
      *   Default is 1.
-     * - retryTimeout (integer): how long to wait before putting server back in
-     *   pool. Default is 100
+     * - retryTimeout (integer): how long should we disable a server from the
+     *   pool before adding it back in. If memcached, it trys the connection 3
+     *   times with a 1msec gap before removing from pool. Default is 100.
      * - compressThreshold (false|integer): byte size before gzip is turned on
      *   automatically. Default is false
-     * - compressMinSaving (float): savings fraction or turn off. Default is
-     *   0.2 (20%)
+     * - compressMinSaving (float): savings fraction or turn off. Default is 0.2
+     *   (20%)
+     * - checkStatus (boolean, memcache-only): should we check the server
+     *   status before  using. Default to false.
+     * - logRandom (float|false, memcache-only): What is the probability for
+     *   instantiating a {@link tgif_memcached_memache_log logging memcache
+     *   proxy} instead of a regular one. Default is false.
+     * - diagnostics (boolean): should we do diagnostic logging of memcache
+     *   calls? Default is false.
+     * - hashing (mixed) : if set, you can override the hashing algorithm used
+     *   for generating server hashkeys with by this system (not recommended
+     *   unless you need to be backward compatible with another system).
+     *   Note that if memache then the serializer may be an abritrary function,
+     *   but you must create that function. If memcached, the options are
+     *   {@link http://php.net/manual/en/memcached.constants.php the * part of
+     *   Memcached::HASH_*}. WARNING: this means the algorithm used by memcache:
+     *   ({@link http://en.wikipedia.org/wiki/Cyclic_redundancy_checka crc32}
+     *   mapped onto more bits) is different from the one used by memcached:
+     *   {@link http://en.wikipedia.org/wiki/Jenkins_hash_function the Jenkins
+     *   one-at-a-time}. Default to ''.
+     * - strategy (integer, memcache-only) : You can choose one of two mapping
+     *   strategies. If zero, it will use the "mod" strategy. If set to a
+     *   number then it will use the ketama-like map, and the number is the
+     *   maxint of the hash function. Note this means you can only use a "mod"
+     *   strategy with a hashing of md5 as the max value is larger than MAX_INT.
+     *   Default is 0x7fff. Remember, it will not be libketama compatible
+     *   unless you modify hashing parameter to be md5 above, and modify the
+     *   library to support integers as high as the hash will go.
+     * - distribution (string, memcached-only): algorithm for mapping keys
+     *   across servers types. Currently support igbinary, json, and php.
+     *   Default is 'consistent'. To make it libketama compatibe, don't
+     *  set 'hashing' but instead set this to 'libketama';
+     * - serializer (string, memcached-only): object serializer for non-native
+     *   types. Currently support igbinary, json, and php. Default is php
      * @var array
      */
-    private $_poolConfigs = array();
+    private $_defaultConfig = array(
+            'extension'         => 'memcache',
+            'persist'           => true,
+            'lifetime'          => 0,
+            'timeout'           => 1,
+            'retryTimeout'      => 100,
+            'compressThreshold' => false,
+            'compressMinSaving' => 0.2,
+            'checkStatus'       => false,
+            'logRandom'         => false,
+            'diagnostics'       => false,
+            'hashing'           => '',
+            'strategy'          => 0x7fff,
+            'serializer'        => 'php',
+            'distribution'      => 'consistent',
+        );
     // }}}
-    // {{{ - $ _poolServers
+    // {{{ - $ _defaultServers
     /**
-     * The pool servers indexed by channel id
+     * The default server pool.
      *
-     * Might as well store with the object to avoid repeated calls to
-     * {@link tgif_global::config()}.
+     * This is an array of arrays. The elements are the servers (and weights)
+     * associated with the default pool
      *
      * @var array
      */
-    private $_poolServers = array();
+    private $_defaultServers = array();
     // }}}
-    // {{{ - $ _memcaches
+    // PUBLIC PROPERTIES 
+    // {{{ - $ pools
     /**
-     * Memcache objects (and config data) indexed by host:port. Here is what is
-     * in the hash
-     * - obj: the memcache object.
-     * - expire: the default expiration for connection
-     * - persist: is the connection persistent (in case of server down)
-     *
+     * Array of {@link tgif_memcached_pool}s indexed by pool names.
      * @var array
      */
-    private $_memcaches = array();
+    public $pools = array();
     // }}}
     // CREATION AND SERIALIZATION
     // {{{ __construct($ignore)
@@ -160,14 +258,45 @@ class tgif_memcached
     function __construct()
     {
         //global $_TAG;
-        $this->_loadServerConfig('default',true);
-        $this->_defaultPort = ($port = ini_get('memcache.default_port'))
-                            ? $port
-                            : 11211;
+        if ( $port = $_TAG->config('memcached.default_port') ) {
+            $this->_defaultPort = $port;
+        } elseif ($port = ini_get('memcache.default_port') {
+            $this->_defaultPort = $port;
+        }
+        $this->extension = ( in_array($_TAG->config('memcached.extension'),array('memcached','libmemcached')) && extension_loaded('memcached') )
+                           ? 'memcached'
+                           : 'memcache';
+        $this->_loadDefault();
+        $this->_loadServerConfig('default');
+    }
+    // }}}
+    // {{{ - _loadDefault()
+    /**
+     * Loads default memcache pool into internal variables.
+     *
+     * It will load the default config and pool and save it to
+     * {@link $_defaultConfig} (which also defines the default values if none
+     * of these are overridden in memcached.config_default.
+     */
+    private function _loadDefaultConfig()
+    {
+        //global $_TAG;
+        $configs = $_TAG->config('memcached_config_'.$poolName);
+        if ( $configs ) {
+            $this->_defaultConfig = array_merge($this->_defaultConfig, $configs);
+        }
+        $servers = $_TAG->config('memcached_pool_'.$poolName);
+        $this->_defaultServers = ( $servers )
+                               ? $servers
+                               : array(array('127.0.0.1',11211,1)); // make local machine the default
+        $this->_sanitizeServers($this->_defaultServers);
+        $this->_addPool('default',$this->_defaultConfig,$this->defaultServers);
     }
     // }}}
     // {{{ ___sleep()
     /**
+     * Used to allow most of the work to be saved into shared memory cache.
+     *
      * Don't serialize memcache objects (they have resources and are probably
      * not serializeable).
      *
@@ -175,119 +304,191 @@ class tgif_memcached
      */
     function __sleep()
     {
-        return array('_defaultPort','_poolConfigs','_poolServers');
+        return array('_extension','_defaultPort','_defaultConfig','_defaultServers','pools');
     }
     // }}}
-    // {{{ - _loadServerConfig($channel[,$isDefault])
+    // SINGLETON ACCESS
+    // {{{ + getPool([$poolName])
     /**
-     * Loads a default channel and saves to internal cache
-     * @todo there might be issue here with $server['id'] binding in the case of
-     * using memcached extension
+     * Used to allow most of the work to be saved into shared memory cache.
+     *
+     * Don't serialize memcache objects (they have resources and are probably
+     * not serializeable).
+     *
+     * @return tgif_memcached_pool
+     * @todo load singleton from smem if possible
      */
-    function _loadServerConfig($channel,$isDefault=false)
+    static function getPool($poolName='default')
     {
-        //global $_TAG;
-        // set default $configs and $servers {{{
-        $configs = $_TAG->config('memcached_config_'.$channel);
-        $servers = $_TAG->config('memcached_pool_'.$channel);
-        if ($isDefault) {
-            $defaults = array(
-                'persist'           => true,
-                'lifetime'          => 0,
-                'timeout'           => 1,
-                'retryTimeout'      => 100,
-                'compressThreshold' => false,
-                'compressMinSaving' => 0.2,
-            );
-            if (!$servers) {// local machine
-                $servers = array(array('127.0.0.1',11211));
-            }
-            $channel = '___';
+        global $_tgif_memcached_self;
+        $self =& $_tgif_memcached_self;
+        if ( !$self ) { $self = new tgif_memcached(); }
+        if ( isset($self->pool[$poolName]) ) {
+            return $self->pool[$poolName];
         } else {
-            $defaults = $this->_poolConfigs['___'];
-            if (!$servers) {
-                $servers = $this->_poolServers['___'];
-            }
+            return $self->load($poolName);
         }
-        if ($configs) {
-            $configs = array_merge($defaults, $configs);
-        } else {
-            $configs = $defaults;
-        }
-        // }}}
-        // bind ID to server {{{
-        foreach ($servers as &$server_data) {
-            if (!isset($server_data[1])) {
-                $server_data[1] = $this->_defaultPort;
-            }
-            $server_data['id'] = $server_data[0].':'.$server_data[1];
-        }
-        // }}}
-        $this->_poolConfigs[$channel] = $configs;
-        $this->_poolServers[$channel] = $servers;
-        return;
     }
     // }}}
-    // DATA METHODS
-    // {{{ - get($key[,$serverKey,$pool])
+    // POOL LOADING
+    // {{{ - load($poolName)
+    /**
+     * Loads a memcache pool into internal variables.
+     *
+     * If not overridden in memcached.config__{{pool_name}}, then the default
+     * values are stored in {@link $_defaultConfig}.
+     *
+     * @param string $poolName The id of the pool (to use memcached parliance)
+     * The only special pool is 'default' which is loaded using
+     * {@link _loadDefaultConfig() a different function}.
+     */
+    public function load($poolName);
+    {
+        $configs = $_TAG->config('memcached_config_'.$poolName);
+        $configs = ( $configs )
+                 ? array_merge($this->_defaultConfigs,$configs)
+                 : $this->defaultConfigs;
+        $servers = $_TAG->config('memcached_pool_'.$poolName);
+        if ( !$servers ) {
+            $servers = $this->_defaultServers;
+        } else {
+            $this->_sanitizeServers($servers);
+        }
+        return $this->_addPool($poolName,$configs,$servers);
+    }
+    // }}}
+    // {{{ - addPool($poolName,$config,$servers)
+    /**
+     * Adds a pool to this object.
+     *
+     * @param string $poolName the name of the pool
+     * @param array $config the configuration to add.
+     * @param array $servers the servers in the pool (and weights)
+     * @return tgif_memcached_pool The pool added.
+     */
+    function addPool($poolName, $config, $servers)
+    {
+        if ($this->_extension == 'memcached') {
+            $this->pools[$poolName] = new tgif_memcached_pool_memcached( $config, $servers, $poolName );
+        } else {
+            $this->pools[$poolName] = new tgif_memcached_pool_memcache( $config, $servers );
+        }
+        if ($config[$diagnostic]) {
+            $this->pools[$poolName] = new tgif_memcache_pool_proxy( $this->pools[$poolName] );
+        }
+    }
+    // }}}
+    // {{{ - _sanitizeServers($servers)
+    /**
+     * Ensure all servers have a host, port, and weight
+     *
+     * @param array $servers List of servers to sanitize
+     */
+    private function _sanitzeServers(&$servers)
+    {
+        foreach ($servers as &$server) {
+            if (empty($server[1]) {
+                $server[1] = $this->_defaultPort;
+            }
+            if (!isset($server[2]) {
+                $server[2] = 1; //default weight
+            }
+        }
+    }
+    // }}}
+
+    // DATA PROXIES
+    // {{{ + get($key[,$group,$poolName])
     /**
      * Get data from a memcache pool
      *
-     * @param string $key A key by which data in cache is identified.
-     * @param string $serverKey If provided this represents the key by
-     *  which a server in the pool is identified (affinity).
-     * @param string $pool the string to allow the pool mapping to be used.
+     * Modeled after wp_cache_set()
+     *
+     * @param mixed $key The key by which data in cache is identified
+     * @param string $group Way of grouping data in the cache for same key
+     *  across multiple groups
+     * @param string $poolName the pool to get from
      * @return mixed data
      */
-    function get($key, $serverKey='', $pool='___')
+    static function get($key, $group='', $poolName='default')
     {
-        // Affinity is the server key if it works
-        if (!$serverKey) { $serverKey = $key; }
-        $memcache_info = $this->_getMemcache($key, $serverKey, $pool);
-        if (!$memcache_info) { return false; }
-        return $memcache_info['obj']->get($key);
+        $memcache = self::getPool($poolName);
+        return $memache->get($key, $group);
     }
     // }}}
-    // {{{ - set($key,$var[,$expire,$serverKey,$pool])
+    // {{{ - set($key,$data[,$group,$expire,$poolName])
     /**
      * Set data to a memcache pool
      *
-     * @param string $key A key by which data in cache is identified.
+     * Modeled after wp_cache_get()
+     *
+     * @param mixed $key The key by which data in cache is identified
      * @param mixed $var The value to set it to
-     * @param integer $expire expire time for an itemp. You can also use Unix
-     * timestamp or a number of seconds from the current time. 0 = nexver
-     * expire. If not provided (or negative), use the default expire time
-     * @param string $serverKey If provided this represents the key by
-     *  which a server in the pool is identified (affinity).
-     * @param string $pool the string to allow the pool mapping to be used.
+     * @param string $group Way of grouping data in the cache for same key
+     *  across multiple groups
+     * @param string $poolName the pool to get from
      * @return boolean success or failure
      */
-    function set($key, $var, $expire=-1, $serverKey='', $pool='___')
+    function set($key, $var, $group='', $expire=-1, $poolName='___')
     {
-        // Affinity is the server key if it works
-        if (!$serverKey) { $serverKey = $key; }
-        $flag = 0;
-        $memcache_info = $this->_getMemcache($key, $serverKey, $pool);
-        if (!$memcache_info) { return false; }
-        if ($expire <= 0) {
-            $expire = $memcache_info['lifetime'];
-        }
-        return $memcache_info['obj']->set($key, $var, $flag, $expire);
+        $memcache = self::getPool($poolName);
+        return $memache->set($key, $var, $group, $expire)
     }
     // }}}
     // TODO: add more behaviors here
-    // SERVER METHODS
-    // {{{ - _getMemcache($key,$serverKey,$pool)
+
+    // SERVER PROPERTIES (unsaved)
+    // {{{ - $ _memcaches
     /**
-     * Returns a {@link memcache} object that is connected to a particular cache
-     * server based on the $key.  (Cache keys are spread across a tier of
-     * servers using an algorithm designed to help evenly distribute the data.)
+     * {@link tgif_memcached_memcache} Memcache objects indexed by host:port.
      *
+     * Note that since the memcache objects are shared across the pools if
+     * using memcache as your storing function, settings may vary from machine
+     * to machine. If that is the case, it's first come, first serve. In othe
+     * words, don't vary this!
+     *
+     * @var array
+     */
+    private $_memcaches = array();
+    // }}}
+    // SERVER METHODS
+    // {{{ - $ _memcaches
+    /**
+     * {@link tgif_memcached_memcache} Memcache objects indexed by host:port.
+     *
+     * Note that since the memcache objects are shared across the pools if
+     * using memcache as your storing function, settings may vary from machine
+     * to machine. If that is the case, it's first come, first serve. In othe
+     * words, don't vary this!
+     *
+     * TODO
+     * Here is what is in the hash.
+     * - obj: the memcache object.
+     * - expire: the default expiration for connection
+     * - persist: is the connection persistent (in case of server down)
+     *
+     * @var array
+     */
+    private $_memcaches = array();
+    // }}}
+    // {{{ - getMemcacheByServer($serverInfo,$config)
+    /**
+     * Get {@link tgif_memcached_memcache memcache object} from a registry.
+     * 
      * Unlike the old {@link MemcachePool}, this code does not handle the
      * special session server pool rules or the WORKING_KEY_PREFIX rules.
      * Why? It messes with my chi. This used to be getMemcache() and
      * serverByKey() and getMemcacheByServer() but the code has been merged
      * because of the new way of handling it (the abstractions covers these).
+     *
+     * @param array $serverInfo host, port, and weight.
+     * @param array $config memcache configuration parameters
+     * @return tgif_memcached_memcache
+     *
+     * TODO:
+     * Returns a {@link memcache} object that is connected to a particular cache
+     * server based on the $key.  (Cache keys are spread across a tier of
+     * servers using an algorithm designed to help evenly distribute the data.)
      *
      * The default time out period is 1 second.
      *
@@ -298,57 +499,72 @@ class tgif_memcached
      * @return array null if it failed to create, else it returns an array
      * containing the memcache object in "obj"
      */
-    private function _getMemcache($key, $serverKey, $pool)
+    function getMemcacheByServer($server_info, $config)
     {
-        if (!array_key_exists($pool,$this->_poolServers)) {
-            $this->_loadServerConfig($pool);
-        }
-        // find the server id {{{
-        // regular CRC32 hash {{{
-        $num_servers = count($this->_poolServers[$pool]);
-        if ($num_servers < 1) { return null; }
-        $hash  = (crc32($key) >> 16) & 0x7fff;
-        // }}}
-        // Mod hashing strategy
-        $index = $hash % $num_servers;
-        $server_data = $this->_poolServers[$pool][$index];
-        $server_id   = $server_data['id'];
-        $config      = $this->_poolConfigs[$pool];
-        // }}}
+        $server_id = $server_info['host'].':'.$server_info['port'];
         // Look for a cached memcache object {{{
         if (isset($this->_memcaches[$server_id])) {
-            $memcache_data = $this->_memcaches[$server_id];
-            $memcache_obj = $memcache_data['obj'];
+            $memcache_obj = $this->_memcaches[$server_id];
             // check memcache status {{{
-            if ($_TAG->config('memcached_checkStatus')) {
-                // Check that memcache is set correctly.  If not, dump
-                // a message and disable.
-                $status = $memcache_obj->getServerStatus($server_data[0],$server_data[1]);
+            if ($config['checkStatus']) {
+                // Check that memcache is set correctly.  If not, dump a
+                // message and disable.
+                $status = $memcache_obj->getServerStatus($server_info['host'],$server_info['port']);
                 if (!$status) {
-                    if ($memcache_data['persist']) {
+                    if ($config['persist']) {
                         $memcache_obj->close();
                     }
-                    $memcache_obj = new tgif_memcached_null();
-                    $this->_memcaches[$server_id]['obj'] = $memcache_obj;
+                    $memcache_obj = new tgif_memcached_memcache_null();
+                    $this->_memcaches[$server_id] = $memcache_obj;
                     $this->_serverSetDisabled($server_id,true,$config['retryTimeout']);
                     trigger_error(sprintf('%s:_getMemcache() Inconsistent state for %s.', get_class($this), $server_id),E_USER_WARNING);
                 }
             }
             // }}}
-            return $memcache_data;
+            return $memcache_obj;
         }
         // }}}
         // If the server is disabled return a "null" do-nothing proxy {{{
         if ($this->_serverDisabled($server_id)) {
-            return array(
-                'obj'       => new tgif_memcached_null(),
-                'persist'   => false,
-                'lifetime'    => 0
-            );
+            return tgif_memcached_null();
         }
         // }}}
-        $memcache_obj = $this->_connect($server_data[0], $server_data[1], $config['timeout'], $config['persist']);
-        /*
+        $memcache_obj = $this->_connect($server_info, $config);
+        // should we use a logging object? {{{
+        if ( (($prob = $config['logRandom']) !== false) && (rand()/getrandmax() < $prob) ) {
+            $memcache_obj = new tgif_memcached_log($memcache_obj);
+        }
+        // }}}
+        // No need for diagnostics proxy in this version, that is handled
+        // upstream.
+        // connect to memcache server {{{
+        if ( $config['persist'] ) {
+            $success = $memcache_obj->pconnect($server_info['host'], $server_info['port'], $config['timeout'])
+        } else {
+            $success = $memcache_obj->connect($server_info['host'], $server_info['port'], $config['timeout']);
+        }
+        // }}}
+        if ($success) {
+            // Should not need to check server status
+            $this->_serverSetDisabled($server_id,false);
+            // Set compression {{{
+            $threshold = $config['compressThreshold'];
+            if ($threshold !== false) {
+                $memcache_obj->setCompressThreshold($threshold, $config['compressMinSaving']);
+            }
+            // }}}
+        } else {
+            // failed to connect {{{
+            $this->_serverSetDisabled($server_id,true,$config['retryTimeout']);
+            trigger_error(sprintf('%s:_getMemcache() Could not connect to server %s',get_class($this), $serverInfo),E_USER_WARNING);
+            $memcache_obj = new tgif_memcached_null();
+            // }}}
+        }
+        // register object
+        $this->_memcaches[$server_id] = $memcache_obj;
+        return $memcache_obj;
+
+        /* //using getServerStatus() now
         // Make sure that we're OK. {{{
         if (!$memcache_obj) {
             $ok = $memcache->getVersion();
@@ -358,49 +574,6 @@ class tgif_memcached
         }
         // }}}
         /* */
-        if ($memcache_obj) {
-            $this->_serverSetDisabled($server_id,false);
-            // Set compression.
-            $threshold = $config['compressThreshold'];
-            if ($threshold !== false) {
-                $memcache_obj->setCompressThreshold($threshold, $config['compressMinSaving']);
-            }
-        } else {
-            $this->_serverSetDisabled($server_id,true,$config['retryTimeout']);
-            trigger_error(sprintf('%s:_getMemcache() Could not connect to server %s',get_class($this), $serverInfo),E_USER_WARNING);
-            $memcache_obj = new tgif_memcached_null();
-        }
-        $this->_memcaches[$server_id] = array(
-            'obj'       => $memcache_obj,
-            'persist'   => $config['persist'],
-            'lifetime'  => $config['lifetime'],
-        );
-        return $this->_memcaches[$server_id];
-    }
-    // }}}
-    // {{{ - _connect($host,$port,$timeout,$shouldPersist)
-    /**
-     * Connect to a memcache instance.
-     *
-     * @param string $host IP of host (can use sockets if "host").
-     * @param integer $port port of memcache, set to 0 if using domain sockets
-     * in the first case
-     * @param integer $timeout value in seconds for connecting to the daemon
-     * @return object|false a memcache object on success, or false on failure.
-     */
-    private function _connect($host, $port, $timeout, $shouldPersist) 
-    {
-        //global $_TAG;
-        $memcache = new memcache();
-        if ((($prob = $_TAG->config('memcached_logRandom')) !== false) && (rand()/getrandmax() < $prob)) {
-            $memcache = new tgif_memcached_log($memcache);
-        } else if ($_TAG->config('diagnostics_memcache')) {
-            $memcache = new tgif_memcached_proxy($memcache);
-        }
-        $ok = ($shouldPersist)
-            ? $memcache->pconnect($host, $port, $timeout)
-            : $memcache->connect($host, $port, $timeout);
-        return ($ok) ? $memcache : false;
     }
     // }}}
     // {{{ - _serverDisabled($serverId)

@@ -2,28 +2,30 @@
 // vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 /**
- * Container for {@link tgif_memcached_log}.
+ * Container for {@link tgif_memcached_memcache_log}.
  *
  * @package tgiframework
  * @subpackage global
- * @copyright 2007 Tagged Inc. 2009 terry chay
+ * @copyright 2007 Tagged Inc. 2009-2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net> 
  * @todo need to build tgif_log to activate this code
  */
-// {{{ tgif_memcached_log
+// {{{ tgif_memcached_memcache_log
 /**
  * Proxies a standard memcache object with this one to allow logging.
  * @package tgiframework
  * @subpackage global
  */
-class tgif_memcached_log
+class tgif_memcached_memcache_log extends tgif_memcached_memcache
 {
+    // {{{ - $_obj
     /**
      * Memcache extension object proxied through this interface
      * @var Memcache
      */
     private $_obj;
+    // }}}
     private $_host;
     private $_port;
     private $_protocol;
