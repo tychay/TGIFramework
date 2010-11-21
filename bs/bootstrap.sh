@@ -98,7 +98,7 @@ fi
 
 if [ $DISTRIBUTION = 'fedora' ]; then
     # Set path to libmemcached (to use php-memcached instead of php-memcache)
-    LIBMEMCACHED=/usr/lib64
+    LIBMEMCACHED=/usr
 fi
 # }}}
 # shell function declarations {{{
@@ -335,20 +335,39 @@ fi
 pecl_update_or_install inclued $INCLUED '' ''
 # }}}
 # Install memcache(d) with igbinary {{{
-pecl_update_or_install $MEMCACHE_PKG $MEMCACHE php-pecl-$MEMCACHE "$MEMCACHE_PORT"
-#pushd packages
-#pecl download $MEMCACHE
-#popd
-#pushd build
-#rm -rf *
-#gzip -dc ../packages/${MEMCACHE_PKG}*.tgz | tar xf -
-#pushd ${MEMCACHE_PKG}*
-#phpize
-#./configure --with-libmemcached-dir=${LIBMEMCACHED}
-#make
-#$SUDO make install
-#popd
-#popd
+if [ $DISTRIBUTION = 'fedora' ] && [ $MEMCACHE = 'memcached' ] then
+    if [ `$PHP_EXT_TEST $1` ]; then
+        echo "### memcached already installed, doing nothing"
+    else
+        $SUDO yum install libmemcached-devel
+        pushd packages
+            pecl download memcached
+        popd
+        pushd build
+            rm -rf *
+            #mkdir mybuild\
+            #    mybuild/BUILD\
+            #    mybuild/RPMS\
+            #    mybuild/RPMS/i386\
+            #    mybuild/SOURCES\
+            #    mybuild/SPECS\
+            #    mybuild/SRPMS
+            #cp ../packages/memcached*.tgz mybuild/SOURCES
+            ##cat "topdir: ${BASE_DIR}/build/mybuild" > ~/.rpmrc
+            #rpmbuild -bb --define "_topdir ${BASE_DIR}/build/mybuild" ../res/php-pecl-memcached.spec
+            #$SUDO rpm -i ${BASE_DIR}/RPMS/*/php-pecl-memcached*.rpm
+            gzip -dc ../packages/memcached*.tgz | tar xf -
+            pushd memcached*
+                phpize
+                ./configure --with-libmemcached-dir=${LIBMEMCACHED} -enable-memcached-igbinary
+                make
+                $SUDO make install
+            popd
+        popd
+    fi
+else
+    pecl_update_or_install $MEMCACHE_PKG $MEMCACHE php-pecl-$MEMCACHE "$MEMCACHE_PORT"
+fi
 # }}}
 # Install PEAR packages: {{{ Savant, FirePHP, PhpDocumentor
 # Old download was: SAVANT='http://phpsavant.com/Savant3-3.0.0.tgz'
