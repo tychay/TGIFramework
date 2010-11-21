@@ -33,7 +33,8 @@ if [ $DISTRIBUTION = "macports" ]; then
 # 3) $ sudo port -v selfupdate                          #update ports
 # 4) $ sudo port install apache2                        #install apache
 #    $ sudo port install mysql5 +server                 #install mysql
-#    $ sudo port install php5 +apache2 +mysql5 +pear    #install php+pear
+#    $ sudo port install php5 +apache2 +pear
+#                                                       #install php+pear
 # 5) $ cd /opt/local/apache2/modules                    $install mod_php
 #    $ sudo /opt/local/apache2/bin/apxs -a -e -n "php5" libphp5.so
 # 6) $ sudo vim /opt/local/apache2/conf/httpd.conf
@@ -65,21 +66,34 @@ if [ $DISTRIBUTION = "macports" ]; then
 #    $ mysqlstart
 #    $ mysqladmin5 -u root password [yourpw]
 # 9) $ sudo cp /opt/local/etc/php5/php.ini-production /opt/local/etc/php5/php.ini
-# 10)$ apache2ctl start
+# 10)# TODO: PDO mysql is missing!!!!  # http://c6s.co.uk/webdev/119
+#    $ sudo port install php5-sqlite 
+#    $ sudo port install php5-mysql 
+#    $ sudo port install php5-tidy 
+#    $ sudo port install php5-zip 
+#    $ sudo port install php5-curl 
+#    $ sudo port install php5-big_int   #bcmath substitute
+#    # copy other ini files as necessary (most of them are in res/php.ini, but
+#    # be sure to edit xdebug.ini before copying
+# 11)$ apache2ctl start
+# AFTER:
+# --)$ sudo port load memcached
+# install sqlite3
 # }}}
     $SUDO port -v selfupdate
+    $SUDO port install memcached
     #$SUDO port upgrade outdated
     #PHP=/opt/local/bin/php
     APACHECTL=/opt/local/apache2/bin/apachectl
     #PHP_INI=/opt/local/etc
     PHP_INI=/opt/local/etc/php5/php.ini
     # Set path to libmemcached (to use php-memcached instead of php-memcache)
-    #LIBMEMCACHED=/opt/local
+    LIBMEMCACHED=/opt/local
 fi
 
 if [ $DISTRIBUTION = 'fedora' ]; then
     # Set path to libmemcached (to use php-memcached instead of php-memcache)
-    LIBMEMCACHE=/usr/lib64
+    LIBMEMCACHED=/usr/lib64
 fi
 # }}}
 # shell function declarations {{{
@@ -87,12 +101,15 @@ pear_installed () { pear list -a | grep ^$1 | wc -l ; }
 # {{{  pecl_update_or_install()
 # $1 = package name
 # $2 = package name in pecl (may have -beta or the like)
+# $3 = if set, package name in macports
 pecl_update_or_install () {
     if [ `$PHP_EXT_TEST $1` ]; then
         if [ $DO_UPGRADE ]; then
             if [ $DISTRIBUTION = 'fedora' ]; then
                 echo "### UPDATING $1...";
                 $SUDO yum update php-pecl-$1
+            elif [ $DISTRIBUTION = 'macports' ] && [ "$3" != '' ]; then
+                echo "### $1 is already up-to-date"
             else
                 echo "### UPGRADING $1...";
                 $SUDO pecl upgrade $2
@@ -102,6 +119,8 @@ pecl_update_or_install () {
         echo "### INSTALLING $1";
         if [ $DISTRIBUTION = 'fedora' ]; then
             $SUDO yum install php-pecl-$1
+        elif [ $DISTRIBUTION = 'macports' ] && [ "$3" != '' ]; then
+            $SUDO port install $3
         else
             $SUDO pecl install $2
             if [ $1 = 'xdebug']; then
@@ -165,9 +184,11 @@ XDEBUG='xdebug'
 # MEMCACHE {{{
 MEMCACHE_PKG='memcache'
 MEMCACHE='memcache'
+MEMCACHE_PORT=''
 if [ $LIBMEMCACHED ]; then
     MEMCACHE='memcached-beta'
     MEMCACHE_PKG='memcached'
+    MEMCACHE_PORT='php5-memcached +igbinary'
 fi
 # }}}
 # }}}
@@ -227,7 +248,7 @@ if [ `which pecl` ]; then
 fi
 # }}}
 # Install APC {{{
-pecl_update_or_install apc $APC
+pecl_update_or_install apc $APC php5-apc
 # }}}
 # Install runkit {{{
 if [ `$PHP_EXT_TEST runkit` ]; then
@@ -268,20 +289,31 @@ else
 fi
 # }}}
 # Install XDEBUG {{{
-pecl_update_or_install xdebug $XDEBUG
+pecl_update_or_install igbinary igbinary php5-igbinary
+# }}}
+# Install XDEBUG {{{
+pecl_update_or_install xdebug $XDEBUG php5-xdebug
+# }}}
+# Install big_int {{{ http://pecl.php.net/package/big_int
+echo "### big_int..."
+if [ `$PHP_EXT_TEST big_int` ]; then
+    $SUDO pecl upgrade big_int
+else
+    $SUDO pecl install big_int
+fi
 # }}}
 # Install inclued {{{
 # No fedora package for inclued
 if [ $DISTRIBUTION = 'fedora' ]; then
     DISTRIBUTION='xfedora';
 fi
-pecl_update_or_install inclued $INCLUED
+pecl_update_or_install inclued $INCLUED ''
 if [ $DISTRIBUTION = 'xfedora' ]; then
     DISTRIBUTION='fedora';
 fi
 # }}}
 # Install memcache {{{
-pecl_update_or_install $MEMCACHE_PKG $MEMCACE
+pecl_update_or_install $MEMCACHE_PKG $MEMCACHE "$MEMCACHE_PORT"
 #pushd packages
 #pecl download $MEMCACHE
 #popd
@@ -299,8 +331,10 @@ pecl_update_or_install $MEMCACHE_PKG $MEMCACE
 # Install PEAR packages: {{{ Savant, FirePHP, PhpDocumentor
 # Old download was: SAVANT='http://phpsavant.com/Savant3-3.0.0.tgz'
 # Old Savant PEAR repository   $SUDO pear channel-discover savant.pearified.com
+$SUDO pear channel-discover phpsavant.com
 pear_update_or_install Savant3 savant/Savant3 phpsavant.com
 #echo '### NB: There is a bug in Savant PHP Fatal error:  Method Savant3::__tostring() cannot take arguments in /usr/share/pear/Savant3.php on line 241'
+$SUDO pear channel-discover pear.firephp.org
 pear_update_or_install FirePHPCore firephp/FirePHPCore pear.firephp.org
 pear_update_or_install PhpDocumentor
 # }}}
