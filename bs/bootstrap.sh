@@ -111,7 +111,7 @@ pear_installed () { pear list -a | grep ^$1 | wc -l ; }
 pecl_update_or_install () {
     if [ `$PHP_EXT_TEST $1` ]; then
         if [ $DO_UPGRADE ]; then
-            if [ $DISTRIBUTION = 'fedora' ] && [ "$3" != '' ; then
+            if [ $DISTRIBUTION = 'fedora' ] && [ "$3" != '' ]; then
                 echo "### UPDATING $1...";
                 $SUDO yum update $3
             elif [ $DISTRIBUTION = 'macports' ] && [ "$4" != '' ]; then
@@ -123,7 +123,7 @@ pecl_update_or_install () {
         fi
     else
         echo "### INSTALLING $1";
-        if [ $DISTRIBUTION = 'fedora' ] && [ "$3" != '' ; then
+        if [ $DISTRIBUTION = 'fedora' ] && [ "$3" != '' ]; then
             $SUDO yum install $3
         elif [ $DISTRIBUTION = 'macports' ] && [ "$4" != '' ]; then
             $SUDO port install $3
@@ -237,7 +237,7 @@ if [ `which pear` ]; then
     if [ $DO_UPGRADE ]; then
         $SUDO pear list-upgrades
         if [ $DISTRIBUTION = 'fedora' ]; then
-            $SUDO pear uninstall APC
+            $SUDO pear uninstall apc
             $SUDO pear uninstall memcache
         fi
         $SUDO pear upgrade-all
@@ -297,6 +297,26 @@ fi
 # TODO: -enable-memcached-igbinary (in php-pecl-memcached)
 # igbinary http://opensource.dynamoid.com/
 # performance settings: http://ilia.ws/archives/211-Igbinary,-The-great-serializer.html#extended  
+if [ `$PHP_EXT_TEST igbinary` ]; then
+    echo '### igbinary installed'
+else
+    if [ $DISTRIBUTION = 'macports' ]; then
+        $SUDO port install php5-igbinary
+    else
+        pushd packages
+            curl -O http://opensource.dynamoid.com/igbinary-1.0.2.tar.gz
+        popd
+        pushd build
+            gzip -dc ../packages/igbinary-1.0.2.tar.gz | tar xf -
+            pushd igbinary-1.0.2
+                phpize
+                ./configure
+                make
+                $SUDO make install
+            popd
+        popd
+    fi
+fi
 pecl_update_or_install igbinary igbinary '' php5-igbinary
 # }}}
 # Install XDEBUG {{{
