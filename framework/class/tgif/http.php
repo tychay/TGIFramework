@@ -266,7 +266,6 @@ class tgif_http
     // {{{ _ip_regex
     /**
      * A regular expression used to match IP addresses.
-     * @const string
      */
     const _ip_regex = '/^([0-9]{1,3})\\.([0-9]{1,3})\\.([0-9]{1,3})\\.([0-9]{1,3})$/';
     // }}}
