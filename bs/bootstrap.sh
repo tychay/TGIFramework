@@ -1,15 +1,20 @@
 #!/bin/sh
 # vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker:
 # This boostraps the framework, be sure to execute from base directory (not this directory) i.e.: $ ./bs/bootstrap.sh
-# TODO: -enable-memcached-igbinary (in php-pecl-memcached), igbinary http://opensource.dynamoid.com/, settings http://ilia.ws/archives/211-Igbinary,-The-great-serializer.html#extended  
 
 # EDITME: Set the full path to binaries {{{
 if [ $1 ]; then
     DISTRIBUTION=$1
 else
-    #DISTRIBUTION='macports'
-    DISTRIBUTION='fedora'
+    if [ `which port` != '' ]; then
+        DISTRIBUTION='macports'
+    elif [ `which yum` != '' ]; then
+        DISTRIBUTION='fedora'
+    else
+        DISTRIBUTION='???'
+    fi
 fi
+echo "### Distribution is $DISTRIBUTION";
 # Should it run as sudo? 
 SUDO='sudo'
 
@@ -288,7 +293,10 @@ else
     echo 'be sure to add to your php.ini: extension=runkit.so'
 fi
 # }}}
-# Install XDEBUG {{{
+# Install igbinary {{{
+# TODO: -enable-memcached-igbinary (in php-pecl-memcached)
+# igbinary http://opensource.dynamoid.com/
+# performance settings: http://ilia.ws/archives/211-Igbinary,-The-great-serializer.html#extended  
 pecl_update_or_install igbinary igbinary php5-igbinary
 # }}}
 # Install XDEBUG {{{
@@ -312,7 +320,7 @@ if [ $DISTRIBUTION = 'xfedora' ]; then
     DISTRIBUTION='fedora';
 fi
 # }}}
-# Install memcache {{{
+# Install memcache(d) with igbinary {{{
 pecl_update_or_install $MEMCACHE_PKG $MEMCACHE "$MEMCACHE_PORT"
 #pushd packages
 #pecl download $MEMCACHE
