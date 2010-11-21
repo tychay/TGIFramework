@@ -24,7 +24,7 @@
  * extension during development.
  */
 // }}}
-class tgif_memcached_pool_memcache extends tgif_memcache_pool
+class tgif_memcached_pool_memcache extends tgif_memcached_pool
 {
     // PRIVATE PROPERTIES
     // {{{ - $ _config
@@ -138,7 +138,7 @@ class tgif_memcached_pool_memcache extends tgif_memcache_pool
         $key = $_TAG->symbol().$group,$key;
 
         $server_info = $this->getServerByKey($serverKey);
-        $memcache = $this->getMemcacheByServer($server_info, $this->_config);
+        $memcache = $_TAG->memcache->getMemcacheByServer($server_info, $this->_config);
         return $memcache->get($key);
     }
     // }}}
@@ -153,7 +153,7 @@ class tgif_memcached_pool_memcache extends tgif_memcache_pool
         }
 
         $server_info = $this->getServerByKey($serverKey);
-        $memcache = $this->getMemcacheByServer($server_info, $this->_config);
+        $memcache = $_TAG->memcache->getMemcacheByServer($server_info, $this->_config);
         // auto compression turned on in configuration set $flag=0
         return $memcache->set($key, $var, 0, $expire);
     }

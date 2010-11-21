@@ -73,8 +73,13 @@ $_TAG->firephp->log($var, 'Iterators');
 ?>
 <h2>Memcache</h2>
 <?php
-$_TAG->memcached->set('foo','bar');
-var_dump($_TAG->memcached->get('foo'));
+if ($foo = $_TAG->memcached->get('foo')) {
+    echo 'foo=';
+    var_dump($foo);
+} else {
+    $_TAG->memcached->set('foo','bar');
+    echo 'Reload to see foo=bar';
+}
 
 ?>
 <h2>Benchmarking</h2>
@@ -189,6 +194,7 @@ echo tgif_benchmark_iterate::format($b1->compare($b2,$b3));
 <h2>Diagnostics</h2>
 <?php
 echo $_TAG->diagnostics->summary();
+var_dump(json_encode($_TAG->diagnostics->summary('data')));
 ?>
 </body>
 </html>

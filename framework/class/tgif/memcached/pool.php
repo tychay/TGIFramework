@@ -19,7 +19,7 @@
  * @subpackage global
  */
 // }}}
-class tgif_memcache_pool
+class tgif_memcached_pool
 {
     // CREATION AND SERIALIZATION
     // {{{ - getServerByKey($serverKey)

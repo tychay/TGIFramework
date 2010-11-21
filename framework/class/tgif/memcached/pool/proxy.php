@@ -17,7 +17,7 @@
  * @package tgiframework
  * @subpackage global
  */
-class tgif_memcached_pool_proxy extends tgif_memcache_pool
+class tgif_memcached_pool_proxy extends tgif_memcached_pool
 {
     // {{{ - $_obj
     /**
@@ -61,7 +61,7 @@ class tgif_memcached_pool_proxy extends tgif_memcache_pool
         //global $_TAG;
         $_TAG->diagnostics->startTimer('memcache', 'get', array(
             'key'   => $key,
-            'group' => $group
+            'group' => $group,
             ));
         $return = $this->_obj->get($key, $group);
         //$size = (is_string($return)) ? strlen($return) : strlen(serialize($return)); // not always accurate if using igbinary
@@ -77,7 +77,7 @@ class tgif_memcached_pool_proxy extends tgif_memcache_pool
         //$size = (is_string($var)) ? strlen($var) : strlen(serialize($var)); // not always accurate if using igbinary
         $_TAG->diagnostics->startTimer('memcache', 'set', array(
             'key'   => $key,
-            'group' => $group
+            'group' => $group,
             'expire'=> $expire,
             ));
         $return = $this->_obj->get($key, $var, $group, $expire);

@@ -21,8 +21,15 @@ return array(
                                     // timeout
         'retryTimeout'  => 100,     //let server be disabled for 100 sec before
                                     // trying to put it back on pool
-        'compressThreshold' => 8192,//8K to turn on auto compression
-        'compressMinSaving' => 0.2, //20% savings required
+        'compressThreshold' => 8192,//8K to turn on auto compressioc
+        'compressMinSaving' => 0.2, //20% savings required (memcache-only)
+        //'checkStatus'       => false, //don't verify connection (memcache-only)
+        //'logRandom'         => false, //don't log memcaches at random (memcache-only)
+        'diagnostics'       => true,  //allow diagnostics to time memcache
+        'hashing'           => '',    //default hashing function
+        //'strategy'          => 32757, //default strategy
+        'serializer'        => 'igbinary', //use igbinary if available
+        'distribution'      => 'consistent', //use libketama-like
     ),
     // }}}
     // {{{ memcached_pool_default

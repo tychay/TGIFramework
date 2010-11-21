@@ -84,40 +84,23 @@ return array(
         'params'            => 0,
         'construct'         => array('tgif_memcached'),
         'version'           => 1,
-        'shouldShard'       => false, //different installs should be seperate
+        'shouldShard'       => true, //different installs should be seperate
         'isSmemable'        => true,
         'smemKey'           => false,
         'isMemcacheable'    => false,
     ),
     // }}}
-    // memcached_config_default
-    // memcached_pool_default
-    // {{{ memcached_checkStatus
+    // {{{ memcached_extension
     /**
-     * Should we check server status on usage?
+     * which php extension to use
      */
-    'memcached_checkStatus' => true,
+    'memcached_extension'  => 'memcached',
     // }}}
-    // {{{ memcached_logRandom
+    // {{{ memcached_default_port
     /**
-     * Percentage of memcache instances to use logging memcache object?
-     * If set to false, then logging service never activated.
+     * default port
      */
-    'memcached_logRandom' => false,
-    // }}}
-    // {{{ memcached_retryTimeout
-    /**
-     * How long to disable a server (in second) before adding it back to the
-     * pool?
-     */
-    'memcached_retryTimeout' => true,
-    // }}}
-    // {{{ memcached_compressThreshold
-    /**
-     * What byte size should we turn on compression for? If it is set to false
-     * then it leaves it at the defaults set by memcache.
-     */
-    'memcached_compressThreshold' => true,
+    //'memcached_default_port'  => 11211,
     // }}}
     // }}}
 );
