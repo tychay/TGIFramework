@@ -4,6 +4,12 @@
 # TODO: -enable-memcached-igbinary (in php-pecl-memcached), igbinary http://opensource.dynamoid.com/, settings http://ilia.ws/archives/211-Igbinary,-The-great-serializer.html#extended  
 
 # EDITME: Set the full path to binaries {{{
+if [ $1 ]; then
+    DISTRIBUTION=$1
+else
+    #DISTRIBUTION='macports'
+    DISTRIBUTION='fedora'
+fi
 # Should it run as sudo? 
 SUDO='sudo'
 
@@ -15,15 +21,58 @@ APACHECTL=`which apachectl`
 # Set this to php-memcached instead of php-memcache
 LIBMEMCACHED=""
 PHP_INI=/etc/php.ini # TODO: check php --ini
-DISTRIBUTION='fedora'
 DO_UPGRADE='1' #Set this to upgrade
 
-# MacPorts
+# MacPorts:
 if [ $DISTRIBUTION = "macports" ]; then
+# Instructions for installing: {{{
+# http://forums.macnn.com/79/developer-center/322362/tutorial-installing-apache-2-php-5-a/
+# 0) Have XCode installed
+# 1) install MacPorts Pkg http://www.macports.org/install.php
+# 2) create a new terminal
+# 3) $ sudo port -v selfupdate                          #update ports
+# 4) $ sudo port install apache2                        #install apache
+#    $ sudo port install mysql5 +server                 #install mysql
+#    $ sudo port install php5 +apache2 +mysql5 +pear    #install php+pear
+# 5) $ cd /opt/local/apache2/modules                    $install mod_php
+#    $ sudo /opt/local/apache2/bin/apxs -a -e -n "php5" libphp5.so
+# 6) $ sudo vim /opt/local/apache2/conf/httpd.conf
+#    #DocumentRoot "/opt/local/apache2/htdocs"          #preserve default site
+#    DocumentRoot "/Library/WebServer/Documents"
+#    ...
+#    # User home directories
+#    Include conf/extra/httpd-userdir.conf              # user home dirs
+#    Include conf/extra/mod_php.conf                    # mod php loader
+#    # If you generated a cert into: /opt/local/apache2/conf/server.crt
+#    Include conf/extra/httpd-ssl.conf                  # ssl support
+#    #also consider conf/extra/httpd-autoindex.conf (Fancy directory listing)
+#    #              conf/extra/httpd-default.conf (Some default settings)
+#    #              conf/extra/httpd-vhosts.conf (virtual hosts)
+#    ....
+#    #DirectoryIndex index.html
+#    DirectoryIndex index.html index.php
+# 6) $ vim ~/.profile
+#    alias apache2ctl='sudo /opt/local/apache2/bin/apachectl'
+#    alias mysqlstart='sudo mysqld_safe5 &'
+#    alias mysqlstop='mysqladmin5 -u root -p shutdown' 
+#    
+#    # remember to start a new shell
+# 7) $ sudo launchctl load -w /Library/LaunchDaemons/org.macports.apache2.plist
+#    $ sudo launchctl load -w /Library/LaunchDaemons/org.macports.mysql5.plist
+# 8) $ sudo mkdir /opt/local/var/db/mysql5
+#    $ sudo chown mysql:mysql /opt/local/var/db/mysql5
+#    $ sudo -u mysql mysql_install_db5
+#    $ mysqlstart
+#    $ mysqladmin5 -u root password [yourpw]
+# 9) $ sudo cp /opt/local/etc/php5/php.ini-production /opt/local/etc/php5/php.ini
+# 10)$ apache2ctl start
+# }}}
+    $SUDO port -v selfupdate
+    #$SUDO port upgrade outdated
     #PHP=/opt/local/bin/php
     APACHECTL=/opt/local/apache2/bin/apachectl
     #PHP_INI=/opt/local/etc
-    PHP_INI=/opt/local/etc/php.ini
+    PHP_INI=/opt/local/etc/php5/php.ini
     # Set path to libmemcached (to use php-memcached instead of php-memcache)
     #LIBMEMCACHED=/opt/local
 fi
@@ -316,8 +365,8 @@ popd
 # }}}
 #echo "### Running phpdoc"
 #./bs/phpdoc.sh
-if [ $PACKAGES_INSTALLED ]; then
-    echo '### You may need to add stuff to your /etc/php.ini (or etc/php.d/) and restart'
+if [ "$PACKAGES_INSTALLED" ]; then
+    echo '### You may need to add stuff to your $PHP_INI (or /etc/php.d/) and restart'
     echo "###  $PACKAGES_INSTALLED"
 fi
 $SUDO $APACHECTL graceful
