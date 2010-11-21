@@ -4,6 +4,7 @@
  * Container for {@link tgif_http}
  *
  * @package tgiframework
+ * @subpackage utilities
  * @copyright 2007-2009 Tagged, Inc. c.2009-2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
@@ -11,8 +12,9 @@
 // {{{ tgif_http
 /**
  * Utility functions handling url manipulation and http redirection
-
+ *
  * @package tgiframework
+ * @subpackage utilities
  * @author terry chay <tychay@php.net>
  */
 class tgif_http

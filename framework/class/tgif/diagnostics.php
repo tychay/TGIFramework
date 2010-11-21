@@ -478,8 +478,8 @@ class tgif_diagnostics
     /**
      * Returns some diagnostics of the page
      *
-     * @param string $type Can be various things:<ul>
-     * <li><b>simple</b>: (string)
+     * @param string $type Can be various things:
+     * <b>simple</b>: (string)
      * This replaces the old quick_diag() function. It is also slightly more
      * accurate of a timer. The idea is to embed some diagnostics into
      * an HTML in a relatively safe manner. Mouseover the copyright symbol
@@ -489,17 +489,17 @@ class tgif_diagnostics
      * 1. is the time to generate the page (in msec), the second
      * 2. is the peak memory usage (if possible) in MB
      * 3. last two digits of IP of server that served the page
-     * </li>
-     * <li><b>totals</b>: (array)
+     *
+     * <b>totals</b>: (array)
      * This returns the total number of calls and total times for each
      * timer category. This was used to output diagnostics into
      * firephp.
-     * </li>
-     * <li><b>data</b>: (array)
+     *
+     * <b>data</b>: (array)
      * Array containing complete diagnostics.
      * The idea is to take this output and serialize into json
      * for rendering in the browser.
-     * </li><</ul>
+     * 
      * @return mixed diagnostics (see $type above)
      */
     function summary($type = 'simple')
