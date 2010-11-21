@@ -17,7 +17,7 @@
  */
 //if (true) {
     // {{{ call_user_func_faster
-    /*
+    /**
      * Get key shared memory cache!
      *
      * If caching is not available, this cleanly returns false. :-) Note
