@@ -342,27 +342,34 @@ if [ $DISTRIBUTION = 'fedora' ] && [ $MEMCACHE = 'memcached' ] then
         $SUDO yum install libmemcached-devel
         pushd packages
             pecl download memcached
+            curl -O http://launchpadlibrarian.net/56440579/libmemcached-0.44.tar.gz
         popd
         pushd build
             rm -rf *
-            #mkdir mybuild\
-            #    mybuild/BUILD\
-            #    mybuild/RPMS\
-            #    mybuild/RPMS/i386\
-            #    mybuild/SOURCES\
-            #    mybuild/SPECS\
-            #    mybuild/SRPMS
-            #cp ../packages/memcached*.tgz mybuild/SOURCES
-            ##cat "topdir: ${BASE_DIR}/build/mybuild" > ~/.rpmrc
-            #rpmbuild -bb --define "_topdir ${BASE_DIR}/build/mybuild" ../res/php-pecl-memcached.spec
-            #$SUDO rpm -i ${BASE_DIR}/RPMS/*/php-pecl-memcached*.rpm
-            gzip -dc ../packages/memcached*.tgz | tar xf -
-            pushd memcached*
-                phpize
-                ./configure --with-libmemcached-dir=${LIBMEMCACHED} -enable-memcached-igbinary
-                make
-                $SUDO make install
-            popd
+            mkdir mybuild\
+                mybuild/BUILD\
+                mybuild/RPMS\
+                mybuild/RPMS/i386\
+                mybuild/SOURCES\
+                mybuild/SPECS\
+                mybuild/SRPMS
+            cp ../packages/memcached*.tgz mybuild/SOURCES
+            cp ../packages/libmemcached*.tar.gz mybuild/SOURCES
+            #cat "topdir: ${BASE_DIR}/build/mybuild" > ~/.rpmrc
+            rpmbuild -bb --define "_topdir ${BASE_DIR}/build/mybuild" ../res/libmemcached.spec
+            cp mybuild/RPMS/x86_64/libmemcached-0.44-1.fc12.x86_64.rpm ../packages
+            cp mybuild/RPMS/x86_64/libmemcached-devel-0.44-1.fc12.x86_64.rpm ../packages
+            $SUDO rpm -i ../packages/libmemcached-*.rpm
+            rpmbuild -bb --define "_topdir ${BASE_DIR}/build/mybuild" ../res/php-pecl-memcached.spec
+            cp mybuild/RPMS/x86_64/php-pecl-memcached-1.0.2-1.fc12.x86_64.rpm ../packages
+            $SUDO rpm -i ../packages/php-pecl-memcached*.rpm
+            #gzip -dc ../packages/memcached*.tgz | tar xf -
+            #pushd memcached*
+            #    phpize
+            #    ./configure --with-libmemcached-dir=${LIBMEMCACHED} -enable-memcached-igbinary
+            #    make
+            #    $SUDO make install
+            #popd
         popd
     fi
 else

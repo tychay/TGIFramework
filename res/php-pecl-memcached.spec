@@ -4,8 +4,8 @@
 
 Summary:      Extension to work with the Memcached caching daemon
 Name:         php-pecl-memcached
-Version:      1.0.0
-Release:      2%{?dist}
+Version:      1.0.2
+Release:      1%{?dist}
 License:      PHP
 Group:        Development/Languages
 URL:          http://pecl.php.net/package/%{pecl_name}
@@ -47,7 +47,7 @@ cd %{pecl_name}-%{version}
 %build
 cd %{pecl_name}-%{version}
 phpize
-%configure --enable-memcached-igbinary
+%configure --with-libmemcached-dir=/usr --enable-memcached-igbinary
 %{__make} %{?_smp_mflags}
 
 
@@ -92,13 +92,17 @@ fi
 
 %files
 %defattr(-, root, root, -)
-%doc %{pecl_name}-%{version}/{CREDITS,LICENSE,EXPERIMENTAL,README.markdown,ChangeLog}
+%doc %{pecl_name}-%{version}/{CREDITS,LICENSE,README.markdown,ChangeLog}
 %config(noreplace) %{_sysconfdir}/php.d/%{pecl_name}.ini
 %{php_extdir}/%{pecl_name}.so
 %{pecl_xmldir}/%{name}.xml
 
 
 %changelog
+* Sun Nov 21 2010 terry chay <tychay@php.net> - 1.0.2-1
+- Update to 1.0.2
+- Rebuilt with libmemcached 0.44 
+
 * Sun Jul 26 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.0.0-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_12_Mass_Rebuild
 
