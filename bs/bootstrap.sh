@@ -106,14 +106,15 @@ pear_installed () { pear list -a | grep ^$1 | wc -l ; }
 # {{{  pecl_update_or_install()
 # $1 = package name
 # $2 = package name in pecl (may have -beta or the like)
-# $3 = if set, package name in macports
+# $3 = if set, yum package name
+# $4 = if set, package name in macports
 pecl_update_or_install () {
     if [ `$PHP_EXT_TEST $1` ]; then
         if [ $DO_UPGRADE ]; then
-            if [ $DISTRIBUTION = 'fedora' ]; then
+            if [ $DISTRIBUTION = 'fedora' ] && [ "$3" != '' ; then
                 echo "### UPDATING $1...";
-                $SUDO yum update php-pecl-$1
-            elif [ $DISTRIBUTION = 'macports' ] && [ "$3" != '' ]; then
+                $SUDO yum update $3
+            elif [ $DISTRIBUTION = 'macports' ] && [ "$4" != '' ]; then
                 echo "### $1 is already up-to-date"
             else
                 echo "### UPGRADING $1...";
@@ -122,9 +123,9 @@ pecl_update_or_install () {
         fi
     else
         echo "### INSTALLING $1";
-        if [ $DISTRIBUTION = 'fedora' ]; then
-            $SUDO yum install php-pecl-$1
-        elif [ $DISTRIBUTION = 'macports' ] && [ "$3" != '' ]; then
+        if [ $DISTRIBUTION = 'fedora' ] && [ "$3" != '' ; then
+            $SUDO yum install $3
+        elif [ $DISTRIBUTION = 'macports' ] && [ "$4" != '' ]; then
             $SUDO port install $3
         else
             $SUDO pecl install $2
@@ -185,7 +186,6 @@ fi
 #APC='http://pecl.php.net/get/APC'
 # }}}
 INCLUED='inclued-beta' #2010-02-22 it went beta, see http://pecl.php.net/package/inclued
-XDEBUG='xdebug'
 # MEMCACHE {{{
 MEMCACHE_PKG='memcache'
 MEMCACHE='memcache'
@@ -253,7 +253,7 @@ if [ `which pecl` ]; then
 fi
 # }}}
 # Install APC {{{
-pecl_update_or_install apc $APC php5-apc
+pecl_update_or_install apc $APC php-pecl-apc php5-apc
 # }}}
 # Install runkit {{{
 if [ `$PHP_EXT_TEST runkit` ]; then
@@ -297,10 +297,10 @@ fi
 # TODO: -enable-memcached-igbinary (in php-pecl-memcached)
 # igbinary http://opensource.dynamoid.com/
 # performance settings: http://ilia.ws/archives/211-Igbinary,-The-great-serializer.html#extended  
-pecl_update_or_install igbinary igbinary php5-igbinary
+pecl_update_or_install igbinary igbinary '' php5-igbinary
 # }}}
 # Install XDEBUG {{{
-pecl_update_or_install xdebug $XDEBUG php5-xdebug
+pecl_update_or_install xdebug xdebug php-pecl-xdebug php5-xdebug
 # }}}
 # Install big_int {{{ http://pecl.php.net/package/big_int
 echo "### big_int..."
@@ -312,16 +312,10 @@ fi
 # }}}
 # Install inclued {{{
 # No fedora package for inclued
-if [ $DISTRIBUTION = 'fedora' ]; then
-    DISTRIBUTION='xfedora';
-fi
-pecl_update_or_install inclued $INCLUED ''
-if [ $DISTRIBUTION = 'xfedora' ]; then
-    DISTRIBUTION='fedora';
-fi
+pecl_update_or_install inclued $INCLUED '' ''
 # }}}
 # Install memcache(d) with igbinary {{{
-pecl_update_or_install $MEMCACHE_PKG $MEMCACHE "$MEMCACHE_PORT"
+pecl_update_or_install $MEMCACHE_PKG $MEMCACHE php-pecl-$MEMCACHE "$MEMCACHE_PORT"
 #pushd packages
 #pecl download $MEMCACHE
 #popd
