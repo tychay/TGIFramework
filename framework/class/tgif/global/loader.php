@@ -6,11 +6,12 @@
  *
  * @package tgiframework
  * @subpackage global
- * @copyright c.2007 Tagged, Inc., c.2009 terry chay
+ * @copyright c.2007 Tagged, Inc., c.2009-2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
- * @todo support memcache queues
- * @todo support database (via data access objects)
+ * @todo support memcached getMulti
+ * @todo support memcached nonblocking queues
+ * @todo support datastore event
  * @todo support database queues
  */
 // imports {{{
@@ -340,8 +341,8 @@ class tgif_global_loader extends tgif_global_object
     // }}}
     // {{{ - $__data
     /**
-     * The data received from calling a store
-     * @var string
+     * The data received from a persistent store
+     * @var mixed
      */
     private $__data;
     // }}}
@@ -538,10 +539,10 @@ class tgif_global_loader extends tgif_global_object
             if ($stopAt && strcmp($stopAt,'db')===0) { $this->__stopped = 'db';  return; }
             // constructor {{{
             if ($this->_construct) {
+                // if constructor must be called make sure the data is saved
+                // as an array (makes it easier to deal with)
                 if (!is_array($this->_ids)) {
                     $this->__data = array();
-                } elseif (count($this->_ids)==1) {
-                    $this->__data = $this->_ids[0];
                 } else {
                     $this->__data = $this->_ids;
                 }
@@ -609,7 +610,13 @@ class tgif_global_loader extends tgif_global_object
         if (!$this->__callback) {
             $return = $this->__data;
         } elseif(is_array($this->__callback) && (count($this->__callback)==1)) {
-            $return = new $this->__callback[0]($this->__data);
+            // special case, if 1 parameter, call the new expliclity
+            $constructor = $this->__callback[0];
+            switch ( count($this->__data) ) {
+                case 0: $return = new $constructor; break;
+                case 1: $return = new $constructor($this->__data[0]); break;
+                default: $return = new $constructor($this->__data); break;
+            }
         } else {
             $return = call_user_func_array($this->__callback, $this->__data);
         }

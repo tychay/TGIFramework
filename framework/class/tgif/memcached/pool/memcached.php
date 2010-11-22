@@ -113,8 +113,9 @@ class tgif_memcached_pool_memcached extends tgif_memcached_pool
             break;
         }
         // }}}
-        // auto prepend the symbol (saves cpu)
-        $m->setOption(Memcached::OPT_PREFIX_KEY, $_TAG->symbol());
+        // Cannot auto prepend the symbol. While it would saves cpu, some
+        // objects in the store are not sharded (shared across instances).
+        //$m->setOption(Memcached::OPT_PREFIX_KEY, $_TAG->symbol());
         // hashing {{{
         if ( $hash = $config['hashing'] ) {
             // Memcached::OPT_HASH default=Memcached::HASH_DEFAULT (Jenkins one-at-a-time)
