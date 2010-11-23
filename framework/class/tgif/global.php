@@ -837,7 +837,6 @@ class tgif_global
                     if ( !isset($config[$key]) ) { $found = false; break; }
                     $config =& $config[$key];
                 }
-                var_dump($found);
                 if ( $found ) {
                     // replace value, never merge here.
                     $config = $configs[$search_key];
