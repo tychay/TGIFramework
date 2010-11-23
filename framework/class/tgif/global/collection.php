@@ -48,7 +48,7 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
     // {{{ __construct($params, $arguments)
     /**
      * @param $arguments array the stuff to use in a constructor of an initial
-     *      member in a subclass. Note that if one isnÕt provided the collection
+     *      member in a subclass. Note that if one isn't provided the collection
      *      is created but there is no submember loaded.
      */
     function __construct($params, $arguments=array())
@@ -160,17 +160,23 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
     // }}}
     // {{{ - offsetSet($offset,$value)
     /**
-     * You should never set this outside {@link tgif_global}.
+     * Bind an object to the collection from outside {@link tgif_global}.
      *
      * @param $offset integer|string offset to modify
      * @param $value mixed new value
      */
     function offsetSet($offset,$value)
     {
-        if (defined('TEST_ENV') && TEST_ENV) {
-            $this->_array[$offset] = $value;
-        } else {
-            trigger_error(sprintf('Unless testing, you should never set %s classes outside of tgif_global! %s=%s',get_class($this), $offset, $value));
+        if ( is_a($value,'tgif_global_collection') ) {
+            trigger_error('Binding a collection object not supported yet! Make a routine that initialized the base loader first');die;
+        }
+        $this->_array[$offset] = $value;
+        // bind the loader becuse it isn't set yet
+        if ( isset($params['loaderLoader']) ) {
+            $params['ids'] = $offset;
+            unset($params['params']);
+            $loader_obj = new tgif_global_loader($params);
+            $value->{$params['loaderLoader']} = $loader_obj;
         }
     }
     // }}}
