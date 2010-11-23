@@ -128,17 +128,20 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
      */
     function offsetGet($offset)
     {
+        // if it's in the collection, return it.
         if (array_key_exists($offset,$this->_array)) {
             return $this->_array[$offset];
         }
+
         $params = $this->_params;
+        // if it isnt in the collection, add it to the loaders {{{
         if (!array_key_exists($offset,$this->_loaders)) {
             if (array_key_exists('ids',$params)) {
                 array_push($params['ids'],$offset);
             } else {
                 $params['ids'] = array($offset);
             }
-            // a collection of collections is already done {{{
+            // a collection of collections is already "done" {{{
             if ($params['params'] > 1) {
                 --$params['params'];
                 $this->_array[$offset] = new tgif_global_collection($params);
@@ -148,6 +151,7 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
             unset($params['params']);
             $this->_loaders[$offset] = new tgif_global_loader($params);
         }
+        // }}}
         $this->_loaders[$offset]->dispatch();
         $this->_array[$offset] = $this->_loaders[$offset]->ready();
         unset($this->_loaders[$offset]);
