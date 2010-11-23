@@ -31,7 +31,7 @@ return array(
      */
     'gld_classmaps'     => array(
         'construct'         => '__autoload_maptable',
-        'version'           => 1,
+        'version'           => 0,
         'isSmemable'        => true,
         'isMemcacheable'    => false, // I tried this with TRUE for testing. Works only if we deal with the commenting issues elsewhere
         'deferCache'        => false, //don't try to call a defer cache. it's ugly
@@ -87,7 +87,7 @@ return array(
     'gld_memcached'  => array(
         'params'            => 0,
         'construct'         => array('tgif_memcached'),
-        'version'           => 1,
+        'version'           => 0,
         'isSmemable'        => true,
     ),
     // }}}
