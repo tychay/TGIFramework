@@ -8,6 +8,8 @@
  * @copyright 2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @todo is there backquoting in PDO? If so, update queries
+ * @todo add arbitrary query support (and log)
+ * @todo add delete function
  */
 // {{{ tgif_db_pdo
 // docs {{{
@@ -52,7 +54,7 @@ class tgif_db_pdo extends pdo
         }
     }
     // }}}
-    // CREATE
+    // CREATE, UPDATE
     // {{{ - insert($table,$data)
     /**
      * Insert a row into a table
@@ -65,7 +67,7 @@ class tgif_db_pdo extends pdo
      */
     function insert($table, $data)
     {
-        $_TAG->diagnostics->startTimer('db', sprintf('%s::insert()',get_class($this)));
+        $_TAG->diagnostics->startTimer('db', sprintf('%s::insert()',get_class($this)), array( 'data'=>$data ));
         // format query {{{
         $keys = array_keys($data);
         $values = array();
@@ -104,6 +106,7 @@ class tgif_db_pdo extends pdo
      */
     function update($table, $data, $where)
     {
+        $_TAG->diagnostics->startTimer('db', sprintf('%s::insertOrUpdate()',get_class($this)), array( 'data'=>array_merge($data,$where) ));
         // format query {{{
         $sets = array();
         $wheres = array();
@@ -128,6 +131,7 @@ class tgif_db_pdo extends pdo
         $result = $sth->execute($data);
         //$result = $sth->execute();
         $this->insertId = $this->lastInsertId();
+        $_TAG->diagnostics->stopTimer('db', array( 'query' => $query ) );
         return ($result) ? true : false;
     }
     // }}}
@@ -147,6 +151,7 @@ class tgif_db_pdo extends pdo
      */
     function insertOrUpdate($table, $data, $where, $autoIncrement='')
     {
+        $_TAG->diagnostics->startTimer('db', sprintf('%s::insertOrUpdate()',get_class($this)), array( 'data'=>array_merge($data,$where) ));
         // format query {{{
         $keys = array_keys($data);
         $values = array();
@@ -181,6 +186,7 @@ class tgif_db_pdo extends pdo
         $sth = $this->prepare($query);
         $result = $sth->execute($data);
         $this->insertId = ($autoIncrement) ? $this->lastInsertId($autoIncrement) : $this->lastInsertId();
+        $_TAG->diagnostics->stopTimer('db', array( 'query' => $query ) );
         return ($result) ? true : false;
     }
     // }}}
@@ -198,10 +204,12 @@ class tgif_db_pdo extends pdo
      */
     function getResults($query, $bindings=array(), $output_type='ARRAY_A')
     {
+        $_TAG->diagnostics->startTimer('db', sprintf('%s::getResults()',get_class($this)), array( 'bindings'=>$bindings ));
         $sth = $this->_prepareQuery($query,$bindings);
 
         $sth->execute();
 
+        $_TAG->diagnostics->stopTimer('db', array( 'query' => $query ) );
         return $sth->fetchAll($this->_guessStyle($output_type));
     }
     // }}}
@@ -215,11 +223,10 @@ class tgif_db_pdo extends pdo
      * WordPress db, this will default to ARRAY_A
      * @param integer $row_offset The desired row
      * @return mixed the row from the database. If no result found then null
-     * @todo support CLASS, BOUND, INTO, LAZY fetch types?
      */
     function getRow($query, $bindings=array(), $output_type='ARRAY_A', $row_offset=0)
     {
-        $_TAG->diagnostics->startTimer('db', sprintf('%s::getRow()',get_class($this)));
+        $_TAG->diagnostics->startTimer('db', sprintf('%s::getRow()',get_class($this)), array( 'bindings'=>$bindings ));
         $sth = $this->_prepareQuery($query,$bindings);
 
         $sth->execute();
@@ -247,6 +254,7 @@ class tgif_db_pdo extends pdo
      */
     function getVar($query, $bindings=array(), $column_offset=0, $row_offset=0)
     {
+        $_TAG->diagnostics->startTimer('db', sprintf('%s::getVar()',get_class($this)), array( 'bindings'=>$bindings ));
         $sth = $this->_prepareQuery($query,$bindings);
 
         $sth->execute();
@@ -257,10 +265,10 @@ class tgif_db_pdo extends pdo
             if (!$success) { return null; }
         }
 
+        $_TAG->diagnostics->stopTimer('db', array( 'query' => $query ) );
         return $sth->fetchColumn($column_offset);
     }
     // }}}
-    // TODO: INTERCEPT AND LOG
     // PRIVATE METHODS
     // {{{ - _guessStyle($output_type)
     /**
@@ -269,7 +277,6 @@ class tgif_db_pdo extends pdo
      * @param string $output_type OBJECT, ARRAY_A, or ARRAY_N. Unlike the
      * WordPress db, this will default to ARRAY_A
      * @return integer returns the PDO::FETCH_* constant
-     * @todo support CLASS, BOUND, INTO, LAZY fetch types?
      */
     private function _guessStyle($output_type)
     {
@@ -288,7 +295,6 @@ class tgif_db_pdo extends pdo
      * @param string $query SQL query to execute
      * @param array $binding bind variables
      * @return PDOStatement a statement handle of the prepared query
-     * @todo add logging
      */
     private function _prepareQuery($query, $bindings=array())
     {
