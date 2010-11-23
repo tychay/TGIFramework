@@ -4,7 +4,7 @@
  * Container for {@link tgif_db}
  *
  * @package tgiframework
- * @subpackage utilities
+ * @subpackage database
  * @copyright 2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @todo is there backquoting in PDO? If so, update queries

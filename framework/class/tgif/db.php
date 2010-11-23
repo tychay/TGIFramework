@@ -14,7 +14,7 @@
  * Right now just a wrapper to pdo so it pdo handles can be created directly from globals
  *
  * @package tgiframework
- * @subpackage utilities
+ * @subpackage database
  * @author terry chay <tychay@php.net>
  */
 // }}}
