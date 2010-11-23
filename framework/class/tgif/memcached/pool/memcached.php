@@ -9,6 +9,8 @@
  * @copyright 2007 Tagged Inc. 2009-2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net> 
+ * @todo Don't bother with server keys unless it is specified (makes it more
+ * efficient and parallelizeable
  */
 // {{{ tgif_memcached_pool_memcached
 // docs {{{
@@ -113,9 +115,9 @@ class tgif_memcached_pool_memcached extends tgif_memcached_pool
             break;
         }
         // }}}
-        // Cannot auto prepend the symbol. While it would saves cpu, some
-        // objects in the store are not sharded (shared across instances).
-        //$m->setOption(Memcached::OPT_PREFIX_KEY, $_TAG->symbol());
+        // Auto prepend the symbol on all requests. This saves cpu and ensures
+        // this cache is independent of other applications 
+        $m->setOption(Memcached::OPT_PREFIX_KEY, $_TAG->symbol());
         // hashing {{{
         if ( $hash = $config['hashing'] ) {
             // Memcached::OPT_HASH default=Memcached::HASH_DEFAULT (Jenkins one-at-a-time)

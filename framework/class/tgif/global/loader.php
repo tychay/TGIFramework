@@ -9,6 +9,7 @@
  * @copyright c.2007 Tagged, Inc., c.2009-2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
+ * @todo add checkandset flag support
  * @todo support memcached getMulti
  * @todo support memcached nonblocking queues
  * @todo support datastore event
@@ -28,37 +29,45 @@ if (!function_exists('apc_fetch')) {
  * Load globals automagically
  *
  * All possible parameters (defaults):
- * - params (0): if non-zero this defines the nesting of globals as array
+ * - params (0): if non-zero this defines the nesting levels of globals as array
  *   objects
  * - construct (): The callback function to call as the constructor. This must
- *   always be provided to bootstrap the system.
- * - shouldShard (false): If true, the built in cache key generator will create
- *   keys unique to the installation checkout (different dev systems will
- *   have different keys) for that object
- * - loaderLoader (): method of the constructed object to pass the loader to
+ *   always be provided to bootstrap the system which is needed when the
+ *   volatile stores return nothing. There is a special rule here in that if
+ *   the callback is an array with a single element it will call "new" on the
+ *   element instead of {@link call_user_func_array()}. This means if the
+ *   constructor has multiple paramters, it can only have a single parameter!
+ *   If it the call has only a single element that is passed through, but if it
+ *   has more, it will be passed in as an array.
+ * - version (0): the version number to append to the cache keys to allow
+ *   for staling of the cache/hot updates of the information.
+ * - loaderLoader (''): method of the constructed object to pass the loader to
  *   after construction. This is done so the loader has access to the
  *   shared memory storage and other functions of the loader class. Note that
  *   it is bad mojo to serialize this with the object, so you should consider
  *   using __sleep() to filter this parameter out.
- * - version (0): the version number to append to the cache keys to allow
- *   for hot updates of the information.
  * - manualCache (false): if set to true, it will not write the memcache
- *   automatically at all.
- * - deferCache (true): if set to true, it will not write the memcache until
+ *   automatically at all. The object must do the work manually.
+ * - deferCache (false): if set to true, it will not write the memcache until
  *   page shutdown (via event system).
- * - checkCache (): method to call that returns a boolean on whether or not
+ * - checkCache (''): method to call that returns a boolean on whether or not
  *   (after wakeup) the wakeup function may have changed the data and
  *   need to be set.
- * - isSmemable (false): whether or not this global can be stored into
- *   the shared memory segment of the server's user cache. Note: never
- *   serialize any user/profile data, only sitewide globals, etc.
+ * - deleteAction (false): If set, this is the callback to execute before
+ *   deleting object from cache. This allows the system to delete any related
+ *   volatile stores. Note that if it is an array and the first element is
+ *   empty, then $this is implied.
+ * - isSmemable (false): whether or not this global can be stored into the
+ *   shared memory segment of the server's user cache. Note: never serialize any
+ *   user/profile data because you will blow through this cache! Instead resere
+ *   smem for sitewide globals, and small things that are shared at the
+ *   application level.
  * - smemKey (false): the callback to generate the shared memory key. If false,
  *   then it will use a built-in generator.
- * - smemcacheLifetime (false): the amount of time to store value in shared
+ * - smemcacheLifetime (0): the amount of time to store value in shared
  *   memory. By default, this is forever (i.e., until service restart).
  * - isMemcacheable (false): whether or not this global can be stored into
  *   memcache.
- * - memcacheChannel (___): the memcache pool to use.
  * - memcacheKey (false): the callback to generate the memory cache key. This
  *   must may return an array (key,serverkey[,pool]). If false, then it will
  *   use a built-in generator.
@@ -66,20 +75,48 @@ if (!function_exists('apc_fetch')) {
  *   memcache. By default, this uses the default value of {@link memcached
  *   memcache pool}
  * - memcacheGet (null): a callback to run after data is returned from
- *   memcache. Since we are using the memcache extension, we shouldn't need to
- *   use unserialize() here, but you can if you pass an object, it saves it as
- *   an associative array. The default handler is determined by
- *   {@link tgif_memcached}.
+ *   memcache. Since we are using the php extension, there is no need to use
+ *   unserialize() here (for backward compatibility to the original Tagged
+ *   system for instance). 
  * - memcacheSet (null): a callback to run before data is stored to  memcache.
- *   Since we are using the memcache extension, we shouldn't need to use
- *   serialize() here, but we can becasue it saves objects as associative
- *   arrays. The default handler is determined by {@link tgif_memcached}.
+ *   Since we are using the php extension, there is no need to use serialize()
+ *   here.
  *
- * There is a special rule for callbacks in that if the callback is an array
- * with a single function it will call "new" on the element instead of
- * {@link call_user_func_array()}. This means if the constructor has multiple
- * paramters in the constructor, it can only have a single parameter(!) which
- * is an array of the parameterization.
+ * Automatically generated parameters;
+ * - name: This is used in constructing keys, it will usually be the class
+ *   name.
+ * - ids: This is used to identify the object when it is part of a collection.
+ *   most often this is used in constructing cache keys and the constructor of
+ *   the object itself.
+ * - configPrefix: three letter symbol
+ *
+ * Unsupported parameters:
+ * - shouldShard (false): When storing variables into the volatile stores (smem,
+ *   memcache), should we prepend the config prefix in order to prevent overlap
+ *   with other installs? Now this is always on by default.
+ * - deferCache (true): This used to default to true, but now it is false as
+ *   it simplifies interaction.
+ * - memcacheChannel (___): the memcache pool to use. This is no longer
+ *   supported as we assume the pool is the default pool for everything.
+ * - useUpdateChecker (true): Check to see if the data changed before doing
+ *   an update. This also throws an object notification on change. This would
+ *   only work if _laoderLoader is set, if the data stored is an object, and
+ *   for memcache get/sets. This will be replaced by a checkAndSet option.
+ * - lockedUpdates (false): whehter all updates to this object should be
+ *   performed inside a lock. This is eliminated until checkAndSet is resolved.
+ * - getDataVersion ('getDataVersion'): name of the method in the object that
+ *   returns the version of the object. Only need if $_lockedUpdates is true.
+ *   cheeckAndSet eliminated this nastiness.
+ * - smemCallback (): like memcacheCallback but for shared memory segment. It
+ *   is decided that since smem stores objects natively, there is no need to
+ *   fiddle with the callback system
+ * - onDispatch: set this if you need to do work after dispatch (ex. loading
+ *   class libraries)
+ * - dirtyCallback: what call hander to register when it receives a cache
+ *   dirty (this should either update itself to smem,memcache, or it
+ *   should delete itself from cache).
+ * - isPersist: does this have a way to save/persist to database
+ * - dbCallback: what to call to grab data from database and make global
  *
  * @package tgiframework
  * @subpackage global
@@ -87,18 +124,20 @@ if (!function_exists('apc_fetch')) {
 // }}}
 class tgif_global_loader extends tgif_global_object
 {
+    // CONSTANTS
     // {{{ - _global_version
     /**
      * A global version character
      *
      * Added a single character can be changed when we change default behaviors
-     * of the engine, or basic routines in the loader object. Think of it as
-     * global versioning, but not done on every release. If you want to do this
-     * on release, just keep cyling it through base-64 numbers 0…9a…zA…z-_
+     * of entire tag global system, or basic routines in the loader object.
+     * Think of it as global versioning, but not done on every release. If you
+     * want to do this on release, just keep cyling it through base-64 numbers
+     * 0…9a…zA…z-_
      *
      * Only use one character to keep the keys small.
      *
-     * Note that this code is only called when using the autokey generator. To
+     * Note that this code is only called when using the default generator. To
      * allow for backward compatibility, this is not called when the generator
      * is bypassed.
      *
@@ -111,32 +150,30 @@ class tgif_global_loader extends tgif_global_object
     // {{{ - $self
     /**
      * The object/data itself.
+     *
      * Unless the loader is unloaded, there will remain a reference to it here.
      * Note that unless this is an object, this will be a copy of the data,
-     * not the data itself so be warned when working in
-     * {@link tgif_global_loader::$_deferCache deferred cache mode}
+     * not the data itself so be warned when working in {@link
+     * tgif_global_loader::$_deferCache deferred cache mode}
      * @var mixed
      */
     public $self = null;
     // }}}
     // CONFIGURABLE PRIVATE PROPERTIES
-    // {{{ - $_ids
-    /**
-     * This is used to identify the object when it is part of a collection.
-     * most often this is used in constructing cache keys and the constructor of
-     * the object itself.
-     * @var array|0
-     */
-    private $_ids = 0;
-    // }}}
     // {{{ - $_name
     /**
      * The name of the object.
      *
-     * This is used in constructing keys, it will usually be the class name.
      * @var string
      */
     private $_name = '';
+    // }}}
+    // {{{ - $_ids
+    /**
+     * Identify the object when it is part of a collection.
+     * @var array|0
+     */
+    private $_ids = 0;
     // }}}
     // {{{ - $_configPrefix
     /**
@@ -156,13 +193,15 @@ class tgif_global_loader extends tgif_global_object
      */
     private $_construct = false;
     // }}}
-    // {{{ - $_shouldShard
+    // {{{ - $_version
     /**
-     * When storing variables into the volatile stores (smem, memcache), should
-     * we separate this by the config prefix in order to prevent overlap with
-     * other installs?
+     * The version number.
+     *
+     * Appended to the default key in order to do stale keys
+     *
+     * @var string
      */
-    private $_shouldShard = false;
+    private $_version = '';
     // }}}
     // {{{ - $_loaderLoader
     /**
@@ -175,16 +214,7 @@ class tgif_global_loader extends tgif_global_object
      *
      * @var string
      */
-    private $_loaderLoader = 0;
-    // }}}
-    // {{{ - $_version
-    /**
-     * The version number.
-     *
-     * This is used as part of the key to allow dynamic upgrades.
-     * @var string
-     */
-    private $_version = '';
+    private $_loaderLoader = '';
     // }}}
     // {{{ - $_manualCache
     /**
@@ -193,21 +223,11 @@ class tgif_global_loader extends tgif_global_object
      */
     private $_manualCache = false;
     // }}}
-    // {{{ - $_useUpdateChecker
-    /**
-     * Check to see if data changed before doing an update. This also
-     * throws an object notification on change.
-     *
-     * This only works if the _loaderLoader is set, if the data
-     * stored is an object, and for memcache get/sets
-     */
-    private $_useUpdateChecker = true;
-    // }}}
     // {{{ - $_deferCache
     /**
      * Set to true to defer writing of cache to page shutdown
      */
-    private $_deferCache = true;
+    private $_deferCache = false;
     // }}}
     // {{{ - $_checkCache
     /**
@@ -216,6 +236,18 @@ class tgif_global_loader extends tgif_global_object
      * @var string
      */
     private $_checkCache = '';
+    // }}}
+    // {{{ - $_deleteAction
+    /**
+     * Callback to execute before deleting object from cache.
+     *
+     * This allows the system to delete any related persistent stores.
+     *
+     * @var mixed if false, does nothing, else it does {@link call_user_func()}
+     *  If the first element in the array is empty, it inserts $this into that
+     *  element.
+     */
+    private $_deleteAction = false;
     // }}}
     // {{{ - $_isSmemable
     /**
@@ -236,10 +268,10 @@ class tgif_global_loader extends tgif_global_object
     /**
      * The lifetime of the smemcache key in seconds.
      *
-     * When false, the key lives until service restart.
-     * @var mixed.
+     * When 0, the key lives until service restart.
+     * @var string.
      */
-    private $_smemcacheLifetime = false;
+    private $_smemcacheLifetime = 0;
     // }}}
     // {{{ - $_isMemcacheable
     /**
@@ -247,25 +279,6 @@ class tgif_global_loader extends tgif_global_object
      * @var boolean
      */
     private $_isMemcacheable = false;
-    // }}}
-    // {{{ - $_memcacheChannel
-    /**
-     * Which memcache pool to refer to.
-     *
-     * If this is an array, then it will do memcache affinity. The first
-     * element in the array will be the index into the id of the object
-     * to do the affinity for. The second one will be a prefix character.
-     *
-     * For instance, if the object is indexed by user id and this parameter
-     * is array(0,'crapola'); then the channel generated would be something
-     * for a user in the 37th partition would be: c37 (c from "c" in crapola).
-     *
-     * If no second paramter is specified it will use the character "p".
-     *
-     * If no memcache partition exists it will use the default channel "___".
-     * @var string|array
-     */
-    private $_memcacheChannel = '___';
     // }}}
     // {{{ - $_memcacheKey
     /**
@@ -303,43 +316,7 @@ class tgif_global_loader extends tgif_global_object
      */
     private $_memcacheSet = false;
     // }}}
-    // {{{ - $_deleteAction
-    /**
-     * Function to execute before deleting object from cache.
-     *
-     * This allows the system to delete any related persistent stores
-     *
-     * Note for old key support you should put this as 'unserialize'
-     * @var mixed if false, does nothing, else it does {@link call_user_func()}
-     *  If the first element in the array is empty, it inserts $this into that
-     *  element.
-     */
-    private $_deleteAction = false;
-    // }}}
-    // {{{ - $_lockedUpdates
-    /**
-     * Whether all updates to this object should be performed inside a lock
-     * @var bool
-     */
-    private $_lockedUpdates = false;
-    // }}}
-    // {{{ - $_dataVersion
-    /**
-     * Name of the method in the object that returns the version of the object
-     * Only need if $_lockedUpdates is true
-     * @var string
-     */
-    private $_dataVersion = 'getDataVersion';
-    // }}}
     // VERY PRIVATE PROPERTIES
-    // {{{ - $__dataSignature
-    /**
-     * If {@link $_useUpdateChecker} this stores
-     * the signature of the data
-     * @var string
-     */
-    private $__dataSignature;
-    // }}}
     // {{{ - $__data
     /**
      * The data received from a persistent store
@@ -347,22 +324,23 @@ class tgif_global_loader extends tgif_global_object
      */
     private $__data;
     // }}}
-    // {{{ - $__needsUpdate
-    /**
-     * Flag to say that we need to update the caches with the new data.
-     *
-     * I had to add a check before updating this flag so it only updates if
-     * isSemable or isMemcacheble is true (tychay 20080903)
-     * @var boolean
-     */
-    private $__needsUpdate = false;
-    // }}}
     // {{{ - $__callback
     /**
      * What to do with return data in order to start the object.
      * @var string
      */
     private $__callback;
+    // }}}
+    // {{{ - $__needsUpdate
+    /**
+     * Flag to say that we need to update the caches with the new data.
+     *
+     * I had to add a check before updating this flag so it only updates if
+     * isSemable or isMemcacheble is true (tychay 20080903)
+     *
+     * @var boolean
+     */
+    private $__needsUpdate = false;
     // }}}
     // {{{ - $__exception
     /**
@@ -381,25 +359,16 @@ class tgif_global_loader extends tgif_global_object
     // CREATION AND DESTRUCTION
     // {{{ __construct($params)
     /**
-     * The constructor.
+     * The constructor (builds configuration and overrides defaults).
      *
      * @param $params a hash of information the global system uses to figure
      * out how to load the stuff as transparently as possible.
-     *
-     * Unsupported parameters:
-     * - smemCallback: like memcacheCallback but for shared memory segment
-     * - onDispatch: set this if you need to do work after dispatch (ex. loading
-     *   class libraries
-     * - dirtyCallback: what call hander to register when it receives a cache
-     *   dirty (this should either update itself to smem,memcache, or it
-     *   should delete itself from cache).
-     * - isPersist: does this have a way to save/persist to database
-     * - dbCallback: what to call to grab data from database and make global
-     * @var mixed The callback to call when there is no variable. This should
-     *     be an array or string.
      */
     function __construct($params)
     {
+        if (isset($params['name'])) {
+            $params['name'] = get_class($this);
+        }
         foreach($params as $key=>$value)
         {
             $propname = '_'.$key;
@@ -430,56 +399,57 @@ class tgif_global_loader extends tgif_global_object
      * @return string
      */
     private function _defaultKeyGen() {
-        $return = self::_global_version;
-        $return .= ($this->_shouldShard)
-                  ? $this->_configPrefix.'-'
-                  : '';
-        $return .= $this->_name;
+        $return = self::_global_version . $this->_name;
         if ($this->_ids) { $return .= '_'.implode('_',$this->_ids); }
-        // memcache keys cannot contain control characters or whitespace so we urlencode
-        return urlencode($return . '.' . $this->_version);
+        return $return . '.' . $this->_version;
     }
     // }}}
     // {{{ - smemKey()
     /**
      * Grab the key for shared memory access
+     *
+     * If 'smemKey' is specified in the configuration, it will call that
+     * function (passing in two parameters: the object name and the ids
+     * generate the key. Therefore the function should have the structure:
+     * mixed function memcache_key(string $name, array $ids, integer $version)
+     *
+     * @uses _defaultKeyGen() To generate key in default case. It will then
+     * prepend the config prefix to ensure no conflict ont the same server.
+     * @return string The key to use reading this object from shared memory.
      */
     function smemKey()
     {
         if ($this->_smemKey) {
-            return call_user_func($this->_smemKey,$this->_ids);
+            return call_user_func($this->_smemKey,$this->_name,$this->_ids,$this->_version);
         } else {
-            return $this->_defaultKeyGen();
+            return $this->_configPrefix.$this->_defaultKeyGen();
         }
     }
     // }}}
     // {{{ - memcacheKey()
     /**
      * Grab the key used to store data into memcached.
+     *
+     * If 'memcachKey' is specified in the configuration, it will call that
+     * function (passing in two parameters: the object name and the ids
+     * generate the key. Therefore the function should have the structure:
+     * mixed function memcache_key(string $name, array $ids, integer $version)
+     *
+     * @return array|string The key used for storing this object into memcache.
+     *  Note that if you return an array, the second parameter is the server    
+     *  key.
      */
     function memcacheKey()
     {
         // grab the key either with a user function or the default _defaultKeyGen {{{
         if ($this->_memcacheKey) {
-            $userKey = call_user_func($this->_memcacheKey,$this->_ids);
-            if (is_array($userKey)) {
-                return $userKey;
-            }
-            $key = $userKey;
+            return call_user_func($this->_memcacheKey,$this->_name,$this->_ids,$this->_version);
         } else {
-            $key = $this->_defaultKeyGen();
+            // memcache keys cannot contain control characters or whitespace
+            // so we urlencode
+            return urlencode($this->_defaultKeyGen());
         }
         // }}}
-        // handle channel affinity {{{
-        $channel = $this->_memcacheChannel;
-        if (is_array($channel)) {
-            $channel = tgif_memcache::affine_channel(
-                      $this->_ids[$channel[0]],                             // affinity parameter
-                      (count($channel) > 1) ? substr($channel[1],0,1) : 'p' // prefix defaults to 'p'
-                      );
-        }
-        // }}}
-        return array($key,$channel);
     }
     // }}}
     // PUBLIC METHODS
@@ -487,22 +457,27 @@ class tgif_global_loader extends tgif_global_object
     /**
      * Grab the data from the quickest persistence store.
      *
-     * This doesn't actually create an object, that is left for {@link ready()}
+     * This doesn't actually create an object, that is left for {@link ready()}.
+     * Instead it stores itself in $__data and $__callback.
      *
+     * @param string $stopAt How far to go with the dispatch before stopping.
      * @return void
-     * @todo memcache (upgrade): add flag support on get()
+     * @todo when resuming stopped we should skip parts that have already been
+     *  done
      */
     function dispatch($stopAt='')
     {
-        global $_TAG;
-        // we may be reloading, so clear the "last" exception
+        //global $_TAG;
+
+        // we may be reloading object, so clear the "last" exception
         $this->__exception = null;
-//        $old_error_handler = set_error_handler(array('tgif_global_loader','error_handler'), E_ALL&~E_NOTICE&~E_USER_NOTICE);
+        $this->__stopped = ''; // no stopping us...
+
         try {
             // get from shared memory {{{
             if ($this->_isSmemable) {
-                $return = apc_fetch($this->smemKey());
-                if ($return !== false) {
+                $return = apc_fetch($this->smemKey(), $success);
+                if ($success) {
                     $this->__data = $return;
                     $this->__callback = false;
                     return;
@@ -513,9 +488,14 @@ class tgif_global_loader extends tgif_global_object
             // get from memcached {{{
             if ($this->_isMemcacheable) {
                 try {
-                    $memcache_pool = $_TAG->memcached;
                     $key = $this->memcacheKey();
-                    $data = $memcache_pool->get($key); //TODO: add pool
+                    $data = $_TAG->memcached->get($key, 'global');
+                    if ($data !== false) {
+                        $callback = $this->_memcacheGet;
+                        $this->__callback = $callback;
+                        $this->__data = ($callback) ? array($data) : $data;
+                    }
+                    // need to nest data
                     // handle you can save strings only (temporary) {{{
                     if (is_array($data)) {
                         $data = (array_key_exists($key[0],$data))
@@ -523,42 +503,36 @@ class tgif_global_loader extends tgif_global_object
                             : false;
                     }
                     // }}}
-                    if ($data !== false) {
-                        $this->__data = $data;
-                        $this->__callback = $this->_memcacheGet;
-                        return;
-                    }
                 } catch (tgif_global_exception $e) {
-                    // If we get a cache exception, make a note but
-                    // don't otherwise do anything.  We want to
-                    // proceed as if caching were enabled.
+                    // If we get a cache exception, make a note but don't
+                    // otherwise stop processing.  We want to proceed as if
+                    // caching were enabled and returned nothing
                     trigger_error( $e->getMessage() );
                 }
             }
             // }}}
             if ($stopAt && strcmp($stopAt,'memcache')===0) { $this->__stopped = 'memcache';  return; }
+            // TODO: db gathering code :-)
             if ($stopAt && strcmp($stopAt,'db')===0) { $this->__stopped = 'db';  return; }
             // constructor {{{
             if ($this->_construct) {
-                // if constructor must be called make sure the data is saved
+                // If constructor must be called make sure the data is saved
                 // as an array (makes it easier to deal with)
-                if (!is_array($this->_ids)) {
-                    $this->__data = array();
-                } else {
-                    $this->__data = $this->_ids;
-                }
+                $this->__data = (is_array($this->_ids))
+                              ? $this->_ids
+                              : array();
                 $this->__callback = $this->_construct;
-                // only update if it is in a memory cache
+
+                // only force update if it should save to a volatile cache
                 if ($this->_isSmemable || $this->_isMemcacheable) {
                     $this->__needsUpdate = true;
                 }
             }
             // }}}
         } catch (tgif_global_exception $e) {
-            echo $e->getMessage(); die;
+            trigger_error($e->getMessage());
             $this->__exception = $e;
         }
-//        restore_error_handler();
     }
     // }}}
     // {{{ - canConstruct()
@@ -583,6 +557,8 @@ class tgif_global_loader extends tgif_global_object
      * - string: {@link call_user_func_array} on data (dangerous because
      *      function may not be in memory)
      * - array (with one parameter): call a constructor, pass data as param
+     *      if data has a single element, pass it directly, else wrap in in
+     *      an array so it is a single parameter pass.
      * - array (more than one parameter): {@link call_user_func_array} on data
      *
      * @return mixed the actually loaded object or data or null if it failed
@@ -591,10 +567,12 @@ class tgif_global_loader extends tgif_global_object
     function ready()
     {
         global $_TAG;
+        // If we stopped, finish dispatch and clear the stopped variable {{{
         if ($this->__stopped) {
             $this->dispatch();
-            $this->__stopped = '';
         }
+        // }}}
+        // There was a problem with the dispatch {{{
         if ($this->__exception) {
            trigger_error(sprintf(
                'Try to load a failed construction of %s(%s). Failed due to %s on "+%d %s"',
@@ -605,42 +583,46 @@ class tgif_global_loader extends tgif_global_object
                $this->__exception->getFile()), E_USER_WARNING);
            return null;
         }
-        // run callback constructor on data {{{
-        // If you don't see any errors, then check to make sure __autoload()
-        // doesn't have error suppression
-        if (!$this->__callback) {
+        // }}}
+        // Run callback constructor on data {{{
+        // Note: If you don't see any errors, then check to make sure
+        // __autoload() doesn't have error suppression
+        if ( !$this->__callback ) {
             $return = $this->__data;
-        } elseif(is_array($this->__callback) && (count($this->__callback)==1)) {
-            // special case, if 1 parameter, call the new expliclity
+        } elseif (is_array($this->__callback) && (count($this->__callback)==1)) {
+            // special case, if 1 parameter, call the "new" explicitly {{{
             $constructor = $this->__callback[0];
             switch ( count($this->__data) ) {
                 case 0: $return = new $constructor; break;
                 case 1: $return = new $constructor($this->__data[0]); break;
                 default: $return = new $constructor($this->__data); break;
             }
+            // }}}
         } else {
             $return = call_user_func_array($this->__callback, $this->__data);
         }
+        // clear temporary stuff because we are done with them.
         unset($this->__data);
         unset($this->__callback);
-        if(empty($return)) { return $return; }
+        if( empty($return) ) { return $return; }
         // }}}
+        // Bind loader 
         if ($this->_loaderLoader) {
-            if ($this->_useUpdateChecker) {
-                $this->__dataSignature = md5(serialize($return));
-            }
             call_user_func(array($return,$this->_loaderLoader), $this);
         }
+        // Allow object to figure out if wakeup function has messed with the
+        // cache and it needs updating.
         if ($this->_checkCache && call_user_func(array($return,$this->_checkCache))) {
             $this->__needsUpdate = true;
         }
+        // If update, then update itself
         if ($this->__needsUpdate) {
             $this->self = $return;
             if (!$this->_manualCache) {
                 if ($this->_deferCache) {
                     $_TAG->queue->subscribe('shutdown',array($this,'cacheSelf'),100,false,false);
                 } elseif (!$this->_manualCache) {
-                    $this->cacheSelf($return);
+                    $this->cacheSelf();
                 }
             }
         }
@@ -648,6 +630,32 @@ class tgif_global_loader extends tgif_global_object
     }
     // }}}
     // CACHING
+    // {{{ - setToCache($data[,$deferSmem,$deferMemcache])
+    /**
+     * Allow cache to be updated.
+     *
+     * An example of how this should be used when you have loaderLoader defined
+     * to add the loader to $this->_loader.
+     *
+     * <code>$this->_loader->setToCache($this);</code>
+     *
+     * @param boolean $deferSmem Skip the smem step (if defined)
+     * @param boolean $deferMemcache Skip the memcache step (if defined)
+     * @return boolean success or failure.
+     * @todo Don't bother updating caches if nothing changed
+     */
+    public function setToCache($data, $deferSmem=false, $deferMemcache=false)
+    {
+        //global $_TAG;
+        // Throw object update notification {{{
+        if (is_object($data) && $_TAG->queue) {
+            $_TAG->queue->publish(array('object',get_class($data),'updateCache'), array('obj'=>$data));
+        }
+        // }}}
+        $this->self = $data;
+        return $this->cacheSelf($deferSmem,$deferMemcache);
+    }
+    // }}}
     // {{{ - cacheSelf([$deferSmem,$deferMemcache])
     /**
      * Updates the loader to the memory caches.
@@ -656,43 +664,41 @@ class tgif_global_loader extends tgif_global_object
      * let's make sure it's there and updated.
      *
      * Note this function is PUBLIC only in order to be called when
-     * {@link $_deferCache} is set. Don't use this function, you are looking
-     * for $setToCache($data) instead. :-)
+     * {@link $_deferCache} is set. Don't use this function -- you are looking
+     * for setToCache($data) instead. :-)
      *
+     * @param boolean $deferSmem Skip the smem step (if defined)
+     * @param boolean $deferMemcache Skip the memcache step (if defined)
      * @return boolean success or failure.
      */
     public function cacheSelf($deferSmem=false, $deferMemcache=false)
     {
-        global $_TAG;
+        //global $_TAG;
         $result = true;
         $this->__needUpdate = false;
         // save into smem {{{
         if ($this->_isSmemable && !$deferSmem) {
-            $result = $result && apc_store($this->smemKey(), $this->self,
-                !empty($this->_smemcacheLifetime)? $this->_smemcacheLifetime: 0);
+            $result = $result && apc_store(
+                $this->smemKey(),
+                $this->self,
+                (int) $this->_smemcacheLifetime
+            );
         }
         // }}}
         // save into memcache {{{
         if ($this->_isMemcacheable && !$deferMemcache) {
             try {
-                $memcache_pool = $_TAG->memcachePool;
                 $key = $this->memcacheKey();
-                $cache = $memcache_pool->getMemcache($key[0],$key[1]);
-                $cacheLifetime = ($this->_memcacheLifetime===false) ? $memcache_pool->lifetime : $this->_memcacheLifetime;
-
+                $lifetime = ($this->_memcacheLifetime===false)
+                          ? -1 //use pool default
+                          : $this->_memcacheLifetime;
                 // if custom memcache setter is configured
                 if ($this->_memcacheSet) {
                     $data = call_user_func($this->_memcacheSet, $this->self);
                 } else {
                     $data = $this->self;
                 }
-                
-                if ($this->_lockedUpdates) {
-                    require_once(LIB_FUNC_DIR . DIRECTORY_SEPARATOR . 'locked_memcache_update.php');
-                    $result = $result && locked_memcache_update($cache, $key[0], array($this, 'lockedCacheUpdate'), 0, $cacheLifetime);
-                } else {
-                    $result = $result && $cache->set($key[0], $data, 0, $cacheLifetime);
-                }
+                $result = $result && $_TAG->memcached->set($key, $data, 'global', $lifetime);
             } catch (tgif_global_exception $e) {
                 // If we get a cache exception, make a note but
                 // don't otherwise do anything.  We want to
@@ -704,68 +710,26 @@ class tgif_global_loader extends tgif_global_object
         return $result;
     }
     // }}}
-    // {{{ - lockedCacheUpdate($oldValue)
-    /**
-     * Checks old value's data version against new value's data version for a locked update
-     * 
-     * Note: this function is public so that it can be called by locked_memcache_update
-     * DO NOT CALL THIS FUNCTION DIRECTLY
-     * 
-     * @param $oldValue mixed value currently in memcache
-     * @return mixed new value if update is OK, otherwise false
-     */
-    public function lockedCacheUpdate($oldValue) {
-        // make sure we have a more recent copy
-        if ($oldValue) {
-            $oldVersion = call_user_func(array($oldValue, $this->_dataVersion));
-            $newVersion = call_user_func(array($this->self, $this->_dataVersion));
-            if ($oldVersion >= $newVersion) {
-                return false;
-            }
-        }
-        // return our copy for setting to cache
-        return $this->self;
-    }
-    // }}}
-    // {{{ - setToCache($data[,$deferSmem,$deferMemcache])
-    /**
-     * Allow cache to be updated.
-     *
-     * An example of how this should be used when you have _setLoader defined.
-     * <code>$this->_loader->setToCache($this);</code>
-     */
-    public function setToCache($data, $deferSmem=false, $deferMemcache=false)
-    {
-        global $_TAG;
-        // Don't bother updating caches if nothing changed {{{
-        if ($this->_useUpdateChecker && $this->_loaderLoader && (md5(serialize($data))==$this->__dataSignature)) {
-            return true;
-        }
-        // }}}
-        // Throw object update notification {{{
-        if (is_object($data) && $_TAG->queue) {
-            $_TAG->queue->publish(array('object',get_class($data),'updateCache'), array('obj'=>$data));
-        }
-        // }}}
-        $this->self = $data;
-        return $this->cacheSelf($deferSmem,$deferMemcache);
-    }
-    // }}}
-    // {{{ - deleteFromCache($smemOnly)
+    // {{{ - deleteFromCache([$deferSmem,$deferMemcache])
     /**
      * Allow cache to be deleted
      *
      * Skip can occur when the loader never got the object from cache the first
-     * time. That's because this is called whether or not the obejct is actually
-     * in cache.
+     * time. That's because this can be called whether or not the object is
+     * actually in cache.
+     *
+     * @param boolean $deferSmem Skip the smem step (if defined)
+     * @param boolean $deferMemcache Skip the memcache step (if defined)
+     * @return boolean success or failure.
      */
-    public function deleteFromCache()
+    public function deleteFromCache($deferSmem=false,$deferMemcache=false)
     {
-        global $_TAG;
+        //global $_TAG;
         $result = true;
         // handle deleteAction {{{
         if ($this->_deleteAction) {
             $skip = false;
+            // append self variable to delete action {{{
             if (is_array($this->_deleteAction) && !$this->_deleteAction[0]) {
                 if ($this->self) {
                     $this->_deleteAction[0] = $this->self;
@@ -773,104 +737,32 @@ class tgif_global_loader extends tgif_global_object
                     $skip = true;
                 }
             }
+            // }}}
             if (!$skip) {
                 call_user_func($this->_deleteAction);
             }
         }
         // }}}
         // delete from sMem {{{
-        if ($this->_isSmemable) {
+        if ($this->_isSmemable && !$deferSmem) {
             $result = $result && apc_delete($this->smemKey());
         }
         // }}}
         // delete from memcache {{{
-        if ($this->_isMemcacheable) {
+        if ($this->_isMemcacheable && !$deferMemcache) {
             try {
-                $memcache_pool = $_TAG->memcachePool;
                 $key = $this->memcacheKey();
+                $result = $result && $_TAG->delete($key, 'global');
                 $cache = $memcache_pool->getMemcache($key[0],$key[1]);
                 $result = $result && $cache->delete($key[0]);
             } catch (tgif_global_exception $e) {
-                // If we get a cache exception, make a note but
-                // don't otherwise do anything.  We want to
-                // proceed as if caching were enabled.
+                // If we get a cache exception, make a note but don't otherwise
+                // do anything.  We want to proceed as if caching were enabled.
                 trigger_error( $e->getMessage() );
             }
         }
         // }}}
         return $result;
-    }
-    // }}}
-    // {{{ + get_from_cache($key, $fromSmem, $fromMemcache)
-    /**
-     * Grab the data from the quickest persistence store.
-     *
-     * @param $key array key and pool id
-     * @todo memcache (upgrade): add flag support on get()
-     */
-    static function get_from_cache($key, $fromSmem, $fromMemcache)
-    {
-        global $_TAG;
-        // we may be reloading, so clear the "last" exception
-        try {
-            // get from shared memory {{{
-            if ($fromSmem) {
-                $return = apc_fetch($key[0]);
-                if ($return !== false) {
-                    return $return;
-                }
-            }
-            // }}}
-            // get from memcached {{{
-            if ($fromMemcache) {
-                $memcache_pool = $_TAG->memcachePool;
-                if (empty($key[1])) { trigger_error(sprintf('tgif_global_loader::get_from_cache()  Missing complete key for %s.',$key[0])); }
-                $cache = $memcache_pool->getMemcache($key[0],$key[1]);
-                $data = $cache->get($key[0]);
-                if (!$data) { return false; }
-                return unserialize($data);
-            }
-            // }}}
-        } catch (tgif_global_exception $e) {
-            trigger_error($e->getMessage());
-            return false;
-        }
-    }
-    // }}}
-    // {{{ + save_to_cache($key, $value, $toSmem, $toMemcache[, $ttl = 0])
-    /**
-     * Save data to all presistence stores
-     *
-     * @param $key array key and pool id
-     */
-    static function save_to_cache($key, $value, $toSmem, $toMemcache, $ttl = 0)
-    {
-        global $_TAG;
-        // we may be reloading, so clear the "last" exception
-        try {
-            // set to shared memory {{{
-            if ($toSmem) {
-                apc_store($key[0], $value, $ttl);
-            }
-            // }}}
-            // set to memcached {{{
-            if ($toMemcache) {
-                 $memcache_pool = $_TAG->memcachePool;
-                 $cache = $memcache_pool->getMemcache($key[0],$key[1]);
-                 $data = $cache->set($key[0], serialize($value), 0, $memcache_pool->lifetime);
-            }
-            // }}}
-        } catch (tgif_global_exception $e) {
-            trigger_error($e->getMessage());
-        }
-    }
-    // }}}
-    // {{{ + error_handler($errNo,$errStr[,$errFile,$errLine,$errContext]))
-    static function error_handler($errNo,$errStr,$errFile='',$errLine=0,$errContext=array())
-    {
-        if(false == error_reporting()) return true; // handle @function calls
-        throw new tgif_global_exception($errStr,$errNo,$errFile,$errLine);
-        return false; //to populate $php_errormsg
     }
     // }}}
 }

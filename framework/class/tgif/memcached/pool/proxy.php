@@ -80,7 +80,7 @@ class tgif_memcached_pool_proxy extends tgif_memcached_pool
             'group' => $group,
             'expire'=> $expire,
             ));
-        $return = $this->_obj->get($key, $var, $group, $expire);
+        $return = $this->_obj->set($key, $var, $group, $expire);
         $_TAG->diagnostics->stopTimer('memcache');
         return $return;
     }
