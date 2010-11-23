@@ -129,10 +129,11 @@ class tgif_memcached_pool_memcache extends tgif_memcached_pool
     {
         //global $_TAG;
         $this->_formatKeyAsArray($key, $group);
+        var_dump($key);
 
-        $server_info = $this->getServerByKey($serverKey);
-        $memcache = $_TAG->memcache->getMemcacheByServer($server_info, $this->_config);
-        return $memcache->get($key);
+        $server_info = $this->getServerByKey($key[1]);
+        $memcache = $_TAG->memcached->getMemcacheByServer($server_info, $this->_config);
+        return $memcache->get($key[0]);
     }
     // }}}
     // {{{ - set($key,$var[,$group,$expire])
@@ -145,10 +146,10 @@ class tgif_memcached_pool_memcache extends tgif_memcached_pool
             $expire = $this->_config['lifetime'];
         }
 
-        $server_info = $this->getServerByKey($serverKey);
-        $memcache = $_TAG->memcache->getMemcacheByServer($server_info, $this->_config);
+        $server_info = $this->getServerByKey($key[1]);
+        $memcache = $_TAG->memcached->getMemcacheByServer($server_info, $this->_config);
         // auto compression turned on in configuration set $flag=0
-        return $memcache->set($key, $var, 0, $expire);
+        return $memcache->set($key[0], $var, 0, $expire);
     }
     // }}}
     // PRIVATE UTILITY METHODS
@@ -161,7 +162,7 @@ class tgif_memcached_pool_memcache extends tgif_memcached_pool
      */
     protected function _formatKeyAsArray(&$key,$group)
     {
-        $key = parent::_formatKeyAsArray($key,$group);
+        parent::_formatKeyAsArray($key,$group);
         $key[0] = $_TAG->symbol().$key[0];
     }
     // }}}

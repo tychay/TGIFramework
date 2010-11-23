@@ -245,7 +245,7 @@ class tgif_memcached implements ArrayAccess
     private $_pools = array();
     // }}}
     // CREATION AND SERIALIZATION
-    // {{{ __construct($ignore)
+    // {{{ __construct()
     /**
      * Creates the default pool.
      */
@@ -492,7 +492,7 @@ class tgif_memcached implements ArrayAccess
             return tgif_memcached_null();
         }
         // }}}
-        $memcache_obj = $this->_connect($server_info, $config);
+        $memcache_obj = new Memcache;
         // should we use a logging object? {{{
         if ( (($prob = $config['logRandom']) !== false) && (rand()/getrandmax() < $prob) ) {
             $memcache_obj = new tgif_memcached_log($memcache_obj);
