@@ -31,7 +31,7 @@ class tgif_debug_firephp
     public static function _X_create_object()
     {
         global $_TAG;
-        if ($_TAG->config('firephp_enable')) {
+        if ($_TAG->config('firephp.enable',true)) {
             // explicitly require because the naming convention doesn't obey
             // PEAR's naming standards
             /**

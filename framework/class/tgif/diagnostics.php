@@ -27,7 +27,7 @@
  *   service
  * - diagnostics_monitorEvent: if diagnostics_monitor is true, should we log
  *   all events (instead of just page events).
- * - firephp_diagnostics: should firephp output diagnostics?
+ * - firephp.diagnostics: should firephp output diagnostics?
  *
  * @package tgiframework
  * @subpackage debugging
@@ -192,7 +192,7 @@ class tgif_diagnostics
         // firephp summary {{{
         // Have to have move ob_end_flush() here because we can't let
         // destruction happen before ob_flush on api
-        if ($_TAG->config('firephp_diagnostics')) {
+        if ($_TAG->config('firephp.diagnostics', true)) {
             // you can log this instead if you want a simpler diagnostic returned.
             $this->summary('totals');
             $_TAG->firephp->log($this,'diagnostics');

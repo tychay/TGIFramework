@@ -59,6 +59,8 @@ test_runkit();
 <li>'testConfMacros' local config is <?php var_dump($_TAG->config('testConfMacros')); ?></li>
 <li>'firephp' global (test subconfig override) <?php var_dump($_TAG->config('firephp')); ?></li>
 <li>'testGlobal' global is <?php var_dump($_TAG->testGlobal); ?></li>
+<li>'testCollection' of foo:<?php var_dump($_TAG->testCollection['foo']); ?></li>
+<li>'testCollection' of bar:<?php var_dump($_TAG->testCollection['bar']); ?></li>
 </ul>
 
 <h2>FirePHP debugging</h2>
