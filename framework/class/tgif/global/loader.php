@@ -476,8 +476,10 @@ class tgif_global_loader extends tgif_global_object
         try {
             // get from shared memory {{{
             if ($this->_isSmemable) {
-                $return = apc_fetch($this->smemKey(), $success);
-                if ($success) {
+                //$return = apc_fetch($this->smemKey(), $success);
+                //if ($success) {
+                $return = apc_fetch($this->smemKey());
+                if ($return !== false) {
                     $this->__data = $return;
                     $this->__callback = false;
                     return;
