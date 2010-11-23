@@ -9,11 +9,10 @@
  * @copyright c.2007 Tagged, Inc., c.2009-2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
+ * @todo consider adding a cache for smemkey and memcachekey computation
  * @todo add checkandset flag support
- * @todo support memcached getMulti
- * @todo support memcached nonblocking queues
- * @todo support datastore event
- * @todo support database queues
+ * @todo support memcached getMulti or nonblocking queues
+ * @todo support datastore event/queues
  */
 // imports {{{
 if (!function_exists('apc_fetch')) {
@@ -366,9 +365,6 @@ class tgif_global_loader extends tgif_global_object
      */
     function __construct($params)
     {
-        if (isset($params['name'])) {
-            $params['name'] = get_class($this);
-        }
         foreach($params as $key=>$value)
         {
             $propname = '_'.$key;
