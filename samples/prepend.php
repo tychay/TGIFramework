@@ -54,10 +54,12 @@ define('APP_CLASS_DIR', APP_DIR.DIRECTORY_SEPARATOR.'class');
 define('APP_INC_DIR', APP_DIR.DIRECTORY_SEPARATOR.'inc');
 // }}}
 // APP_CLASSMAP_PATH {{{
-/**
- * The file
+/*
+ * Not reocommended way of accessing a backward compatibility class mapping
+ * table. Instead, define a configuration called "classmaps" that is an array
+ * hash.
  */
-define('APP_CLASSMAP_PATH', APP_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php');
+//define('APP_CLASSMAP_PATH', APP_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php');
 // }}}
 // $symbol {{{
 $symbol_file = APP_DIR.DIRECTORY_SEPARATOR.'__symbol.php';

@@ -13,18 +13,29 @@
 // {{{  __autoload($class_name)
 // comments {{{
 /**
- * See {@link http://www.php.net/autoload}
+ * See {@link http://php.net/autoload}
  *
  * I am using this to minimize unnecessary file inclusion and reduce memory
  * usage of the page (in PHP 5, we are using 20MB to display the homepage, 22MB
- * to display my profile page). In order to ensure backward compatibility with
- * an original codebase (the original Tagged framework), I allow a map table as
- * possible check. This map table (hash) is stored in var_export format as a
- * free energy include.
+ * to display my profile page).
+ *
+ * This also supports a backward compatibility map, that allows you to load
+ * includes that are not in the standard namespace naming convention of this
+ * framework (pear standard, force lowercase). This map consists a hash mapping
+ * the name of the class (lowercased) with the path to the file containing its
+ * definition.
+ *
+ * To specify a classmaps hash, the recommended way is simply to create it as
+ * a configuration called "classmaps". But if not defined, the system allows
+ * you to use an arbitrary function to generate this classmaps table. For
+ * backward compatibility with an original codebase (the original Tagged
+ * framework), I have the default global generate load using the
+ * {@link APP_CLASSMAP_PATH} define by default. This map table (hash) is
+ * stored in var_export format as a free energy include.
  *
  * Until a hook is written, probably the best way to know what is loading your
- * classmap table is to use {@link http://php.net/manual/en/book.inclued.php inclued}.
- * in a live site.
+ * classmap table is to use {@link http://php.net/manual/en/book.inclued.php
+ * inclued}. in a live site.
  *
  * For obvious reasons, it's best to write this function anyway in order to bind
  * it as the unserialize_callback_func of the site. There is no need to
