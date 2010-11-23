@@ -2,7 +2,17 @@
 // vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 /**
- * Configuration for global related stuff
+ * Configuration for global related stuff.
+ *
+ * This sets the following config varables:
+ * - autoload_stubs: don't throw exceptions or make stub classes on unknown class error
+ * - diagnostics_*: comment later
+ * - memcached.extension: preer memcached over memcache extension (if loaded).
+ *
+ * This configures teh following global variables:
+ * - $_TAG->classmaps: autoloader for loading a free energy class map table from APP_CLASSMAP_PATH
+ * - $_TAG->memcached: singleton for the object that manages memcached access
+ *
  *
  * @package tgiframework
  * @subpackage global
