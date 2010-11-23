@@ -28,7 +28,7 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
     /**
      * The data used to construct loaders
      *
-     * We have to save it in case the sparse array in the collection isn’t
+     * We have to save it in case the sparse array in the collection isn't
      * entirely preloaded.
      */
     private $_params = array();

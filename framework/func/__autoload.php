@@ -84,17 +84,16 @@ function __autoload($class_name)
         // }}}
     }
     // Backward compatibility map table load {{{
+    // check config variable (recommend way of storing backward compatibility
+    // map:
     if (empty($map_table)) {
+        $map_table = $_TAG->config('classmaps');
+    }
+    // This uses the config system to call __autoload_maptable below
+    if ($map_table === false) {
         //sprintf('__autoload(): %s forced load of classmaps',$class_name);
-        //$map_table = include(APP_INC_DIR.DIRECTORY_SEPARATOR.'class_map_table.php');
-        //Can no longer do by reference: Indirect modification of overloaded property
-       if (!$map_table = $_TAG->classmaps) {
-            // this should never be called. {{{
-            $map_table = (defined('APP_CLASSMAP_PATH'))
-                       ? include(APP_CLASSMAP_PATH)
-                       : array();
-            // }}}
-        }
+       $map_table = $_TAG->classmaps;
+        // if we have an error then it will get ugly
     }
     if (array_key_exists($lower_class_name,$map_table)) {
         require($map_table[$lower_class_name]);
