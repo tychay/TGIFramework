@@ -493,16 +493,10 @@ class tgif_global_loader extends tgif_global_object
                     if ($data !== false) {
                         $callback = $this->_memcacheGet;
                         $this->__callback = $callback;
+                        // need to nest data as array for callbacks
                         $this->__data = ($callback) ? array($data) : $data;
+                        return;
                     }
-                    // need to nest data
-                    // handle you can save strings only (temporary) {{{
-                    if (is_array($data)) {
-                        $data = (array_key_exists($key[0],$data))
-                            ? $data[$key[0]]
-                            : false;
-                    }
-                    // }}}
                 } catch (tgif_global_exception $e) {
                     // If we get a cache exception, make a note but don't
                     // otherwise stop processing.  We want to proceed as if
