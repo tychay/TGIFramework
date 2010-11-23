@@ -56,6 +56,8 @@ test_runkit();
 <li>Files read for configuration: <?php var_dump($_TAG->config('configFiles')); ?></li>
 <li>'gld_firephp' global config is <?php var_dump($_TAG->config('gld_firephp')); ?></li>
 <li>'testConf' local config is <?php var_dump($_TAG->config('testConf')); ?></li>
+<li>'testConfMacros' local config is <?php var_dump($_TAG->config('testConfMacros')); ?></li>
+<li>'firephp' global (test subconfig override) <?php var_dump($_TAG->config('firephp')); ?></li>
 <li>'testGlobal' global is <?php var_dump($_TAG->testGlobal); ?></li>
 </ul>
 
@@ -194,7 +196,8 @@ echo tgif_benchmark_iterate::format($b1->compare($b2,$b3));
 <h2>Diagnostics</h2>
 <?php
 echo $_TAG->diagnostics->summary();
-var_dump(json_encode($_TAG->diagnostics->summary('data')));
+$data = $_TAG->diagnostics->summary('data');
+var_dump($data,$data['times']['memcache']);
 ?>
 </body>
 </html>

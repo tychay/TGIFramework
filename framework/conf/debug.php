@@ -23,9 +23,10 @@ return array(
     'isSmemable'        => false,
     'isMemcacheable'    => false,
 ),
-// }}}
-// {{{ firephp_enable: set to true to turn on firephp debugging
-'firephp_enable'    => false,
+'firephp'   => array(
+    'enable'        => false, //set to true to turn on firephp debugging
+    'diagnostics'   => false, //set to true to log diagnostics to firephp
+),
 // }}}
 );
 ?>

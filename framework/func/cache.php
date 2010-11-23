@@ -13,6 +13,10 @@
  * @copyright 2007 Tagged, Inc., 2009 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
+ * @todo zend cache is segfaulting dev, may be unreliable. Someone please help!
+ * This is because output cache is implemented impractically. Please see:
+ * http://files.zend.com/help/Zend-Platform/partial_and_preemptive_page_caching.htm
+ * @todo untested shm_* version of apc_cache
  * @todo consider moving function definitions to separate files. Not sure if
  * APC is properly opcode caching this because functions are conditionally
  * defined. (I don't know because this code does nothing if APC is installed.)
@@ -63,16 +67,15 @@ if (function_exists('apc_fetch')) {
     return;
 } elseif (function_exists('output_cache_get')) {
     //echo "zend\n";
-    //zend cache is segfaulting dev, may be unreliable. Someone please help!
     // zend cache available {{{
     /**
      * @ignore
      */
-    function apc_fetch($key)
+    function apc_fetch($key,$success)
     {
         // Bug: Zend didn't document {@link output_cache_get()}. The second
-        // parameter is a time to live. So I'm setting it to zero.
-        return output_cache_get($key,0);
+        // parameter is a time to live (which makes no sense here).
+        return output_cache_get($key, time()+1000000);
     }
     /**
      * @ignore
@@ -116,23 +119,29 @@ if (function_exists('apc_fetch')) {
     // {{{ _shm_key($key)
     /**
      * Lookup function to get shared memory key if using shm extension to
-     * emulate APC.
+     * emulate APC (sort of).
+     *
+     * Shared memory segments are indexed by integer. Unlike apc_* The shared
+     * memory version will always have a variable in as an artifact of the
+     * key generator.
+     *
+     * @return integer
      */
     function _shm_key($key)
     {
         global $tgif_shm;
-        static $maps;
+        static $maps; //local store of maps array
+        // initialize $maps {{{
         if (!is_array($maps)) {
-            $maps = @shm_get_var($GLOBALS['tgif_shm'],0);
-            if (!$maps) {
-                $maps = array();
-            } else {
-                $maps = unserialize($maps);
-            }
+            $maps = ( shm_has_var($tgif_shm,0) )
+                  ? shm_get_var($tgif_shm,0)
+                  : array();
         }
-        if (array_key_exists($key,$maps)) {
+        // }}}
+        if ( array_key_exists($key,$maps) ) {
             return $maps[$key];
         }
+
         $idx = count($maps)+1;
         $maps[$key] = $idx;
         shm_put_var($tgif_shm,0,$maps);
@@ -144,9 +153,11 @@ if (function_exists('apc_fetch')) {
     /**
      * @ignore
      */
-    function apc_fetch($key)
+    function apc_fetch($key, &$success)
     {
-        return shm_get_var($GLOBALS['tgif_shm'],_shm_key($key));
+        global $tgif_shm;
+        $success = true; // artifact of key gnerator
+        return shm_get_var($tgif_shm,_shm_key($key));
     }
     // }}}
     // {{{ apc_store()

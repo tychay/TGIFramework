@@ -63,7 +63,8 @@ if (!function_exists('apc_fetch')) {
  *   must may return an array (key,serverkey[,pool]). If false, then it will
  *   use a built-in generator.
  * - memcacheLifetime (false): the amount of time to store the value in
- *   memcache. By default, this uses the default value of the memcachePool
+ *   memcache. By default, this uses the default value of {@link memcached
+ *   memcache pool}
  * - memcacheGet (null): a callback to run after data is returned from
  *   memcache. Since we are using the memcache extension, we shouldn't need to
  *   use unserialize() here, but you can if you pass an object, it saves it as

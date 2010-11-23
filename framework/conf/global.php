@@ -64,9 +64,6 @@ return array(
     'diagnostics_memcache' => false,
     // }}}
     // }}}
-    // debugging {{{
-    'firephp_diagnostics'    => true,    //log diagnostics to firephp
-    // }}}
     // memcache {{{
     // {{{ $_TAG->memcached
     /**

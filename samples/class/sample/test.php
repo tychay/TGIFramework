@@ -19,5 +19,13 @@
 class sample_test {
     private $_foo = 'spam';
     public $bar = 'alot';
+    function __construct()
+    {
+        printf('%s:__construct() called',get_class($this));
+    }
+    function __wakeup()
+    {
+        printf('%s:wakeup() called',get_class($this));
+    }
 }
 ?>

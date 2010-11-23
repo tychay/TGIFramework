@@ -11,17 +11,22 @@
  * @author terry chay <tychay@php.net>
  */
 return array(
-    'readConfig'        => true, // don't keep loading config
+    'readConfig'        => false, // don't keep loading config
     //test variables {{{
     'gld_testGlobal'    => array(
         'construct'         => array('sample_test'),
-        'version'           => 1,
+        'version'           => 2,
         'shouldShard'       => false,
-        'isSmemable'        => true,
-        'isMemcacheable'    => false,
+        'isSmemable'        => false,
+        'isMemcacheable'    => true,
     ),
     'testConf'          => 'testing',
+    'testConfMacros'    => array(
+        'testConf'      => 'nested {{{testConf}}}',
+        'subproperty'   => 'nested {{{gld_testGlobal.version}}}',
+    ),
     // }}}
-    'firephp_enable'   => true,
+    'firephp_enable'   => true, //deprecated
+    'firephp.enable'    => true,
 );
 ?>

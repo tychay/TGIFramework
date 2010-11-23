@@ -53,5 +53,7 @@ return array(
     // }}}
     'bin_java'              => '/usr/bin/java',
     'jar_yuicompressor'     => TGIF_BIN_DIR.'/yuicompressor-2.4.2.jar',
+    'dir_static'            => '',
+    'yui_ver'               => '2.4.0',
 );
 ?>

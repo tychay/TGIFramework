@@ -5,9 +5,11 @@
  *
  * @package tgiframework
  * @subpackage global
- * @copyright c.2007-2009 Tagged, Inc., c.2009 terry chay
+ * @copyright c.2007-2009 Tagged, Inc., c.2009-2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
+ * @todo the requires/dispatch() system may be broken
+ * @todo setToCache, deleteFromCache, getObjectIfInCache may or may not be set
  */
 // imports {{{
 if (!function_exists('apc_fetch')) {
@@ -20,34 +22,95 @@ if (!function_exists('apc_fetch')) {
 // {{{ tgif_global
 // comments {{{
 /**
- * This contains an interface for reading and writing application globals.
+ * This contains an interface for reading and writing application globals
+ * (and configurations).
  *
- * The path by which it reads application globals is from an internal registry
- * (the "global"), then the shared memory segment (apc_cache or zend_cache),
- * then from memcache, then from a data access object or other resource.
+ * Application globals are found through a superglobal (via runkit) like so
+ * <code>$_TAG->global_variable_name</code>
+ * $TAG stands for "TGIFramework Application Globals." :-)
+ *
+ * When an application global is accessed, it looks for the global in the
+ * following order:
+ *
+ * 1) defined in an internal property
+ * 2) in a shared memory segment (apc_cache or zend_cache) if configured
+ * 3) in a memcached pool if configured
+ * 4) from a persistent data store (database or other resoure) via a
+ *    construction function.
  *
  * Think of it as L1, L2 (shared memory), RAM (memcache), and disk (database)
  * Obviously, since the resource may or may not be there, the resource may not
  * be automatic, hence the special exception handling which may or may not be
  * caught internally depending on what system is used for accessing the element.
  *
- * This uses a three letter variable prefix to determine which "channel" the
- * global variable gets data (from memcache and shared memory) from. This is
- * used to prevent conflicts if two applications from the same framework are
- * running on the same machine or sharing memcache store (i.e. development).
- * This "channel" is specified on construction (getting the singleton) so
- * is set in file or by direct before the {@link preinclude.php} initializes
- * the global system.
+ * <h3>The symbol prefix</h3>
  *
- * All channels are all pretty much treated the same except a special channel
- * for configuration globals which are treated special in order to bootstrap
- * them from the filesystem and store them into the shared memory segment.
+ * A special three letter variable prefix is defined by the instance of the
+ * application and is passed to the constructor when the {@link $_TAG this
+ * application global system ($TAG)}. This symbol, in turn, is set in a file
+ * or directly before the {@link preinclude.php} initializes the global system.
  *
- * Similarly definitions for the global system are prefixed with a special
- * prefix ('gld_') in the configuration system. This streatement is in order
- * to boostrap from the filesystem and store them into the shared memory segment
- * (as opposed to from the "RAM" (memcache) or the "disk" (database) as neither
- * has been defined by this point.
+ * What the prefix does is serve as a "channel" to prevent this application
+ * instance from conflicting with others on a shared resources. For instance,
+ * two different applications instances (or applications built with the $TGIF
+ * framework) will not conflict in shared memory segments, or variable
+ * collision will not occur unless desired on a shared memcached, etc. In other
+ * words, this prefix is prepended to all keys in shared memory and memcached,
+ * so unless two copies share the same symbol, it will be like two ships
+ * passing in the night.
+ *
+ * <h3>The Configuration system</h4>
+ *
+ * Configuration variables are loaded as necessary from all php files in
+ * predefined directories and saved to shared memory. They can be accessed
+ * from the application global as:
+ * <code>$_TAG->config('configuration_constant_name');</code>
+ *
+ * Note that for ease of use, there is a special "reserved" char in the constant
+ * name. That is ".". Instead of being part of the name, this is a separator
+ * to array parts of a configuration. This allows later config files to modify
+ * parts of a config space without overwriting the entire config space. It is
+ * also used access another part of the configuraiton from the configuration
+ * during macro expansion. For instance {{{config_space.name}}} refers to
+ * the configuration. $configs['config_space']['name']. You access this like
+ * so
+ * <code>$_TAG->config('config_space.name', true);</code>
+ *
+ * Parsing is done at the beginning of every request at first access, unless a
+ * special configuration variable {@link tgif_global::_READ_CONFIG
+ * '_readConfig'} is set. In that case, requests know to not do any file
+ * reading/parsing and depend only on the value stored in shared memory. This
+ * allows you to have a quite intricate configuration system -- lots of
+ * directories, files, and macros -- without affecting performance in
+ * production.
+ *
+ * In development, you most likely want this _readConfig to be unset. If you
+ * don't than changes to the configuration will not be reflected unless the
+ * server is restarted or the configuration system cleared. The latter can be
+ * done using the following command:
+ * <code>$_TAG->reloadConfig();</code>
+ *
+ * Remember, when saved to shared memory space, the symbol prefix is prepended
+ * so changing the symbol will effectively mean your sandbox (even on the same
+ * machine will not share configurations).
+ *
+ * Note that the configuration cannot be stored in memcached because {@link 
+ * tag_memcached the memcache system} itself configured with the configuration
+ * (chicken-egg).
+ *
+ * <h3>Global variable configuration</h3>
+ *
+ * Definitions configurating global variables are prefixed in configuration
+ * files with a special prefix ('gld_'). This treatement is in order to know
+ * which configurations define variables, and which ones are just configurations
+ * to be accessed with {@link tgif::config() $_TAG->config()}.
+ *
+ * "gld" stands for Global Loader Data. In the original version, due to
+ * conflicts in sharing variabel space, no prefix symbole was allowed to use
+ * the "gld". This is no longer true, but please don't try this at home (or
+ * in production) as this edge case is untested.
+ *
+ * <h3>Violations</h3>
  *
  * The purists among you may notice {@link config() configuration constants}
  * are handled differently than other globals in the system. That is technically
@@ -67,7 +130,13 @@ if (!function_exists('apc_fetch')) {
 // }}}
 class tgif_global
 {
-    // {{{ - $_configPrefix
+    // {{{ + _READ_CONFIG
+    /**
+     * The name of the READ CONFIG variable
+     */
+    const _READ_CONFIG = '_readConfig';
+    // }}}
+    // {{{ - $_prefix
     /**
      * Three letter prefix for config variables.
      *
@@ -78,29 +147,34 @@ class tgif_global
      *
      * @var string
      */
-    private $_configPrefix;
+    private $_prefix;
     // }}}
-    // {{{ - $_globals
+    // {{{ - $_configs
     /**
      * The store for configuration parameters.
      *
-     * Using accessors, these are accessed directly and their action is
-     * transparent to the user. Note that the first three characters (followed
-     * by an underscore) are special because the define the "channel" the
-     * variable is stored in.
+     * Where the configuration is locally cached (so subsequent requests do not
+     * go to shared memory or don't force config file rereading). This is
+     * indexed by the name.
+     */
+    private $_configs = array();
+    // }}}
+    // {{{ - $_globals
+    /**
+     * The store for global variables
+     *
+     * Using overloading, these can be accessed directly and their action is
+     * transparent to the user.
      */
     private $_globals = array();
     // }}}
     // {{{ - $_requires
     /**
-     * The store for variables that need to be preloaded
+     * The store for variables that are in the process of loading
      *
      * This is a hash of the {@link tgif_global_loader}s indexed by the global
-     * name.
-     *
-     * In order to work, these globals are stored in configuration parameters.
-     * To prevent a conflict, the name of the config parameter must be prefixed
-     * by 'gld_' (stands for global loader data).
+     * name. This contains loaders that have been passed the global loader data
+     * 'gld_' parameters.
      */
     private $_requires = array();
     // }}}
@@ -109,26 +183,27 @@ class tgif_global
     /**
      * Set up the global object to be ready for handling of magic.
      *
-     * Sets the identifier prefix for configuration parameters and autodetects
-     * what cache store we have.
+     * Sets the identifier symbole for configuration parameters.
      *
      * It also sets the flag that determines if the config files have been read
-     * into shared memory cache already. If we have a lot of files, this will
-     * take a lot of time and we want to do this as rarely as possible (e.g.
-     * only once per server restart unless we are on development). If you are
-     * developmetn set the 'readConfig' param to false and we will rehash the
-     * config on every reuest, else set it to true and we'll only do it after
-     * the shared memory has been cleared (server restart et. al.).
+     * into shared memory cache already. If we have a lot of files, reading the
+     * configuration (especially if complex) will take a lot of time and we
+     * want to do this as rarely as possible (e.g. only once per server restart
+     * unless we are on development). If you are developmet set the 'readConfig'
+     * config to false (or don't set it at all) and we will rehash the config
+     * on every reuest. Or set it to true and we'll only do it after the shared
+     * memory has been cleared (server restart et. al.) or an explicit request
+     * is made.
      *
      * @param string $config_prefix The three letter code to put in front of
-     *     any configuration parameter. If less than three characters are there
-     *     it will pad them with "_".
+     *     any key that read or writes to shared memory/memcached. If less
+     *     than three characters are there it will pad them with "_".
      */
     private function __construct($config_prefix)
     {
-        $this->_configPrefix = sprintf('%\'_3s',$config_prefix);
-        $readconfig_name = $this->_configPrefix.'_readConfig';
-        $this->_globals[$readconfig_name] = apc_fetch($readconfig_name);
+        $this->_prefix = sprintf('%\'_3s',$config_prefix);
+        // note: apc_fetch returns false on failure to read (by default)
+        $this->_configs[self::_READ_CONFIG] = apc_fetch($this->_prefix.self::_READ_CONFIG);
     }
     // }}}
     // {{{ + get_instance([$config_prefix,$create_Fresh])
@@ -144,22 +219,23 @@ class tgif_global
      * in a global called {@link $_TAG} so be forewarned! In fact, tgiframework
      * assumes that $_TAG is a superglobal (via runkit)!
      *
-     * @param string $config_prefix A three letter "channel" to use to prevent
+     * @param string $prefix_symbol A three letter "channel" to use to prevent
      * conflicts with other instances of the framework or other installs of
      * the app.
      * @param boolean $create_fresh Set to true to re-initialize the global
      * system (in general, a really bad idea)
+     * @return tgif_global singleton instance
      */
-    static function get_instance($config_prefix='___', $create_fresh=false)
+    static function get_instance($prefix_symbol='___', $create_fresh=false)
     {
        static $single;
        if (!isset($single) || $create_fresh) {
-           $single = new tgif_global($config_prefix);
+           $single = new tgif_global($prefix_symbol);
        }
        return $single;
     }
     // }}}
-    // {{{ + reinit()
+    // TODO: {{{ + reinit()
     /**
      * Quick code to reinitialize the global system
      * @author Mark Jen <markjen@tagged.com>
@@ -174,9 +250,21 @@ class tgif_global
         register_shutdown_function(array($_TAG->queue,'publish'),'shutdown');
     }
     // }}}
-    // ACCESSING: MAGIC METHODS
+    // PUBLIC: SYMBOL
+    // {{{ - symbol()
+    /**
+     * @return string three letter config symbol
+     */
+    function symbol()
+    {
+        return $this->_prefix;
+    }
+    // }}}
+    // GLOBALS: magic methods
     // {{{ - __set($name,$value)
     /**
+     * Allows you to externally set a global :-)
+     *
      * @param string $name the property to set (normal property naming rules
      * apply).
      * @param mixed $value
@@ -189,15 +277,8 @@ class tgif_global
     // }}}
     // {{{ - __get($name)
     /**
-     * Magic method for property get to pull from cache as needed.
+     * Magic method for global variable get to pull from cache as needed.
      *
-     * When trying to get from a config file, it will try to pull it from shared
-     * memory cache. If it's not there (determined by returning a typed false)
-     * then it will {@link _loadConfigs() load all the config files}. The lesson
-     * here is <em>do not store typed "false" into configuration variables</em>,
-     * use 0 or something that evaluates to false instead! If you have a config
-     * value that is false, then in development you might theoretically force
-     * reload of the entire config system from the file system!
      *
      * In the case of all other "globals" it first goes to shared memory cache,
      *
@@ -205,36 +286,13 @@ class tgif_global
      * apply). The first three characters are special since they define the
      * channel type used
      * @return mixed the value
-     * @todo make debugger event for forcing loading of config file
      */
     function __get($name)
     {
         // if it's there, just return it. Simpler (logically) this way even
         // though it's an opcode less efficient in some cases.
         if (isset($this->_globals[$name])) { return $this->_globals[$name]; }
-        // special case: configuration variable {{{
-        // smem has returned false already
-        if ($this->_isConfig($name)) {
-            // check if stored in shared memory cache {{{
-            $return = apc_fetch($name);
-            if ($return !== false) {
-                $this->_globals[$name] = $return;
-                return $return;
-            }
-            // }}}
-            // no need to check if $name is the readConfig flag because this is
-            // stored in $_globals during object construction.
-            if ($this->__get($this->_configPrefix.'_readConfig')) {
-                $this->_globals[$name] = false;
-                return false;
-            } else {
-                //printf('%s: %s forced loading of config files',getclass($this), $name);
-                $this->_loadConfigs();
-                if (!isset($this->_globals[$name])) { $this->_globals[$name] = false; }
-                return $this->_globals[$name];
-            }
-        }
-        // }}}
+
         // We want to use the variable now, so add it to the requires and load
         // it asap.
         $exists = $this->requires($name);
@@ -243,10 +301,12 @@ class tgif_global
             trigger_error(sprintf('%s: global "%s" requested but doesn\'t exist.', get_class($this), $name). E_USER_NOTICE);
             return null;
         }
-        // just do one, not all of them.
+
+        // just load this one, not all of them.
         $this->_requires[$name]->dispatch();
         $this->_globals[$name] = $this->_requires[$name]->ready();
         unset($this->_requires[$name]); // don't load twice.
+
         if (isset($this->_globals[$name])) { return $this->_globals[$name]; }
         // throw an error if we loaded it but it somehow isn't there!
         trigger_error(sprintf('%s: global "%s" requested but failed to load.', get_class($this), $name). E_USER_NOTICE);
@@ -278,38 +338,7 @@ class tgif_global
         unset($this->_globals[$name]);
     }
     // }}}
-    // PUBLIC: Accessors
-    // {{{ - symbol()
-    /**
-     * @return string three letter config symbol
-     */
-    function symbol()
-    {
-        return $this->_configPrefix;
-    }
-    // }}}
-    // {{{ - config($name[,$subproperty])
-    /**
-     * Access config parameters
-     *
-     * @param string $name the config parameter to get
-     * @param string $subproperty Some config parameters are more like
-     *     namespaces with multiple subconfigurations. If specified, then it
-     *     will grab the subproperty. This allows quick access to subproperties
-     *     without you having to write heinous code.
-     * @return mixed configuration. This will call {@link __get()} to actually
-     *      get the data.
-     */
-    function config($name,$subproperty=null)
-    {
-        $var = $this->_configPrefix.'_'.$name;
-        $return = $this->$var;
-        return (is_null($subproperty))
-               ? $return
-               : $return[$subproperty];
-    }
-    // }}}
-    // PUBLIC: requires() system
+    // GLOBALS: requires/dispatch system
     // {{{ - requires($varname[,...])
     /**
      * Register a global to be pulled from memory
@@ -361,7 +390,46 @@ class tgif_global
         }
     }
     // }}}
-    // PUBLIC METHODS: CACHE STUFF
+    // GLOBALS:: LOADERS
+    // {{{ - adminGetLoader($variableName,$arguments)
+    /**
+     * Helper function for showglobals admin tool.
+     *
+     * @param string $variableName the global variable to look for
+     * @param array $arguments If it is a collection, these are the paremters
+     *  that define it.
+     * @return tgif_global_object|false
+     * @author Rahul Caprihan <rahulcap@gmail.com>
+     */
+    function adminGetLoader($variableName, $arguments)
+    {
+         return $this->_getLoader($variableName,$arguments,true);
+    }
+    // }}}
+    // {{{ - _getLoader($variableName,$arguments)
+    /**
+     * @param string $variableName the global variable to look for
+     * @param array $arguments If it is a collection, these are the paremters
+     * that define it.
+     * @param boolean $noCollections ???
+     * @return tgif_global_object|false
+     */
+    private function _getLoader($variableName, $arguments, $noCollections=false)
+    {
+        $params = $this->config('gld_'.$variableName);
+        //var_dump(array($variableName,$params));
+        if (!$params) { return false; }
+        $params['name']          = $variableName;
+        $params['configPrefix']  = $this->_prefix;
+        if ($noCollections) {
+            $params['ids'] = $arguments;
+            $params['params'] = 0;
+            $arguments = array();
+        }
+        return tgif_global_object::get_loader($params, $arguments);
+    }
+    // }}}
+    // GLOBALS: CACHE STUFF
     // {{{ - getObjectIfInCache($variableName[,$params])
     /**
      * This returns an object IFF it is in a smem or memcache.
@@ -478,136 +546,251 @@ class tgif_global
         return false;
     }
     // }}}
-    // PRIVATE METHODS: LOADERS
-    // {{{ - adminGetLoader($variableName,$arguments)
+    // CONFIGURATION
+    // {{{ - config($name[,$accessSubproperty])
     /**
-     * Helper function for showglobals admin tool.
+     * Access config parameters
      *
-     * @param string $variableName the global variable to look for
-     * @param array $arguments If it is a collection, these are the paremters
-     *  that define it.
-     * @return tgif_global_object|false
-     * @author Rahul Caprihan <rahulcap@gmail.com>
+     * Some config parameters are more like namespaces with multiple
+     * subconfigurations. This can return those instead of the whole space.
+     *
+     * When trying to get from a config file, it will try to pull it from shared
+     * memory cache. If it's not there, it will {@link _loadConfigs() load all
+     * the config files} if _readConfig isn't set. Note that the action,
+     * _loadConfigs will set _readConfig in the variable space but not save that
+     * to the shared memory cache. This prevents _loadConfigs() from being
+     * called multiple times in the same request.
+     *
+     * The Tagged version of this code would reload config files on any "false'      * received (unless _readConfig was set).
+     *
+     * @param string $name the config parameter to get
+     * @param boolean $accessSubProperty If true, then it will parses name for
+     *  subproerties. For performance reasons, this defaults to off.
+     * @return mixed configuration. This will call {@link __get()} to actually
+     *      get the data.
      */
-    function adminGetLoader($variableName, $arguments)
+    function config($name,$accessSubproperty=false)
     {
-         return $this->_getLoader($variableName,$arguments,true);
-    }
-    // }}}
-    // {{{ - _getLoader($variableName,$arguments)
-    /**
-     * @param string $variableName the global variable to look for
-     * @param array $arguments If it is a collection, these are the paremters
-     * that define it.
-     * @return tgif_global_object|false
-     */
-    private function _getLoader($variableName, $arguments, $noCollections=false)
-    {
-        $params = $this->config('gld_'.$variableName);
-        //var_dump(array($variableName,$params));
-        if (!$params) { return false; }
-        $params['name']          = $variableName;
-        $params['configPrefix']  = $this->_configPrefix;
-        if ($noCollections) {
-            $params['ids'] = $arguments;
-            $params['params'] = 0;
-            $arguments = array();
+        // high performance access
+        if ( !$accessSubproperty ) { 
+            return $this->_getConfig($name);
         }
-        return tgif_global_object::get_loader($params, $arguments);
+
+        $name_parts = explode('.',$name);
+        $config = $this->_getConfig($name_parts[0]);
+        unset($name_parts[0]);
+        return self::_get_from_array( $config, $name_parts );
     }
     // }}}
-    // PRIVATE: CONFIG ACCESSORS
-    // {{{ - _isConfig($name)
+    // {{{ - reloadConfig()
     /**
-     * Returns whether the parameter is a configurtion parameter
-     *
-     * @param string $name
-     * @return boolean
+     * Force a reload of the configuration files (clears all parameters)
      */
-    private function _isConfig($name)
+    public function reloadConfig()
     {
-        return (strcmp($this->_configPrefix, substr($name,0,3)) === 0);
+        $this->_configs = array(
+            self::_READ_CONFIG  => false
+        );
+        // stale all elements in the cache
+        apc_delete($this->_prefix.self::_READ_CONFIG);
+        $this->_loadConfigs(); //overwrite everything
+    }
+    // }}}
+    // {{{ + _get_from_array($config_array,$keys)
+    /**
+     * Run down the heirarchy of $config_array looking for the element defined
+     * by $keys
+     *
+     * This should not be used externally, it is only public so that an
+     * anonymous function on a different scope can access it.
+     *
+     * @param array $config_array the array to be seached
+     * @param array $keys the hiearchy of keys to drill down.
+     * @return mixed the element of array. If not found, it returns false.
+     */
+    static function _get_from_array($config_array, $keys)
+    {
+        if (!is_array($keys) || count($keys) == 0) {
+            return $config_array;
+        }
+        foreach ($keys as $key) {
+            if ( !isset($config_array[$key]) ) {
+                return false;
+            }
+            $config_array = $config_array[$key];
+        }
+        return $config_array;
+    }
+    // }}}
+    // {{{ - _getConfig($name)
+    /**
+     * Loads the config variable into the property from wherever it may be
+     * stored.
+     *
+     * Note that in some cases, this may force a parse of the entire configs
+     * system.
+     *
+     * @param string $name Must be a string. This is the config variable to
+     *  find.
+     * @return mixed The configuration parameter. If not found, it returns
+     *  false.
+     */
+    private function _getConfig($name)
+    {
+        if ( isset($this->_configs[$name]) ) {
+            return $this->_configs[$name];
+        }
+        // check shared memory cache {{{
+        $return = apc_fetch($this->_prefix.$name, $success);
+        if ( $success ) {
+            $this->_configs[$name] = $return;
+            return $return;
+        }
+        // }}}
+
+        // If this far, it is not be in cache.
+        // Case: _readConfig set {{{
+        // Remember: if $name = readConfig. this is already stored in $_configs
+        // during object construction.
+        if ( $this->_configs[self::_READ_CONFIG] ) {
+            // no config exists, return false
+            $this->_configs[$name] = false;
+            return false;
+        }
+        // }}}
+        //printf('%s: %s forced loading of config files',getclass($this), $name);
+        $this->_loadConfigs();
+        if (isset($this->_configs[$name])) {
+            $return = $this->_configs[$name];
+        } else {
+            $this->_configs[$name] = false;
+            $return = false;
+        }
+        return $return;
     }
     // }}}
     // {{{ - _loadConfigs()
     /**
-     * Read all the configuration files and save them into the local
-     * configuration and into shared memory.
+     * Read all the configuration files, parse them, and save them into the
+     * local configuration and into shared memory.
      *
-     * The load order is set to the framework config and then any specified
-     * in the {@link TGIF_CONF_PATH} symbol (":" separated).
+     * The directory load order is set to the framework config and then any
+     * specified in the {@link TGIF_CONF_PATH} define (":", PATH_SEPARATOR
+     * separated).
      *
-     * For instance, for tagged, TGIF_CONF_PATH would be:
-     * LIB_CONF_DIR.'/common:/home/html/tagconfig:'.LIB_CONF_DIR.'/local:/etc/tagconfig-local'
-     * This is because
+     * For instance, for Tagged, TGIF_CONF_PATH was something like:
+     * <code>
+     * define('TGIF_CONF_PATH', LIB_CONF_DIR.'/common:/home/html/tagconfig:'.LIB_CONF_DIR.'/local:/etc/tagconfig-local');
+     * </code>
+     *
+     * This is because:
      * 1. <LIB_CONF_DIR>/common: The application configuration common directory
      * 2. /home/html/tagconfig: nfsmount'd PROD, STAGE, or DEV config
      *      settings
      * 3. <LIB_CONF_DIR>/local: local dev checkout override
-     * 4. /etc/tagconfig-local: PROD per machine overrride (life site debugging)
+     * 4. /etc/tagconfig-local: PROD per machine overrride (live site debugging)
      *
-     * This does some simple magic config file replacement where it will macro
-     * expand {{{config_param}}} automagically. Note that it currently won't
-     * introspect the array.
+     * This does some magic config file replacement where it will macro expand
+     * {{{config_param}}} automagically. Note that it currently won't
+     * introspect the array. If you need to do that, then use the "." key to
+     * access and override a specific part of the configuration in the setting.
+     * If you need to nest, you may use the "." key here.
+     *
+     * Macro expansion uses an {@link http://docs.php.net/functions.anonymous
+     * anonymous function. This requires PHP 5.3.
      *
      * Note that there are two very special config parameters:
      * - readConfig: set to true to prevent the config files from getting
      *   reparsed
      * - configFiles: contains a list of config files that have been parsed
      *   to generate config
-     *
-     * @todo introspect 1 level (or more) of array in config for expansion
      */
     private function _loadConfigs()
     {
         $configs = array();
         $filelist = array();
+        // place the framework configuration at the beginning of the path always
         $config_dirs = explode(PATH_SEPARATOR, TGIF_DIR.DIRECTORY_SEPARATOR.'conf'.PATH_SEPARATOR.TGIF_CONF_PATH);
-        //var_dump($config_dirs);
+
         foreach ($config_dirs as $config_dir) {
             $this->_loadConfigDir($config_dir, $configs, $filelist);
         }
-        // macro expansion {{{
-        $this->_temps = $configs;
-        $count = 0;
-        foreach ($configs as $key=>$value) {
-            if (!is_string($value)) { continue; } //on check top level
-            do { //handle nesting of macros
-             $value = preg_replace_callback(
-                     '/{{{(\w*)}}}/',
-                     array($this,'config_replace'),
-                     $value, -1, $count);
-            } while ($count > 0);
-            $configs[$key] = $value;
-        }
-        unset($this->_temps);
+        // After everything has been loaded, expand the macros {{{
+        //temporary variable to store unprocessed config
+        do {
+            $num_expansions = $this->_expandMacros($configs,$configs);
+        } while ( $num_expansions !== 0 );
         // }}}
-        // set "configFiles" configuration
+
+        // set "configFiles" configuration variable
         $configs['configFiles'] = $filelist;
-        // store configs in and in global space {{{
+
+        // store configs in and in global space (and smem) {{{
         foreach ($configs as $key=>$value) {
-            $name = $this->_configPrefix.'_'.$key;
-            $this->_globals[$name] = $value;
-            apc_store($name, $value, 0);
+            $this->_configs[$key] = $value;
+            apc_store($this->_prefix.'_'.$key, $value, 0);
         }
         // }}}
+        // add "_readConfig" in the local cache after storing so that we don't
+        // _loadConfigs() (reparase) on every missing configuration variable.
+        $this->_configs[self::_READ_CONFIG] = true;
     }
     // }}}
-    // {{{ - config_replace($matches)
+    // {{{ - _expandMacros(&$configs, &$current)
     /**
-     * preg_replace_callback() for doing variable replacement in the config
-     * system.
+     * Handle a single pass of macro expansion.
      *
-     * Do not call from the outside. This is called internally but needs to be
-     * public because it is called from callback.
-     * @todo Migrate to an {@link http://docs.php.net/functions.anonymous anonymous function} MUCH later (don't want to do it yet because of PHP 5.3 requirement).
+     * Unlike older versions, this will drill further down than the top level.
+     *
+     * @param array $configs the root level element
+     * @param mixed $current the current level element being examined for
+     *   macros.
+     * @return integer number of macros replace
      */
-    public function config_replace($matches)
+    private function _expandMacros(&$configs, &$current)
     {
-        if (key_exists($matches[1],$this->_temps)) {
-            return $this->_temps[$matches[1]];
+        $count = 0;
+        if ( is_array($current) ) {
+            foreach ($current as &$value) {
+                $count += $this->_expandMacros($configs, $value);
+            }
+        } elseif ( is_string($current) ) {
+            // macro expansion callback {{{
+            /**
+             * expands macros
+             * @todo handle nesting in key value
+             */
+            $callback = function($matches) use (&$configs)
+            {
+                if ( strpos($matches[1],'.') === false ) {
+                    if (key_exists($matches[1],$configs)) {
+                        return $configs[$matches[1]];
+                    }
+                    throw new Exception(sprintf('Unknown config parameter %s via %s.',$matches[1],$matches[0]));
+                    return '---'.$matches[1].'---';
+                } else {
+                    $parts = explode('.',$matches[1]);
+                    $value = tgif_global::_get_from_array($configs, $parts);
+                    if ( $value !== false ) {
+                        return $value;
+                    }
+                    throw new Exception(sprintf('Unknown config parameter %s via %s.',$matches[1],$matches[0]));
+                    return '---'.$matches[1].'---';
+                }
+            };
+            // }}}
+            $current = preg_replace_callback(
+                '/{{{([\w.]+)}}}/',
+                $callback,
+                $current,
+                -1, //default value
+                $new_count
+            );
+            $count += $new_count;
         }
-        throw new Exception(sprintf('Unknown config parameter %s via %s.',$matches[1],$matches[0]));
+        // integers, objects etc are not introspected and do not increment
+        // counter.
+        return $count;
     }
     // }}}
     // {{{ - _loadConfigDir($dir,$configs,$files)
@@ -615,12 +798,14 @@ class tgif_global
      * Load all the configurations in a directory overriding all parameters that
      * have already been written to.
      *
+     * Remember that "." in root level names are a special case as it implies
+     * an overwrite of a subconfiguration parameter.
+     *
      * @param string $dir the directory to load from
      * @param array $configs the array to load configs into
      * @return array a list of file names that were processed
      * @author terry chay <tychay@php.net>
      * @author Joshual Ball (added warning if configs overlap in same directory)
-     * @todo consider reading through the nesting of arrays.
      */
     private function _loadConfigDir($dir, &$configs, &$files)
     {
@@ -641,6 +826,26 @@ class tgif_global
             $dir_configs = array_merge($dir_configs, $file_data);
         }
         $configs = array_merge($configs, $dir_configs);
+        // "." root level names case {{{
+        $subkeys = array_keys($configs);
+        foreach ($subkeys as $search_key) {
+            if ( strpos($search_key, '.') !== false) {
+                $key_parts      = explode('.',$search_key);
+                $found          = true;
+                $config         = &$configs;
+                foreach ($key_parts as $key) {
+                    if ( !isset($config[$key]) ) { $found = false; break; }
+                    $config =& $config[$key];
+                }
+                var_dump($found);
+                if ( $found ) {
+                    // replace value, never merge here.
+                    $config = $configs[$search_key];
+                }
+                unset($configs[$search_key]);
+            }
+        }
+        // }}}
     }
     // }}}
     // {{{ - _readConfigFile($file)
