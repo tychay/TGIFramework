@@ -51,17 +51,17 @@
  * Configuration:
  * The following config variables can be set: They are contained in the
  * "memcached" configuration. (XXX = $pool_name):
- * - memcached_extension (string): Which extension to use for reading and
+ * - memcached.extension (string): Which extension to use for reading and
  *   writing to memcache. The two values allowed are memcache and memcached (or
  *   libmemcached). Note that the behaviour of the two are radically
  *   different. Default is memcache.
- * - memcached_default_port (integer): the default port number to use. Default
+ * - memcached.default_port (integer): the default port number to use. Default
  *   11211.
- * - memcached_config_XXX (array): The config settings for various pools note
+ * - memcached.config_XXX (array): The config settings for various pools note
  *   that since memcache objects are shared, the actual configuration may not match exactly
  *   depending on how things are instantiated and where the config variable is
  *   used. {@link $_defaultConfig description of the config elements}.
- * - memcached_pool_XXX (array): containing the server, port, and weights of various
+ * - memcached.pool_XXX (array): containing the server, port, and weights of various
  *   servers memcache objects can be attached to. Depending on how this
  *   is marshalled this may be cached slightly differently. The array elements
  *   contain an array of up to three elements: host, port, and weight. If no
@@ -252,12 +252,12 @@ class tgif_memcached implements ArrayAccess
     function __construct()
     {
         //global $_TAG;
-        if ( $port = $_TAG->config('memcached_default_port') ) {
+        if ( $port = $_TAG->config('memcached.default_port',true) ) {
             $this->_defaultPort = $port;
         } elseif ( $port = ini_get('memcache.default_port') ) {
             $this->_defaultPort = $port;
         }
-        $this->_extension = ( in_array($_TAG->config('memcached_extension'),array('memcached','libmemcached')) && extension_loaded('memcached') )
+        $this->_extension = ( in_array($_TAG->config('memcached.extension',true),array('memcached','libmemcached')) && extension_loaded('memcached') )
                            ? 'memcached'
                            : 'memcache';
         $this->_loadDefaultConfig();
@@ -274,11 +274,11 @@ class tgif_memcached implements ArrayAccess
     private function _loadDefaultConfig()
     {
         //global $_TAG;
-        $configs = $_TAG->config('memcached_config_default');
+        $configs = $_TAG->config('memcached.config_default',true);
         if ( $configs ) {
             $this->_defaultConfig = array_merge($this->_defaultConfig, $configs);
         }
-        $servers = $_TAG->config('memcached_pool_default');
+        $servers = $_TAG->config('memcached.pool_default',true);
         $this->_defaultServers = ( $servers )
                                ? $servers
                                : array(array('127.0.0.1',11211,1)); // make local machine the default
@@ -353,7 +353,7 @@ class tgif_memcached implements ArrayAccess
     /**
      * Loads a memcache pool into internal variables.
      *
-     * If not overridden in memcached_config__{{pool_name}}, then the default
+     * If not overridden in memcached.config_{{pool_name}}, then the default
      * values are stored in {@link $_defaultConfig}.
      *
      * @param string $poolName The id of the pool (to use memcached parliance)
@@ -362,11 +362,11 @@ class tgif_memcached implements ArrayAccess
      */
     private function _load($poolName)
     {
-        $configs = $_TAG->config('memcached_config_'.$poolName);
+        $configs = $_TAG->config('memcached.config_'.$poolName, true);
         $configs = ( $configs )
                  ? array_merge($this->_defaultConfigs,$configs)
                  : $this->defaultConfigs;
-        $servers = $_TAG->config('memcached_pool_'.$poolName);
+        $servers = $_TAG->config('memcached.pool_'.$poolName, true);
         if ( !$servers ) {
             $servers = $this->_defaultServers;
         } else {

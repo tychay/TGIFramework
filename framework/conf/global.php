@@ -81,23 +81,14 @@ return array(
         'params'            => 0,
         'construct'         => array('tgif_memcached'),
         'version'           => 1,
-        'shouldShard'       => true, //different installs should be seperate
         'isSmemable'        => true,
-        'smemKey'           => false,
-        'isMemcacheable'    => false,
     ),
     // }}}
-    // {{{ memcached_extension
+    // {{{ memcached.extension
     /**
      * which php extension to use
      */
-    'memcached_extension'  => 'memcached',
-    // }}}
-    // {{{ memcached_default_port
-    /**
-     * default port
-     */
-    //'memcached_default_port'  => 11211,
+    'memcached.extension'  => (extension_loaded('memcached')) ? 'memcached' : 'memcache',
     // }}}
     // }}}
 );
