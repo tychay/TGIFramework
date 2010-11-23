@@ -561,9 +561,11 @@ class tgif_global
      * to the shared memory cache. This prevents _loadConfigs() from being
      * called multiple times in the same request.
      *
-     * The Tagged version of this code would reload config files on any "false'      * received (unless _readConfig was set).
+     * The Tagged version of this code would reload config files on any "false'
+     * received (unless _readConfig was set).
      *
-     * @param string $name the config parameter to get
+     * @param string $name the config parameter to get. If an empty string is
+     * provided, it will return all config variables currently loaded.
      * @param boolean $accessSubProperty If true, then it will parses name for
      *  subproerties. For performance reasons, this defaults to off.
      * @return mixed configuration. This will call {@link __get()} to actually
@@ -571,6 +573,7 @@ class tgif_global
      */
     function config($name,$accessSubproperty=false)
     {
+        if (empty($name)) { return $this->_configs; }
         // high performance access
         if ( !$accessSubproperty ) { 
             return $this->_getConfig($name);
@@ -834,7 +837,10 @@ class tgif_global
                 $found          = true;
                 $config         = &$configs;
                 foreach ($key_parts as $key) {
-                    if ( !isset($config[$key]) ) { $found = false; break; }
+                    // create a config if it's not there
+                    if ( !isset($config[$key]) ) {
+                        $config[$key] = array();
+                    }
                     $config =& $config[$key];
                 }
                 if ( $found ) {
