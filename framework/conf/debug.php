@@ -18,7 +18,7 @@ return array(
 'gld_firephp' => array(
     'params'            => 0,
     'construct'         => array('tgif_debug_firephp','_X_create_object'),
-    'version'           => 1,
+    'version'           => 0,
     'shouldShard'       => false,
     'isSmemable'        => false,
     'isMemcacheable'    => false,
