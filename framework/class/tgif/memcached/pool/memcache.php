@@ -128,14 +128,7 @@ class tgif_memcached_pool_memcache extends tgif_memcached_pool
     function get($key, $group='')
     {
         //global $_TAG;
-        $this->_formatKeyAsArray(&$key, $group);
-
-        if (is_array($key)) {
-            list ($key,$serverkey) = $key;
-        } else {
-            $serverkey = $key;
-        }
-        $key = $_TAG->symbol().$group,$key;
+        $this->_formatKeyAsArray($key, $group);
 
         $server_info = $this->getServerByKey($serverKey);
         $memcache = $_TAG->memcache->getMemcacheByServer($server_info, $this->_config);
@@ -146,7 +139,7 @@ class tgif_memcached_pool_memcache extends tgif_memcached_pool
     function set($key, $var, $group='', $expire=-1)
     {
         //global $_TAG;
-        $this->_formatKeyAsArray(&$key, $group);
+        $this->_formatKeyAsArray($key, $group);
 
         if ($expire <= 0) {
             $expire = $this->_config['lifetime'];
@@ -168,7 +161,7 @@ class tgif_memcached_pool_memcache extends tgif_memcached_pool
      */
     protected function _formatKeyAsArray(&$key,$group)
     {
-        $key = parent::_formatKeyAsArray(&$key,$group);
+        $key = parent::_formatKeyAsArray($key,$group);
         $key[0] = $_TAG->symbol().$key[0];
     }
     // }}}
