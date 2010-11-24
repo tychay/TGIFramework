@@ -42,13 +42,14 @@
  *          'params'        => 1, //primary_key
  *          'construct'     => array('app_dao_tablename'),
  *          'loaderLoader'  => 'setLoader',
+ *          'useMemcache'   => true,
  *      ),
  * );
  * </code>
  *
  * This the last lines become: <code>
  * $_TAG->tablename[$primary_key]->some_col = $new_value;
- * // Destructor will call save()
+ * // Destructor will call save() which will also update memcache
  * </code>
  *
  * This depends on the database handle $_TAG->dbh.

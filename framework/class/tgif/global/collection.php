@@ -162,6 +162,10 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
     /**
      * Bind an object to the collection from outside {@link tgif_global}.
      *
+     * During binding, it will also update the caches, but only if the
+     * 'loaderLoader' parameter is defined. It is assumed that if no such
+     * one is defined, then the cache updates are not needed.
+     *
      * @param $offset integer|string offset to modify
      * @param $value mixed new value
      */
@@ -176,6 +180,11 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
             $params['ids'] = $offset;
             unset($params['params']);
             $loader_obj = new tgif_global_loader($params);
+            // be sure to update caches just in case
+            if (!empty($params['isSmemable']) || !empty($params['isMemcacheable'])) {
+                $loader_obj->setToCache($value);
+            }
+            // bind the loader object
             $value->{$params['loaderLoader']} = $loader_obj;
         }
     }
