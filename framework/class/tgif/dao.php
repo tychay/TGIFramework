@@ -196,7 +196,7 @@ class tgif_dao
     {
         //global $_TAG;
         $dbh = $_TAG->dbh;
-        $success = $_dbh->insert( $this->_table_name, $this->_data );
+        $success = $dbh->insert( $this->_table_name, $this->_data );
         if (!$success) {
             // probably should trigger execption
             trigger_error('Insert failed!');
@@ -221,12 +221,12 @@ class tgif_dao
         //global $_TAG;
         $dbh    = $_TAG->dbh;
         $data   = $this->_data;
-        $where  = array();
+        $wheres = array();
         foreach ($whereKeys as $key) {
-            $where[$key] = $data[$key];
+            $wheres[$key] = $data[$key];
             unset($data[$key]);
         }
-        $success = $_dbh->insertOrUpdate( $this->_table_name, $this->_data );
+        $success = $dbh->insertOrUpdate( $this->_table_name, $data, $wheres, $this->_autoIncrement );
         if ( !$success ) {
             //trigger exception
             return false;

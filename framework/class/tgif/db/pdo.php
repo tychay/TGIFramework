@@ -124,7 +124,6 @@ class tgif_db_pdo extends pdo
             implode(',',$sets),
             implode(' AND ',$wheres)
         );
-        //var_dump($query);
         // }}}
         //$sth = $this->_prepareQuery($query,$data);
         $sth = $this->prepare($query);
@@ -163,7 +162,7 @@ class tgif_db_pdo extends pdo
 
             $data[':'.$key] = $data[$key];
             $values[$i]     = ':'.$key;
-            $sets[]         = sprintf('%1$s=:%1$s', $key);
+            $sets[]         = sprintf('%1$s=VALUES(%1$s)', $key);
 
             unset($data[$key]);
         }
