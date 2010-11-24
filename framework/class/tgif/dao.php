@@ -178,22 +178,23 @@ class tgif_dao
     // CREATE
     // {{{ - insert()
     /**
-     * This is a creation operator. 
+     * Create a new row (but not a creation operator).
      *
      * Example:<code>
-     * $obj = new tgif_dao_tablename(data(),true); // create new object but not database lookup
+     * $obj = new tgif_dao_tablename($data,true); // create new object but not database lookup
      * $obj->create(); //now object is in the database and autoincrement key bound
      * $_TAG->dao_tablename[$obj->autoIncremeent()] = $objl //bind to global
      * </code>
      *
      * Note that this does not bind to any global becuase it is in the base class of something else (which knows what global to bind to).
      *
-     * @param mixed $data The row data to insert
+     * @param array $data The row data to insert
      * @return boolean success or failure
      * @todo failure should trigger exception
      */
     function insert()
     {
+        //global $_TAG;
         $dbh = $_TAG->dbh;
         $success = $_dbh->insert( $this->_table_name, $this->_data );
         if (!$success) {
@@ -204,6 +205,37 @@ class tgif_dao
         if ($this->_autoIncrement) {
             $this->_data[$this->_autoIncrement] = $dbh->insertId;
         }
+        $this->_saveToCache();
+    }
+    // }}}
+    // {{{ - insertOrUpdate($whereKeys)
+    /**
+     * Do an insertOrUpdate()
+     *
+     * @param array $whereKeys a list of keys to use in the where cause.
+     * @return boolean success or failure
+     * @todo failure should trigger exception
+     */
+    function insertOrUpdate($whereKeys)
+    {
+        //global $_TAG;
+        $dbh    = $_TAG->dbh;
+        $data   = $this->_data;
+        $where  = array();
+        foreach ($whereKeys as $key) {
+            $where[$key] = $data[$key];
+            unset($data[$key]);
+        }
+        $success = $_dbh->insertOrUpdate( $this->_table_name, $this->_data );
+        if ( !$success ) {
+            //trigger exception
+            return false;
+        }
+        if ($this->_autoIncrement) {
+            $this->_data[$this->_autoIncrement] = $dbh->insertId;
+        }
+        $this->_saveToCache();
+        return true;
     }
     // }}}
     // MAGIC METHODS: READ UPDATE
@@ -255,14 +287,21 @@ class tgif_dao
         return false;
     }
     // }}}
-    // CACHING METHODS
-    // {{{ - setLoader($loader)
+    // ACCESSORS
+    // {{{ getData()
     /**
-     * Bind to loader
+     * Get all the data necessary to be able to reconstruct.
+     *
+     * To reconstruct:<code>
+     * $data = $obj->getData();
+     * $obj = new tgif_dao_tablename($data,true); // create new object but not database lookup
+     * </code>
+     *
+     * @return array The data used to reconstruct
      */
-    public function setLoader($loader)
+    function getData()
     {
-        $this->_loader = $loader;
+        return $this->_data;
     }
     // }}}
     // PUBLIC METHODS
@@ -283,7 +322,27 @@ class tgif_dao
         }
         // save to database
         $success = $dbh->update( $this->_table_name, $data, $where );
-        // save to cache
+        if ( $success) {
+            $this->_saveToCache();
+        }
+    }
+    // }}}
+    // CACHING METHODS
+    // {{{ - setLoader($loader)
+    /**
+     * Bind to loader
+     */
+    public function setLoader($loader)
+    {
+        $this->_loader = $loader;
+    }
+    // }}}
+    // {{{ - _saveToCache()
+    /**
+     * Update cache
+     */
+    private function _saveToCache()
+    {
         if ( $this->_loader ) {
             $this->_loader->setToCache( $this );
         }

@@ -175,18 +175,22 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
             trigger_error('Binding a collection object not supported yet! Make a routine that initialized the base loader first');die;
         }
         $this->_array[$offset] = $value;
-        // bind the loader becuse it isn't set yet
-        if ( isset($params['loaderLoader']) ) {
+
+        // bind the loader or update the cache on set {{{
+        // since the default values are nil, we can use isset here
+        if ( isset($params['loaderLoader']) || isset($params['cacheUpdateOnSet']) ) {
             $params['ids'] = $offset;
             unset($params['params']);
             $loader_obj = new tgif_global_loader($params);
-            // be sure to update caches just in case
-            if (!empty($params['isSmemable']) || !empty($params['isMemcacheable'])) {
+            if ( !empty($params['cacheUpdateOnSet']) ) {
                 $loader_obj->setToCache($value);
             }
             // bind the loader object
-            $value->{$params['loaderLoader']} = $loader_obj;
+            if ( !empty($params['laoderLoader']) ) {
+                $value->{$params['loaderLoader']} = $loader_obj;
+            }
         }
+        // }}}
     }
     // }}}
     // {{{ - offsetUnset($offset)

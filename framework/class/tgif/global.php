@@ -265,6 +265,13 @@ class tgif_global
     /**
      * Allows you to externally set a global :-)
      *
+     * You might think it woul be best to allow onfigurations for the
+     * '_loaderLoader' and 'cacheUpdateOnSet' assignements. However
+     * since this is unparameterized, there is only one way to access
+     * this variable. If you are explicitly setting this variable,
+     * it doesn't make sense to implicit set also. Therefore support
+     * for the two parameters is skipped.
+     *
      * @param string $name the property to set (normal property naming rules
      * apply).
      * @param mixed $value

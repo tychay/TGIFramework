@@ -50,8 +50,13 @@ if (!function_exists('apc_fetch')) {
  * - deferCache (false): if set to true, it will not write the memcache until
  *   page shutdown (via event system).
  * - checkCache (''): method to call that returns a boolean on whether or not
- *   (after wakeup) the wakeup function may have changed the data and
- *   need to be set.
+ *   (after wakeup) to force a cache update. A wakeup function or whatever
+ *   executed after 'memcacheGet' called, have messed with the object. If that
+ *   is the case, we need to always force an update on reading from the cache.
+ * - cacheUpdateOnSet (false): if set to true, when a global collection is
+ *   externally assigned (_set)), this tells the system to make sure the
+ *   object is stored in the caches also. By default, it does not attempt
+ *   to update cache (it only binds a loader).
  * - deleteAction (false): If set, this is the callback to execute before
  *   deleting object from cache. This allows the system to delete any related
  *   volatile stores. Note that if it is an array and the first element is
@@ -235,6 +240,16 @@ class tgif_global_loader extends tgif_global_object
      * @var string
      */
     private $_checkCache = '';
+    // }}}
+    // {{{ - $_cacheUpdateOnSet
+    /**
+     * If the variable is externally set (as part of a collection),
+     * This will force the object to update caches also.
+     * This allows the system to delete any related persistent stores.
+     *
+     * @var boolean
+     */
+    private $_cacheUpdateOnSet = false;
     // }}}
     // {{{ - $_deleteAction
     /**
