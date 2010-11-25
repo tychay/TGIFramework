@@ -13,7 +13,7 @@
  * @copyright 2009 terry chay <tychay@php.net
  */
 $latest_version = max(explode(':',exec('svnversion -n'))); //sometimes you get back a range...
-$data = sprintf('<?php return array(\'global_version\'=>%d); ?>',$latest_version);
+$data = sprintf('<?php /** @package tgiframework */ return array(\'global_version\'=>%d); ?>',$latest_version);
 /**
  * Bootstrap tgif_file for writing
  */
