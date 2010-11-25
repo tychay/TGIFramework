@@ -4,7 +4,7 @@
  * Container for {@link tgif_dao}
  *
  * @package tgiframework
- * @subpackage db
+ * @subpackage database
  * @author terry chay <tychay@php.net>
  * @copyright c. 2010 5, Inc. and c. 2010 Terry Chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
@@ -55,7 +55,7 @@
  * This depends on the database handle $_TAG->dbh.
  * @author terry chay <tychay@buywith5.com>
  * @package tgiframework
- * @subpackage db
+ * @subpackage database
  */
 // }}}
 class tgif_dao
