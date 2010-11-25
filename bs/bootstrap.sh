@@ -335,7 +335,7 @@ fi
 pecl_update_or_install inclued $INCLUED '' ''
 # }}}
 # Install memcache(d) with igbinary {{{
-if [ $DISTRIBUTION = 'fedora' ] && [ $MEMCACHE = 'memcached' ] then
+if [ $DISTRIBUTION = 'fedora' ] && [ $MEMCACHE = 'memcached' ]; then
     if [ `$PHP_EXT_TEST $1` ]; then
         echo "### memcached already installed, doing nothing"
     else
