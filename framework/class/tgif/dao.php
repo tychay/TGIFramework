@@ -53,8 +53,9 @@
  * </code>
  *
  * This depends on the database handle $_TAG->dbh.
- * @package buywith5
  * @author terry chay <tychay@buywith5.com>
+ * @package tgiframework
+ * @subpackage db
  */
 // }}}
 class tgif_dao
