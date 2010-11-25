@@ -23,13 +23,16 @@
  * quick, dirty, and effective.
  *
  * The following config variables are used
- * - diagnostics.diagnostics: should we bother timing diagnostics?
- * - diagnostics.monitor: whether or not to log diagnostics data to a monitoring
- *   service
- * - diagnostics.monitorEvent: if diagnostics.monitor is true, should we log
+ * - diagnostics.diagnostics (false): should we bother doing diagnostics on the 
+ *   diagnostics itself.
+ * - diagnostics.monitor (false): Should we send diagnostics information to the
+ *   monitoring service (was diagnostics_monitor)
+ * - diagnostics.monitorEvent: If diagnostics_monitor is true, should we send
+ *   diagnostics information of the events (instead of just the page times) to
+ *   the monitoring service? (was diagnostics_should_send_event)
  *   all events (instead of just page events).
- * - firephp.diagnostics: should firephp output diagnostics?
- * - firephp.diagnostics_snaps: should firephp output snapshots
+ * - firephp.diagnostics (false): should firephp output diagnostics?
+ * - firephp.diagnostics_snaps (false): should firephp output snapshots
  *
  * @package tgiframework
  * @subpackage debugging
