@@ -14,7 +14,7 @@ return array(
     /**
      * Array containing config for default pool
      */
-    'memcached_config_default'  => array(
+    'memcached.config_default'  => array(
         'persist'       => true,    //persist the connection between requests
         'lifetime'      => 0,       //default lifetime in requests (== expire)
         'timeout'       => 1,       //wait i1 second for the connection to
@@ -22,7 +22,7 @@ return array(
         'retryTimeout'  => 100,     //let server be disabled for 100 sec before
                                     // trying to put it back on pool
         'compressThreshold' => 8192,//8K to turn on auto compressioc
-        'compressMinSaving' => 0.2, //20% savings required (memcache-only)
+        //'compressMinSaving' => 0.2, //20% savings required (memcache-only)
         //'checkStatus'       => false, //don't verify connection (memcache-only)
         //'logRandom'         => false, //don't log memcaches at random (memcache-only)
         'diagnostics'       => true,  //allow diagnostics to time memcache
@@ -32,7 +32,7 @@ return array(
         'distribution'      => 'consistent', //use libketama-like
     ),
     // }}}
-    // {{{ memcached_pool_default
+    // {{{ memcached.pool_default
     /**
      * Array containing list of hosts in pool.
      *
@@ -46,5 +46,6 @@ return array(
         array('127.0.0.1',11212,1),
     ),
     // }}}
+    
 );
 ?>
