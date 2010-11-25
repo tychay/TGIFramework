@@ -23,11 +23,13 @@
  * quick, dirty, and effective.
  *
  * The following config variables are used
- * - diagnostics_monitor: whether or not to log diagnostics data to a monitoring
+ * - diagnostics.diagnostics: should we bother timing diagnostics?
+ * - diagnostics.monitor: whether or not to log diagnostics data to a monitoring
  *   service
- * - diagnostics_monitorEvent: if diagnostics_monitor is true, should we log
+ * - diagnostics.monitorEvent: if diagnostics.monitor is true, should we log
  *   all events (instead of just page events).
  * - firephp.diagnostics: should firephp output diagnostics?
+ * - firephp.diagnostics_snaps: should firephp output snapshots
  *
  * @package tgiframework
  * @subpackage debugging
@@ -94,6 +96,19 @@ class tgif_diagnostics
     public $timerInfo = array();
     // }}}
     // PRIVATE INTERNALS
+    // {{{ - $_config
+    /**
+     * Storage of configuration variables (for quicker reference).
+     * 
+     * This contains the default values so that params always exist.
+     * @var array
+     */
+    private $_config = array(
+        'diagnostics'   => false,
+        'monitor'       => false,
+        'monitorEvent'  => false,
+    );
+    // }}}
     // {{{ - $_timers
     /**
      * Storage of all <b>currently running</b> timers by name.
@@ -118,28 +133,30 @@ class tgif_diagnostics
     // RESERVED METHODS
     // {{{- __construct()
     /**
+     * @uses tgif_http::self_url() url generator
+     * @uses tgif_encode::create_key() uniq id generator
      */
     public function __construct()
     {
         //global $_TAG; // runkit superglobal
+        // read configuration and override defaults
+        if ( is_array($config = $_TAG->config('diagnostics')) ) {
+            $this->_config = array_merge( $this->_config, $config );
+        }
         ob_start();
-        $this->StartTimer('page'); //this will be modded ex post facto by
-                                   // setPageTimer()
+        $this->startTimer('page'); //the time here will be modded ex post facto
+                                   // by setPageTimer()
         $this->pid = getmypid();
         // generate url and server{{{
         if (isset($_SERVER['SERVER_ADDR'])) {
             $this->server = $_SERVER['SERVER_ADDR'];
-            $this->url = sprintf('http://%s%s%s',
-                                 $_SERVER['SERVER_NAME'],
-                                 ($_SERVER['SERVER_PORT']==80) ? '' : ':'.$_SERVER['SERVER_PORT'],
-                                 $_SERVER['REQUEST_URI']
-                                 );
+            $this->url    = tgif_http::self_url();
         } else {
             $this->server = php_uname('n');
-            $this->url = $_SERVER['argv'][0];
+            $this->url    = $_SERVER['argv'][0];
         }
         // }}}
-        // Globally unique identifier is a hash of
+        // Globally unique identifier is a hash of:
         //      microtime + entropy + serverip + pid
         // store the first 10 base-64 digits of hash
         $this->guid = tgif_encode::create_key(uniqid(rand(),true).$this->server.$this->pid);
@@ -151,7 +168,7 @@ class tgif_diagnostics
      */
     function __sleep()
     {
-        return array('guid','parentGuid','pid','memory','server','url','timerInfo');
+        return array('guid','parentGuid','pid','memory','server','url','timerInfo','_config');
     }
     // }}}
     // {{{ - __wakeup()
@@ -174,7 +191,7 @@ class tgif_diagnostics
         // UDP Log page statistics {{{
         // Must call logger before stopTimer because we need the $_timers
         // variable to exist.
-        if ($_TAG->config('diagnostics_monitor')) {
+        if ( $this->_config['monitor'] ) {
             self::_monitor_event('end', array(
                 'guid'          => $this->guid,
                 'server'        => $this->server,
@@ -192,7 +209,7 @@ class tgif_diagnostics
         // firephp summary {{{
         // Have to have move ob_end_flush() here because we can't let
         // destruction happen before ob_flush on api
-        if ($_TAG->config('firephp.diagnostics', true)) {
+        if ( $_TAG->config('firephp.diagnostics', true) ) {
             // you can log this instead if you want a simpler diagnostic returned.
             $this->summary('totals');
             $_TAG->firephp->log($this,'diagnostics');
@@ -255,7 +272,7 @@ class tgif_diagnostics
         $this->_diagStart();
         $this->_timers['page']->startTime = $time;
         // UDP log page start event
-        if ($_TAG->config('diagnostics_monitor')) {
+        if ( $this->_config['monitor'] ) {
             self::_monitor_event('start', array(
                 'guid'          => $this->guid,
                 'server'        => $this->server,
@@ -287,7 +304,7 @@ class tgif_diagnostics
     function startTimer($timer_name, $name='', $stuff=array())
     {
         //global $_TAG; //runkit
-        //if ($_TAG->config('firephp_diagnostics') && ($timer_name!='diagnostics')) { $_TAG->firephp->log(sprintf('started %s',$timer_name),'timer'); }
+        //if ($_TAG->config('firephp.diagnostics', true) && ($timer_name!='diagnostics')) { $_TAG->firephp->log(sprintf('started %s',$timer_name),'timer'); }
         // don't record if page already shut down
         if ((strcmp($timer_name,'page')!==0)  && !array_key_exists('page',$this->_timers)) { return; }
         $this->_diagStart();
@@ -307,7 +324,7 @@ class tgif_diagnostics
     function stopTimer($timer_name,$more_stuff=array())
     {
         //global $_TAG; //runkit
-        //if ($_TAG->config('firephp_diagnostics') && ($timer_name!='diagnostics')) { $_TAG->firephp->log(sprintf('stopped %s',$timer_name),'timer'); }
+        //if ($_TAG->config('firephp.diagnostics', true) && ($timer_name!='diagnostics')) { $_TAG->firephp->log(sprintf('stopped %s',$timer_name),'timer'); }
         // don't record if page already shut down
         if (!array_key_exists('page',$this->_timers)) { return; }
         if(!array_key_exists($timer_name,$this->_timers)){ return;}
@@ -339,7 +356,9 @@ class tgif_diagnostics
         unset($this->_timerStuff[$timer_name]);
         if (strcmp($timer_name,'page')===0) {
             $this->_diagStop();
-        } elseif ($_TAG->config('diagnostics_monitor') && $_TAG->config('diagnostics_monitorEvent') && (strcmp($timer_name,'diagnostic')!==0)) {
+        } elseif ( $this->_config['monitor'] 
+                && $this->_config['monitorEvent']
+                && (strcmp($timer_name,'diagnostic')!==0) ) {
             // record to monitor unless it is a page end event {{{
             // (recorded elsewhere)
             $send_data = array_merge($data['stuff'], array(
@@ -366,6 +385,7 @@ class tgif_diagnostics
      */
     private function _diagStart()
     {
+        if ( !$this->_config['diagnostics'] ) { return; }
         $this->_timers['diagnostic'] = new tgif_benchmark_timer(true);
         //$this->setPeakMemory();
     }
@@ -376,7 +396,8 @@ class tgif_diagnostics
      */
     private function _diagStop()
     {
-        if (!array_key_exists('page',$this->_timers)) { return; }
+        if ( !$this->_config['diagnostics'] ) { return; }
+        if ( !array_key_exists('page',$this->_timers) ) { return; }
         $timer = $this->_timers['diagnostic'];
         unset($this->_timers['diagnostic']);
         $timer->stop();
@@ -399,7 +420,7 @@ class tgif_diagnostics
     {
         //global $_TAG; //runkit
         $this->_diagStart();
-        //if ($_TAG->config('firephp_diagnostics')) { $_TAG->firephp->log(sprintf('started %s',$snapshotId),'snap'); }
+        //if ($_TAG->config('firephp.diagnostics', true)) { $_TAG->firephp->log(sprintf('started %s',$snapshotId),'snap'); }
         // don't overwrite a snap!
         if (array_key_exists($snapshotId, $this->_snaps)) { $this->_diagStop(); return; }
         $this->_snaps[$snapshotId] = array(
@@ -444,7 +465,7 @@ class tgif_diagnostics
     {
         //global $_TAG; //runkit
         $this->_diagStart();
-        //if ($_TAG->config('firephp_diagnostics')) { $_TAG->firephp->log(sprintf('stopped %s',$snapshotId),'snap'); }
+        //if ($_TAG->config('firephp.diagnostics', true)) { $_TAG->firephp->log(sprintf('stopped %s',$snapshotId),'snap'); }
         // test for existence
         if (!array_key_exists($snapshotId, $this->_snaps)) { $this->_diagStop(); return; }
         $returns = $this->_snaps[$snapshotId];
@@ -458,7 +479,7 @@ class tgif_diagnostics
             $old_count = (array_key_exists($key,$old_info))
                        ? count($old_info[$key])
                        : 0;
-            //if ($_TAG->config('firephp_diagnostics')) { $_TAG->firephp->log(sprintf('%s:%d:%d',$key,$new_count,$old_count),'counts'); }
+            //if ($_TAG->config('firephp.diagnostics', true)) { $_TAG->firephp->log(sprintf('%s:%d:%d',$key,$new_count,$old_count),'counts'); }
             if ($new_count != $old_count) {
                 $returns['snapshot'][$key] = array_slice($value,$old_count);
             }
@@ -466,7 +487,7 @@ class tgif_diagnostics
         if (array_key_exists('callback',$returns['params'])) {
             call_user_func($returns['params']['callback'],$returns);
         }
-        if ($_TAG->config('firephp_diagnostics_snaps')) {
+        if ($_TAG->config('firephp.diagnostics_snaps', true)) {
             $_TAG->firephp->log($returns,sprintf('snap %s',$snapshotId));
         }
         $this->_diagStop();
@@ -528,17 +549,17 @@ class tgif_diagnostics
      */
     private function _simpleSummary()
     {
-        $timerName = 'page';
+        $timer_name = 'page';
         //if peak memory is not installed, then append a ?
         $peak = (function_exists('memory_get_peak_usage')) ? '' : '?';
         $server_parts = explode('.',$this->server);
         $server = (count($server_parts) > 3)
                 ? sprintf('%d.%d', $server_parts[2],$server_parts[3])
                 : $this->server;
-        $this->_timers[$timerName]->stop(); // stop is the same as a "lap" timer
+        $this->_timers[$timer_name]->stop(); // stop is the same as a "lap" timer
         return sprintf(
             '%d %.1f%sMB %s',
-            $this->_timers[$timerName]->timeTaken*1000,
+            $this->_timers[$timer_name]->timeTaken*1000,
             $this->setPeakMemory()/1024/1024,
             $peak,
             $server
@@ -554,6 +575,7 @@ class tgif_diagnostics
     private function _dataSummary()
     {
         $this->_timers['page']->stop(); // stop is the same as a "lap" timer
+
         $times = $this->timerInfo;
         // don't clutter results with diagnostic timers
         unset($times['diagnostic']);
@@ -565,6 +587,7 @@ class tgif_diagnostics
             'parent guid'   => $this->parentGuid,
             'peak memory'   => $this->setPeakMemory(),
             'summary'       => $this->_totalSummary(),
+            'total_time'    => $this->_timers['page']->timeTaken,
             'times'         => $times,
         );
         return $returns;

@@ -88,6 +88,17 @@ if ($foo = $_TAG->memcached->get('foo')) {
 ?>
 <h2>Benchmarking</h2>
 <?php
+// {{{ gen_guid_data()
+/**
+ * Generator to generate test data similar to guid in {@link tgif_diagnostics}.
+ * @return string
+ */
+function gen_guid_data() {
+    global $pid, $server;
+    return uniqid(rand(),true).$server.$pid;
+}
+// }}}
+/*
 // date test {{{
 //$error_level = error_reporting(E_ALL | E_STRICT);
 //ini_set('date.timezone',false);
@@ -146,7 +157,6 @@ echo tgif_benchmark_iterate::format($b1->compare($b2,$b3,$b4,$b5)),"\n";
 // restore
 error_reporting($error_level);
 // }}}
-
 // internal time vs server time
 // {{{ date() on internal time
 $b1 = new tgif_benchmark_iterate(true);
@@ -166,16 +176,6 @@ echo tgif_benchmark_iterate::format($b1->compare($b2)),"\n";
 // emulate diagnostic guid hash
 $pid    = getmypid();
 $server = (isset($_SERVER['SERVER_ADDR'])) ? $_SERVER['SERVER_ADDR'] : php_uname('n');
-// {{{ gen_guid_data()
-/**
- * Generator to generate test data similar to guid in {@link tgif_diagnostics}.
- * @return string
- */
-function gen_guid_data() {
-    global $pid, $server;
-    return uniqid(rand(),true).$server.$pid;
-}
-// }}}
 // md5 {{{
 $b1 = new tgif_benchmark_iterate(true);
 //$b1->startStop = true; //(so small get division by 0)
@@ -193,6 +193,7 @@ $b3 = new tgif_benchmark_iterate(true);
 $b3->runGenerator(1000, 'sha1', 'gen_guid_data');
 // }}}
 echo tgif_benchmark_iterate::format($b1->compare($b2,$b3));
+/* */
 // }}}
 ?>
 <h2>Diagnostics</h2>
@@ -200,6 +201,8 @@ echo tgif_benchmark_iterate::format($b1->compare($b2,$b3));
 echo $_TAG->diagnostics->summary();
 $data = $_TAG->diagnostics->summary('data');
 var_dump($data,$data['times']['memcache']);
+echo $_TAG->diagnostics->summary();
+
 ?>
 </body>
 </html>
