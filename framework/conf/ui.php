@@ -21,12 +21,10 @@ return array(
             'target_dir'        => '{{{dir_static}}}/dyn/css',
             'use_cat'           => true,
             'use_compiler'      => true,
-            'use_service'       => true,
             'use_smem'          => true,
             'use_memcache'      => false,
             'signature_mode'    => 'global',
-            'java_cmd'          => '{{{bin_java}}}',
-            'yui_compressor'    => '{{{jar_yuicompressor}}}',
+            'libraries'         => array(),
         ),
     ),
     // }}}
@@ -40,20 +38,31 @@ return array(
             'target_dir'        => '/dyn/js',
             'use_cat'           => true,
             'use_compiler'      => true,
-            'use_service'       => true,
             'use_smem'          => true,
             'use_memcache'      => false,
             'signature_mode'    => 'global',
             'java_cmd'          => '{{{bin_java}}}',
-            'yui_compressor'    => '{{{jar_yuicompressor}}}',
-            'yui_version'       => '{{{yui_ver}}}',
             'yui_combine'       => true,
+            'libraries'         => array(
+                'yui',
+                'json',
+            ),
         ),
     ),
     // }}}
+    // {{{ - yui
+    'yui' => array(
+        'version'           => '2.4.0',
+        // http://developer.yahoo.com/yui/compressor/
+        'compressor_jar'    => TGIF_BIN_DIR.'/yuicompressor-2.4.2.jar',
+        'use_service'       => true,
+    ),
+    // }}}
+    
     'bin_java'              => '/usr/bin/java',
-    'jar_yuicompressor'     => TGIF_BIN_DIR.'/yuicompressor-2.4.2.jar',
     'dir_static'            => '',
+
     'yui_ver'               => '2.4.0',
+    'jar_yuicompressor'     => TGIF_BIN_DIR.'/yuicompressor-2.4.2.jar',
 );
 ?>
