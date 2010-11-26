@@ -44,32 +44,5 @@ return array(
     ),
     // }}}
     // }}}
-    // memcache {{{
-    // {{{ $_TAG->memcached
-    /**
-     * Stub container for {@link tgif_memcache} objects (accessed by channel)
-     * that provides memcache access to a pool of servers (distributed RAM
-     * cache).
-     *
-     * There is a special memcache channel for all default queries known as
-     * "___" and never needs to be explicitly called in calls.
-     *
-     * @global tgif_memcache
-     * @name $_TAG->memcache
-     */
-    'gld_memcached'  => array(
-        'params'            => 0,
-        'construct'         => array('tgif_memcached'),
-        'version'           => 0,
-        'isSmemable'        => true,
-    ),
-    // }}}
-    // {{{ memcached.extension
-    /**
-     * which php extension to use
-     */
-    'memcached.extension'  => (extension_loaded('memcached')) ? 'memcached' : 'memcache',
-    // }}}
-    // }}}
 );
 ?>
