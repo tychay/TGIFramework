@@ -5,7 +5,7 @@
  * Configuration for memcached related stuff
  *
  * This sets the following config varables:
- * - memcached.extension: preer memcached over memcache extension (if loaded).
+ * - memcached.extension: prefer memcached over memcache extension (if loaded).
  *
  * This configures the following global variables:
  * - $_TAG->memcached: singleton for the object that manages memcached access
@@ -18,7 +18,6 @@
  * @author terry chay <tychay@php.net>
  */
 return array(
-    // memcache {{{
     // {{{ memcached.extension
     /**
      * which php extension to use
@@ -43,7 +42,6 @@ return array(
         'version'           => 0,
         'isSmemable'        => true,
     ),
-    // }}}
     // }}}
 );
 ?>

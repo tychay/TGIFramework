@@ -2,15 +2,13 @@
 // vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 /**
- * Configuration for global related stuff.
+ * Configuration for autoload related stuff.
  *
  * This sets the following config varables:
  * - autoload_stubs: don't throw exceptions or make stub classes on unknown class error
- * - memcached.extension: preer memcached over memcache extension (if loaded).
  *
  * This configures the following global variables:
  * - $_TAG->classmaps: autoloader for loading a free energy class map table from APP_CLASSMAP_PATH
- * - $_TAG->memcached: singleton for the object that manages memcached access
  *
  *
  * @package tgiframework
@@ -20,7 +18,6 @@
  * @author terry chay <tychay@php.net>
  */
 return array(
-    // class loading {{{
     // {{{ autoload_stubs
     /**
      * Set to true if you want {@link __autoload()} to throw exceptions and
@@ -42,7 +39,6 @@ return array(
         'isMemcacheable'    => false, // I tried this with TRUE for testing. Works only if we deal with the commenting issues elsewhere
         'deferCache'        => false, //don't try to call a defer cache. it's ugly
     ),
-    // }}}
     // }}}
 );
 ?>
