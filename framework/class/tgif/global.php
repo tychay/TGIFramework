@@ -32,10 +32,10 @@ if (!function_exists('apc_fetch')) {
  * When an application global is accessed, it looks for the global in the
  * following order:
  *
- * 1) defined in an internal property
- * 2) in a shared memory segment (apc_cache or zend_cache) if configured
- * 3) in a memcached pool if configured
- * 4) from a persistent data store (database or other resoure) via a
+ * 1. defined in an internal property
+ * 2. in a shared memory segment (apc_cache or zend_cache) if configured
+ * 3. in a memcached pool if configured
+ * 4. from a persistent data store (database or other resoure) via a
  *    construction function.
  *
  * Think of it as L1, L2 (shared memory), RAM (memcache), and disk (database)
@@ -43,7 +43,7 @@ if (!function_exists('apc_fetch')) {
  * be automatic, hence the special exception handling which may or may not be
  * caught internally depending on what system is used for accessing the element.
  *
- * <strong>The symbol prefix</strong>
+ * <b>The symbol prefix</b>
  *
  * A special three letter variable prefix is defined by the instance of the
  * application and is passed to the constructor when the {@link $_TAG this
@@ -59,7 +59,7 @@ if (!function_exists('apc_fetch')) {
  * so unless two copies share the same symbol, it will be like two ships
  * passing in the night.
  *
- * <strong>The Configuration system</strong>
+ * <b>The Configuration system</b>
  *
  * Configuration variables are loaded as necessary from all php files in
  * predefined directories and saved to shared memory. They can be accessed
@@ -99,7 +99,7 @@ if (!function_exists('apc_fetch')) {
  * tag_memcached the memcache system} itself configured with the configuration
  * (chicken-egg).
  *
- * <strong>Global variable configuration</strong>
+ * <b>Global variable configuration</b>
  *
  * Definitions configurating global variables are prefixed in configuration
  * files with a special prefix ('gld_'). This treatement is in order to know
@@ -111,7 +111,7 @@ if (!function_exists('apc_fetch')) {
  * the "gld". This is no longer true, but please don't try this at home (or
  * in production) as this edge case is untested.
  *
- * <strong>Violations</strong>
+ * <b>Violations</b>
  *
  * The purists among you may notice {@link config() configuration constants}
  * are handled differently than other globals in the system. That is technically
