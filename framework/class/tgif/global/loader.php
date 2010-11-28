@@ -411,8 +411,27 @@ class tgif_global_loader extends tgif_global_object
      */
     private function _defaultKeyGen() {
         $return = self::_global_version . $this->_name;
-        if ($this->_ids) { $return .= '_'.implode('_',$this->_ids); }
-        return $return . '.' . $this->_version;
+        if ($this->_ids) {
+            $simple = true;
+            $num = count($this->_ids);
+            if ( $num > 4 ) {
+                $simple = false;
+            } else {
+                for ($i<$num; $i=0; ++$i) {
+                    $id = $this->_ids[$i];
+                    if ( is_object($id) ) { $simple=false; break; }
+                    if ( is_array($id) ) { $simple=false; break; }
+                    if ( is_resource($id) ) { $simple=false; break; }
+                }
+            }
+            $return .= '_';
+            $return .= ($simple)
+                     ? implode('_',$this->_ids)
+                     : tgif_encode::create_key(serialize($this->_ids));
+        }
+        return ($this->_version)
+               ? $return.'.'.$this->_version
+               : $return;
     }
     // }}}
     // {{{ - smemKey()
@@ -503,6 +522,7 @@ class tgif_global_loader extends tgif_global_object
                 try {
                     $key = $this->memcacheKey();
                     $data = $_TAG->memcached->get($key, 'global');
+                    //var_dump(array('memcache get',$key, 'global', $data));
                     if ($data !== false) {
                         $callback = $this->_memcacheGet;
                         $this->__callback = $callback;
@@ -680,41 +700,20 @@ class tgif_global_loader extends tgif_global_object
      */
     public function cacheSelf($deferSmem=false, $deferMemcache=false)
     {
-        //global $_TAG;
-        $result = true;
         $this->__needUpdate = false;
-        // save into smem {{{
-        if ($this->_isSmemable && !$deferSmem) {
-            $result = $result && apc_store(
-                $this->smemKey(),
-                $this->self,
-                (int) $this->_smemcacheLifetime
+        return self::set_to_cache(
+            array(
+                'group'             => 'global',
+                'smem_key'          => $this->smemKey(),
+                'smem_lifetime'     => $this->_smemcacheLifetime,
+                'memcache_key'      => $this->memcacheKey(),
+                'memcache_lifetime' => $this->_memcacheLifetime,
+                'memcache_set'      => $this->_memcacheSet,
+            ),
+            $this->self,
+            ($this->_isSmemable && !$deferSmem),
+            ($this->_isMemcacheable && !$deferMemcache)
             );
-        }
-        // }}}
-        // save into memcache {{{
-        if ($this->_isMemcacheable && !$deferMemcache) {
-            try {
-                $key = $this->memcacheKey();
-                $lifetime = ($this->_memcacheLifetime===false)
-                          ? -1 //use pool default
-                          : $this->_memcacheLifetime;
-                // if custom memcache setter is configured
-                if ($this->_memcacheSet) {
-                    $data = call_user_func($this->_memcacheSet, $this->self);
-                } else {
-                    $data = $this->self;
-                }
-                $result = $result && $_TAG->memcached->set($key, $data, 'global', $lifetime);
-            } catch (tgif_global_exception $e) {
-                // If we get a cache exception, make a note but
-                // don't otherwise do anything.  We want to
-                // proceed as if caching were enabled.
-                trigger_error($e->getMessage());
-            }
-        }
-        // }}}
-        return $result;
     }
     // }}}
     // {{{ - deleteFromCache([$deferSmem,$deferMemcache])
@@ -770,6 +769,125 @@ class tgif_global_loader extends tgif_global_object
         }
         // }}}
         return $result;
+    }
+    // }}}
+    // {{{ + get_from_cache($key,$useSmem,$useMemcache)
+    /**
+     * Grab data from cache
+     *
+     * @param array $params Can have the following parameters
+     *  - group: if supplied, it is the "group" of the memcache read
+     *  - key: if supplied it is the key to use for both. Note that smem keys
+     *    will have the symbol prepended
+     *  - memcache_key: if supplied it is the memcache key
+     *  - smem_key: if supplied it is the smem key
+     *  - memcache_get: if supplied it will run the software through this
+     *    function after getting from cache
+     * @param boolean $useSmem should we read from smem?
+     * @param boolean $useMemcache should we read from memcache?
+     * @return boolean success or failure.
+     */
+    public static function get_from_cache($params, $useSmem=false, $useMemcache=false)
+    {
+        //global $_TAG;
+        // read from smem {{{
+        if ( $useSmem ) {
+            $key = ( isset($params['smem_key']) )
+                 ? $params['smem_key']
+                 : $_TAG->symbol().$params['key'];
+            if ( $return = apc_fetch($key) ) {
+                return $return;
+            }
+        }
+        // }}}
+        // read from memcache {{{
+        if ( $useMemcache ) {
+            try {
+                $key = ( isset($params['memcache_key']) )
+                     ? $params['memcache_key']
+                     : $params['key'];
+                $group = ( isset($params['group']) )
+                       ? $params['group']
+                       : '';
+                if ( $return = $_TAG->memcached->get($key, $group) ) {
+                    return ( !empty($params['memcache_get']) )
+                           ? call_user_func($params['memcache_get'], $return)
+                           : $return;
+                }
+            } catch (tgif_global_exception $e) {
+                // If we get a cache exception, make a note but
+                // don't otherwise do anything.  We want to
+                // proceed as if caching were enabled.
+                trigger_error($e->getMessage());
+                return false;
+            }
+        }
+        // }}}
+        return false;
+    }
+    // }}}
+    // {{{ + set_to_memcache($key,$data,$useSmem,$useMemcache)
+    /**
+     * Grab data from cache
+     *
+     * @param array $params Can have the following parameters
+     *  - group: if supplied, it is the "group" of the memcache read
+     *  - key: if supplied it is the key to use for both.
+     *  - smem_key: if supplied it is the smem key
+     *  - smem_lifetime: if supplied it is the lifetime to use
+     *  - memcache_key: if supplied it is the memcache key
+     *  - memcache_lifetime: if supplied it is the lifetime to use
+     *  - memcache_set: if supplied it will run the software through this
+     *    function before upload
+     * @param boolean $useSmem should we write to smem?
+     * @param boolean $useMemcache should we write to memcache?
+     * @return boolean success or failure.
+     */
+    public static function set_to_cache($params, $data, $useSmem=false, $useMemcache=false)
+    {
+        //var_dump(array('set_to_cache',$params,$data,$useSmem,$useMemcache));
+        //global $_TAG;
+        $return = true;
+        // write to smem {{{
+        if ( $useSmem ) {
+            $key = ( isset($params['smem_key']) )
+                 ? $params['smem_key']
+                 : $_TAG->symbol().$params['key'];
+            $lifetime = ( isset($params['smem_lifetime']) )
+                      ? $params['smem_lifetime']
+                      : 0;
+            $result = apc_store($key, $data, $lifetime);
+            $return = $return && $result;
+        }
+        // }}}
+        // write to memcache {{{
+        if ( $useMemcache ) {
+            try {
+                $key = ( isset($params['memcache_key']) )
+                     ? $params['memcache_key']
+                     : $params['key'];
+                $group = ( isset($params['group']) )
+                       ? $params['group']
+                       : '';
+                $lifetime = (isset($params['memcache_lifetime']) && $params['memcache_lifetime'] !== false)
+                          ? $params['memcache_lifetime']
+                          : -1; //pool default
+                $data = ( empty($params['memcache_set']) )
+                      ? $data
+                      : call_user_func($params['memcache_set'], $data);
+                //var_dump(array('memcache set', $key, $group, $lifetime, $data));
+                $result = $_TAG->memcached->set($key, $data, $group, $lifetime);
+                $return = $return && $result;
+            } catch (tgif_global_exception $e) {
+                // If we get a cache exception, make a note but
+                // don't otherwise do anything.  We want to
+                // proceed as if caching were enabled.
+                trigger_error($e->getMessage());
+                $return = false;
+            }
+        }
+        // }}}
+        return $return;
     }
     // }}}
 }
