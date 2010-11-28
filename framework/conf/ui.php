@@ -37,9 +37,6 @@ return array(
             'resource_url'      => '{{{url_static}}}/res/js',
             'target_url'        => '{{{url_static}}}/dyn/js',
             //'libraries'         => array('tgif_compiler_library_yuijs','tgif_compiler_library_jquery'),
-                'yui',
-                'json',
-            ),
         ),
     ),
     // }}}
