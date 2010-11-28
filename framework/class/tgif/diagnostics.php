@@ -289,7 +289,17 @@ class tgif_diagnostics
     // }}}
     // {{{ - isRunning($timer_name)
     /**
-     * Check to see if a timer is already running (in case of nesting)
+     * Check to see if a timer is already running (to prevent nesting).
+     *
+     * Example:<code>
+     * if ( !$isRunning = $_TAG->diagnostics->isRunning($timer_name) ) {
+     *      $_TAG->diagnostics->startTimer($timer_name);
+     * }
+     * // ... do work ...
+     * if ( !$isRunning ) {
+     *      $_TAG->diagnostics->stopTimer($timer_name);
+     * }
+     * </code>
      * @param $timer_name string the queue to put the timer in.
      */
     function isRunning($timer_name)
