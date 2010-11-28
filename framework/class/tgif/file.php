@@ -48,7 +48,9 @@ class tgif_file
         if ( file_exists($destFile) ) {
             unlink($destFile);
         }
-        if ( !link($destFile, $sourceFile) ) {
+        if ( link($sourceFile, $destFile) ) {
+            $success = true;
+        } else {
             $success = copy($sourceFile, $destFile);
         }
         if ($chmod!==false) { chmod($destFile, $chmod); }
