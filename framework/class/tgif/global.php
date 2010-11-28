@@ -27,7 +27,7 @@ if (!function_exists('apc_fetch')) {
  *
  * Application globals are found through a superglobal (via runkit) like so
  * <code>$_TAG->global_variable_name</code>
- * $TAG stands for "TGIFramework Application Globals." :-)
+ * $_TAG stands for "TGIFramework Application Globals." :-)
  *
  * When an application global is accessed, it looks for the global in the
  * following order:
@@ -43,7 +43,7 @@ if (!function_exists('apc_fetch')) {
  * be automatic, hence the special exception handling which may or may not be
  * caught internally depending on what system is used for accessing the element.
  *
- * <h3>The symbol prefix</h3>
+ * <strong>The symbol prefix</strong>
  *
  * A special three letter variable prefix is defined by the instance of the
  * application and is passed to the constructor when the {@link $_TAG this
@@ -59,7 +59,7 @@ if (!function_exists('apc_fetch')) {
  * so unless two copies share the same symbol, it will be like two ships
  * passing in the night.
  *
- * <h3>The Configuration system</h4>
+ * <strong>The Configuration system</strong>
  *
  * Configuration variables are loaded as necessary from all php files in
  * predefined directories and saved to shared memory. They can be accessed
@@ -98,7 +98,7 @@ if (!function_exists('apc_fetch')) {
  * tag_memcached the memcache system} itself configured with the configuration
  * (chicken-egg).
  *
- * <h3>Global variable configuration</h3>
+ * <strong>Global variable configuration</strong>
  *
  * Definitions configurating global variables are prefixed in configuration
  * files with a special prefix ('gld_'). This treatement is in order to know
@@ -110,7 +110,7 @@ if (!function_exists('apc_fetch')) {
  * the "gld". This is no longer true, but please don't try this at home (or
  * in production) as this edge case is untested.
  *
- * <h3>Violations</h3>
+ * <strong>Violations</strong>
  *
  * The purists among you may notice {@link config() configuration constants}
  * are handled differently than other globals in the system. That is technically
@@ -189,11 +189,11 @@ class tgif_global
      * into shared memory cache already. If we have a lot of files, reading the
      * configuration (especially if complex) will take a lot of time and we
      * want to do this as rarely as possible (e.g. only once per server restart
-     * unless we are on development). If you are developmet set the 'readConfig'
-     * config to false (or don't set it at all) and we will rehash the config
-     * on every reuest. Or set it to true and we'll only do it after the shared
-     * memory has been cleared (server restart et. al.) or an explicit request
-     * is made.
+     * unless we are on development). If you are developmet set the
+     * {@link tgif_global::_READ_CONFIG _readConfig config} to false (or don't
+     * set it at all) and we will rehash the config on every reuse. Or set it
+     * to true and we'll only do it after the shared memory has been cleared
+     * (server restart et. al.) or an explicit request is made.
      *
      * @param string $config_prefix The three letter code to put in front of
      *     any key that read or writes to shared memory/memcached. If less
@@ -563,10 +563,11 @@ class tgif_global
      *
      * When trying to get from a config file, it will try to pull it from shared
      * memory cache. If it's not there, it will {@link _loadConfigs() load all
-     * the config files} if _readConfig isn't set. Note that the action,
-     * _loadConfigs will set _readConfig in the variable space but not save that
-     * to the shared memory cache. This prevents _loadConfigs() from being
-     * called multiple times in the same request.
+     * the config files} if {@link tgif_global::_READ_CONFIG _readConfig} isn't
+     * set. Note that the action, {@link _loadConfigs()} will always set
+     * _readConfig to true in the variable space but not save that to the shared
+     * memory cache. This prevents _loadConfigs() from being called multiple
+     * times in the same request.
      *
      * The Tagged version of this code would reload config files on any "false'
      * received (unless _readConfig was set).
@@ -601,9 +602,9 @@ class tgif_global
         $this->_configs = array(
             self::_READ_CONFIG  => false
         );
-        // stale all elements in the cache
+        // stale all elements in the cache (concurrent processes)
         apc_delete($this->_prefix.self::_READ_CONFIG);
-        $this->_loadConfigs(); //overwrite everything
+        $this->_loadConfigs(); //overwrite everything locally
     }
     // }}}
     // {{{ + _get_from_array($config_array,$keys)
@@ -668,7 +669,7 @@ class tgif_global
             return false;
         }
         // }}}
-        //printf('%s: %s forced loading of config files',getclass($this), $name);
+        //trigger_error(sprintf('%s::_getConfig: %s forced loading of config files',get_class($this), $name), E_USER_NOTICE);
         $this->_loadConfigs();
         if (isset($this->_configs[$name])) {
             $return = $this->_configs[$name];
@@ -710,8 +711,8 @@ class tgif_global
      * anonymous function. This requires PHP 5.3.
      *
      * Note that there are two very special config parameters:
-     * - readConfig: set to true to prevent the config files from getting
-     *   reparsed
+     * - {@link tgif_global::_READ_CONFIG _readConfig}: set to true to prevent
+     *   the config files from getting reparsed
      * - configFiles: contains a list of config files that have been parsed
      *   to generate config
      */
@@ -738,7 +739,7 @@ class tgif_global
         // store configs in and in global space (and smem) {{{
         foreach ($configs as $key=>$value) {
             $this->_configs[$key] = $value;
-            apc_store($this->_prefix.'_'.$key, $value, 0);
+            apc_store($this->_prefix.$key, $value, 0);
         }
         // }}}
         // add "_readConfig" in the local cache after storing so that we don't
