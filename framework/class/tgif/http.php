@@ -200,7 +200,7 @@ class tgif_http
     /**
      * Turns a hash into a url encoded stirng
      *
-     * This just calles {@link http_build_query()}
+     * This just calls {@link http_build_query()}
      * @return string
      */
     public static function url_encode($data)
