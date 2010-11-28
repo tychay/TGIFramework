@@ -53,6 +53,14 @@ define('TGIF_CLASS_DIR', TGIF_DIR.DIRECTORY_SEPARATOR.'class');
  */
 define('TGIF_BIN_DIR', TGIF_DIR.DIRECTORY_SEPARATOR.'bin');
 // }}}
+// {{{ TGIF_DIR
+if (!defined('TGIF_CONF_PATH')) {
+    /**
+     * where ot get configururation overrides
+     */
+    define('TGIF_CONF_PATH','');
+}
+// }}}
 // }}}
 // bind autoload {{{
 /**
