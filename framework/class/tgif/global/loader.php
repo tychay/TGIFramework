@@ -417,8 +417,9 @@ class tgif_global_loader extends tgif_global_object
             if ( $num > 4 ) {
                 $simple = false;
             } else {
-                for ($i<$num; $i=0; ++$i) {
-                    $id = $this->_ids[$i];
+                foreach ($this->_ids as $id) {
+                //for ($i=0; $i<$num; ++$i) {
+                //    $id = $this->_ids[$i];
                     if ( is_object($id) ) { $simple=false; break; }
                     if ( is_array($id) ) { $simple=false; break; }
                     if ( is_resource($id) ) { $simple=false; break; }
