@@ -88,13 +88,13 @@ class tgif_compiler_css extends tgif_compiler
         return $matches[1];
     }
     // }}}
-    // {{{ - _generateTargetFileName($fileListData)
+    // {{{ - _generateTargetFileName($fileDatas)
     /**
      * Adds .css to the target name, and put it in a supdirectory.
      */
-    protected function _generateTargetFileName($fileListData)
+    protected function _generateTargetFileName($fileDatas)
     {
-        $signature = parent::_generateTargetFileName($fileListData);
+        $signature = parent::_generateTargetFileName($fileDatas);
         return sprintf('%s/%s.css', substr($signature,0,1), substr($signature,1,10));
     }
     // }}}

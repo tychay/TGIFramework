@@ -67,6 +67,8 @@ class tgif_compiler
      *   use_service is set. was CACHE_FILE_NOT_FOUND_TTL.
      * - dir_chmod (integer): the chmod of any directories created
      * - file_chmod (integer): the chmod of any files created
+     * - libraries (array): external libraries the compiler needs to know
+     *   about
      *
      * UNSUPPORTED:
      * - track_file (string): If set, this is the path to a file to keep a log
@@ -97,6 +99,8 @@ class tgif_compiler
 
         'dir_chmod'         => 0777,
         'file_chmod'        => 0666,
+
+        'libraries'         => array(),
         /*
         'use_release_name'  => false,
         'track_file'        => '',
@@ -720,7 +724,7 @@ class tgif_compiler
         }
         if ( $success ) {
             $sourceFileData['name']         = $targetFileName;
-            $sourceFileData['isResource']   = false;
+            $sourceFileData['is_resource']= false;
             $sourceFileData['file_path']    = $targetFilePath;
             //$sourceFileData['library']      = ''; //already assumed by internal designation
         }
@@ -844,7 +848,8 @@ class tgif_compiler
     /**
      * Figure out target file name in a normalized manner.
      *
-     * Override this (and call it) in order to add filetype extensions.
+     * Override this in order to add filetype extensions. The nature of the
+     * function is that the parent may find it useful to call the parent.
      *
      * Note that even if the compile order of files is slightly different, this
      * generates the same key. The assumption is that the build order may
@@ -855,7 +860,7 @@ class tgif_compiler
      *  array.
      * @return string This version generates a hash key based on the file list
      *  data. The old version used the use_compiler flag, but it is unnecessary
-     *  now as this and the cat stage are now separate..
+     *  now as this and the cat stage are now separate.
      */
     protected function _generateTargetFileName($fileDatas)
     {
