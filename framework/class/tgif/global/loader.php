@@ -511,6 +511,7 @@ class tgif_global_loader extends tgif_global_object
                 //if ($success) {
                 $return = apc_fetch($this->smemKey());
                 if ($return !== false) {
+                    //var_dump(array('apc_fetch',$this->smemKey(),$return));
                     $this->__data = $return;
                     $this->__callback = false;
                     return;
@@ -858,6 +859,7 @@ class tgif_global_loader extends tgif_global_object
                       ? $params['smem_lifetime']
                       : 0;
             $result = apc_store($key, $data, $lifetime);
+            //var_dump(array('apc_store',$key,$data,$lifetime));
             $return = $return && $result;
         }
         // }}}
@@ -876,7 +878,8 @@ class tgif_global_loader extends tgif_global_object
                 $data = ( empty($params['memcache_set']) )
                       ? $data
                       : call_user_func($params['memcache_set'], $data);
-                //var_dump(array('memcache set', $key, $group, $lifetime, $data));
+                //var_dump(array('memcache set', $key, $group, $lifetime, $data, $_TAG->memcached));
+                //var_dump($_TAG->memcached);
                 $result = $_TAG->memcached->set($key, $data, $group, $lifetime);
                 $return = $return && $result;
             } catch (tgif_global_exception $e) {

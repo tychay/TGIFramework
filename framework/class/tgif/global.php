@@ -92,7 +92,8 @@ if (!function_exists('apc_fetch')) {
  *
  * Remember, when saved to shared memory space, the symbol prefix is prepended
  * so changing the symbol will effectively mean your sandbox (even on the same
- * machine will not share configurations).
+ * machine will not share configurations). In order to prevent conflict with
+ * any globals, a " " is prepended to the key.
  *
  * Note that the configuration cannot be stored in memcached because {@link 
  * tag_memcached the memcache system} itself configured with the configuration
@@ -106,7 +107,7 @@ if (!function_exists('apc_fetch')) {
  * to be accessed with {@link tgif::config() $_TAG->config()}.
  *
  * "gld" stands for Global Loader Data. In the original version, due to
- * conflicts in sharing variabel space, no prefix symbole was allowed to use
+ * conflicts in sharing variabel space, no prefix symbol was allowed to use
  * the "gld". This is no longer true, but please don't try this at home (or
  * in production) as this edge case is untested.
  *
@@ -183,7 +184,7 @@ class tgif_global
     /**
      * Set up the global object to be ready for handling of magic.
      *
-     * Sets the identifier symbole for configuration parameters.
+     * Sets the identifier symbol for configuration parameters.
      *
      * It also sets the flag that determines if the config files have been read
      * into shared memory cache already. If we have a lot of files, reading the
@@ -203,7 +204,7 @@ class tgif_global
     {
         $this->_prefix = sprintf('%\'_3s',$config_prefix);
         // note: apc_fetch returns false on failure to read (by default)
-        $this->_configs[self::_READ_CONFIG] = apc_fetch($this->_prefix.self::_READ_CONFIG);
+        $this->_configs[self::_READ_CONFIG] = apc_fetch(' '.$this->_prefix.self::_READ_CONFIG);
     }
     // }}}
     // {{{ + get_instance([$config_prefix,$create_Fresh])
@@ -603,7 +604,7 @@ class tgif_global
             self::_READ_CONFIG  => false
         );
         // stale all elements in the cache (concurrent processes)
-        apc_delete($this->_prefix.self::_READ_CONFIG);
+        apc_delete(' '.$this->_prefix.self::_READ_CONFIG);
         $this->_loadConfigs(); //overwrite everything locally
     }
     // }}}
@@ -652,7 +653,7 @@ class tgif_global
             return $this->_configs[$name];
         }
         // check shared memory cache {{{
-        $return = apc_fetch($this->_prefix.$name, $success);
+        $return = apc_fetch(' '.$this->_prefix.$name, $success);
         if ( $success ) {
             $this->_configs[$name] = $return;
             return $return;
@@ -739,7 +740,7 @@ class tgif_global
         // store configs in and in global space (and smem) {{{
         foreach ($configs as $key=>$value) {
             $this->_configs[$key] = $value;
-            apc_store($this->_prefix.$key, $value, 0);
+            apc_store(' '.$this->_prefix.$key, $value, 0);
         }
         // }}}
         // add "_readConfig" in the local cache after storing so that we don't

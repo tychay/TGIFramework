@@ -176,10 +176,11 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
         }
         $this->_array[$offset] = $value;
 
+        $params =& $this->_params;
         // bind the loader or update the cache on set {{{
         // since the default values are nil, we can use isset here
         if ( isset($params['loaderLoader']) || isset($params['cacheUpdateOnSet']) ) {
-            $params['ids'] = $offset;
+            $params['ids'] = array($offset);
             unset($params['params']);
             $loader_obj = new tgif_global_loader($params);
             if ( !empty($params['cacheUpdateOnSet']) ) {
