@@ -98,7 +98,8 @@ function gen_guid_data() {
     return uniqid(rand(),true).$server.$pid;
 }
 // }}}
-/*
+// add a comment start here to bypass benchmarking
+///*
 // date test {{{
 //$error_level = error_reporting(E_ALL | E_STRICT);
 //ini_set('date.timezone',false);
@@ -202,7 +203,6 @@ echo $_TAG->diagnostics->summary();
 $data = $_TAG->diagnostics->summary('data');
 var_dump($data,$data['times']['memcache']);
 echo $_TAG->diagnostics->summary();
-
 ?>
 </body>
 </html>
