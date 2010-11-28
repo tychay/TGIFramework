@@ -90,7 +90,7 @@ class tgif_compiler_css extends tgif_compiler
     // }}}
     // {{{ - _generateTargetFileName($fileDatas)
     /**
-     * Adds .css to the target name, and put it in a supdirectory.
+     * Adds .css to the target name, and put it in a subdirectory.
      */
     protected function _generateTargetFileName($fileDatas)
     {
