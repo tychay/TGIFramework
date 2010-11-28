@@ -6,7 +6,7 @@
  *
  * @package tgiframework
  * @subpackage ui
- * @copyright 2008-2009 Tagged, Inc., c.2009 terry chay
+ * @copyright 2008-2009 Tagged, Inc., c.2009-2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  */
 // {{{ tgif_compiler
@@ -26,98 +26,102 @@
  */
 class tgif_compiler
 {
-    // {{{ + CACHE_FILE_NOT_FOUND_TTL
-    /**
-     * To spare requests, cache compiled file not found for how long? (seconds)
-     */
-    const CACHE_FILE_NOT_FOUND_TTL = 10;
-    // }}}
     // PRIVATE PROPERTIES
-    // options {{{
-    // {{{ - $_resourceDir
+    // {{{ - $_options
     /**
-     * @var string path to the base directory of resources
+     * The configuration for the compiler:
+     * - source_dir (string): where the source files can be found. Was
+     *   $_resourceDir.
+     * - source_url (string): where the source directory can be found (via url).
+     *   This can be bypassed with url_callback
+     * - target_dir (string): The directory to write concatenated/compiled files
+     *   to. Was $_targetDir.
+     * - target_url (string): where the target_dir can be found (via url).
+     * - url_callback (mixed): if specified, use this instead of the internal
+     *   url generator to find the url position.
+     * - use_cat (boolean): Should we attempt to turn everything into a single
+     *   file (as much as as is possible)? Was $_useCat
+     * - cat_add_separator (boolean): Should we add a separator between
+     *   files?
+     * - use_compiler (boolean): Should we try to use the compiler whenever
+     *   possible? Was $_useCompiler
+     * - use_service (boolean): Are we calling externals service to perform a
+     *   compile? (or, if no service, then turn on uncompiler caching).
+     * - service_callback (mixed): call user func of the service that can
+     *   does the entire compile (use_service must be true). If blank, it
+     *   uses the internal compile service (just in the background). This
+     *   service can return immediately but might want to ignore multiple same
+     *   requests until the service is complete then the file should written (or
+     *   written atomically) at the end of the service request. If set
+     *   the signature looks like:
+     *   <pre>boolean (success) function service_callback(array &$sourceFileData, string $targetFilePath)</pre>
+     * - use_smem (boolean) Should we cache file info into the shared memory
+     *   segment? was $_useSmem
+     * - use_memcache (boolean): Should we cache file info into the memcache?
+     *   was $_useMemcache
+     * - signature_method (mixed): generator for determining file info
+     *   staleness. was a string called $_signatureMode with three possible
+     *   values known as "global", "filemtime", "md5"
+     * - file_not_found_ttl (integer): To keep from overloading the requests to
+     *   a compiler, this will cache the uncompiled file for this long if
+     *   use_service is set. was CACHE_FILE_NOT_FOUND_TTL.
+     * - dir_chmod (integer): the chmod of any directories created
+     * - file_chmod (integer): the chmod of any files created
+     *
+     * UNSUPPORTED:
+     * - track_file (string): If set, this is the path to a file to keep a log
+     *   compiled file combos. Was $_trackFile.
+     * - track_db (string): This is the table to store the compilation list
+     *   lookup.
+     * - use_release_name: boolean Should we use the release name as part of
+     *   the file path? Was called $_useReleaseName.
+     * @var array
      */
-    protected $_resourceDir = '';
+    protected $_options = array(
+        'source_dir'        => '',
+        'source_url'        => '',
+        'target_dir'        => '',
+        'target_url'        => '',
+        'url_callback'      => '',
+
+        'use_cat'           => false,
+        'cat_add_separator' => true,
+        'use_compiler'      => false,
+        'use_service'       => false,
+        'service_callback'  => '',
+
+        'use_smem'          => false,
+        'use_memcache'      => false,
+        'signature_method'  => array('tgif_compiler','sign_filemtime'),
+        'file_not_found_ttl'=> 10,
+
+        'dir_chmod'         => 0777,
+        'file_chmod'        => 0666,
+        /*
+        'use_release_name'  => false,
+        'track_file'        => '',
+        'track_db'          => '',
+        /* */
+    );
     // }}}
-    // {{{ - $_targetDir
-    /**
-     * @var string path to the base directory to put compiled files
-     */
-    private $_targetDir = '';
-    // }}}
-    // {{{ - $_trackFile
-    /**
-     * If set, this is the path to a file to keep a log compiled file combos
-     * @var string|false
-     */
-    private $_trackFile = false;
-    // }}}
-    // {{{ - $_useCat
-    /**
-     * @var boolean whether or not we should use concatenation
-     */
-    protected $_useCat = true;
-    // }}}
-    // {{{ - $_useCompiler
-    /**
-     * @var boolean whether or not we should use compiler
-     */
-    protected $_useCompiler = false;
-    // }}}
-    // {{{ - $_useService
-    /**
-     * @var boolean whether or not we should call a service to compile
-     */
-    protected $_useService = false;
-    // }}}
-    // {{{ - $_useSmem
-    /**
-     * Whether or not we should save intermediate data to shared memory segments
-     * @var boolean
-     */
-    protected $_useSmem = false;
-    // }}}
-    // {{{ - $_useMemcache
-    /**
-     * Whether or not we should save intermediate data to memcache
-     * @var boolean
-     */
-    protected $_useMemcache = true;
-    // }}}
-    // {{{ - $_useReleaseName
-    /**
-     * Whether or not we should use the release name as part of the file path
-     * @var boolean
-     */
-    protected $_useReleaseName = false;
-    // }}}
-    // {{{ - $_signatureMode
-    /**
-     * the way to determine signature stalenmess
-     * - global: use the global static version
-     * - filemtime: use the last modified time
-     * - md5: use an md5 of the file content
-     * @var string
-     */
-    protected $_signatureMode = 'filemtime';
-    // }}}
-    // }}}
-    // {{{ - $_fileData
+    // {{{ - $_fileDataList
     /**
      * An array indexed by filename of the loading data associated with the
      * file. The following hash keys:
      * - name (required): identical to the index
-     * - is_file (required): if it is a file in the filesystem (and should be
-     *   cached)
+     * - library (required): either empty (it's just a file) or it is a pointer
+     *   to a class that is the library handler for the file
      * - dependencies (required): a list of other files in the array that must
-     *   be loaded for this to work
-     * - signature: a signature representation of the file
-     * - file_path: path to file in filesystem (via {@link _generateFilePath()}
-     *
+     *   be loaded prior to this library
+     * - signature (required): a signature representation of the file (to handle
+     *   changes)
+     * - is_resource (required): This is set to true if it is an original
+     *   resource, if the resource was dynamically built, it is set to false
+     * - file_path (required): path to file in filesystem (written inside {@link
+     *   _generateFileData()}
      * @var array
      */
-    private $_fileData = array();
+    private $_fileDataList = array();
     // }}}
     // {{{ - $_queues
     /**
@@ -132,7 +136,7 @@ class tgif_compiler
     // {{{ - $_outputList
     /**
      * @var array
-     * An array of files that have already been outputted soemwhere else
+     * An array of files that have already been outputted somewhere else
      */
     protected $_outputList = array();
     // }}}
@@ -140,37 +144,12 @@ class tgif_compiler
     // {{{ __construct($options)
     /**
      * This is protected because this class is actually abstract
-     * @param $options array A bunch of options to set
-     * - resource_dir: string where the starting files can be found
-     * - target_dir: string The directory to write concatenated/compiled files to
-     * - track_file: string If specified, this generates a updates a PHP file at runtime with a compilation list
-     * - use_cat:  boolean Should we attempt to turn everything into a single file as often as possible?
-     * - use_compiler:  boolean Should we try to use the compiler whenever possible?
-     * - use_smem: boolean Should we cache file info into the shared memory segment?
-     * - use_memcache: boolean Should we cahce file info into the memcache?
-     * - use_release_name: boolean Should we use the release name as part of the file path?
-     * - signature_mode:  string What sort of methodology to use when determining file info staleness
+     *
+     * @param $options array A bunch of options to override {@link $_options}
      */
     protected function __construct($options)
     {
-        foreach ($options as $key=>$value) {
-            switch ($key) {
-                case 'resource_dir' : $this->_resourceDir   = $value; break;
-                case 'target_dir'   : $this->_targetDir     = $value; break;
-                case 'track_file'   : $this->_trackFile     = $value; break;
-                case 'use_cat'      : $this->_useCat        = $value; break;
-                case 'use_compiler' : $this->_useCompiler   = $value; break;
-                case 'use_service'  : $this->_useService    = $value; break;
-                case 'use_smem'     : $this->_useSmem       = $value; break;
-                case 'use_memcache' : $this->_useMemcache   = $value; break;
-                case 'use_release_name' : $this->_useReleaseName = $value; break;
-                case 'signature_mode' :
-                if (in_array($value, array('global','filemtime','md5'))) {
-                    $this->_signatureMode = $value;
-                }
-                break;
-            }
-        }
+        $this->_options = array_merge($this->_options, $options);
     }
     // }}}
     // {{{ __sleep()
@@ -179,7 +158,7 @@ class tgif_compiler
      */
     function _sleep()
     {
-        return array('_resourceDir','_targetDir','_trackFile','_useCat','_useCompiler','_useService','_useSmem','_useMemcache','_useReleaseName','_signatureMode');
+        return array('_options');
     }
     // }}}
     // {{{ __wakeup()
@@ -188,7 +167,7 @@ class tgif_compiler
      */
     function __wakeup()
     {
-        $this->_fileData    = array();
+        $this->_fileDataList= array();
         $this->_queues      = array();
         $this->_outputList  = array();
     }
@@ -200,21 +179,112 @@ class tgif_compiler
      */
     function add($fileName, $queue='_default')
     {
+        // initialize queue
         if (!array_key_exists($queue,$this->_queues)) {
             $this->_queues[$queue] = array();
         }
+        // add it to the queue if it's not already there (and there is a map)
         if ($this->_grabFileData($fileName)) {
             $this->_queues[$queue][] = $fileName;
         }
     }
     // }}}
+    // {{{ - printAll([$properties])
+    /**
+     * Print out the HTML that includes all compiled queues (not already
+     * rendered).
+     * @param array $properties extra parameters to pass to outputter
+     */
+    function printAll($properties=array())
+    {
+        echo implode("\n",$this->generateFlush($properties));
+        echo "\n";
+    }
+    // }}}
+    // {{{ - printQueue([$queue,$properties])
+    /**
+     * Print out the HTML that includes the specified compiled queue
+     * @param string $queue The queue to print out.
+     * @param array $properties extra parameters to pass to outputter
+     */
+    function printQueue($queue='_default', $properties=array())
+    {
+        echo implode("\n",$this->generate($queue,$properties));
+        echo "\n";
+    }
+    // }}}
+    // {{{ - generateFlush([$properties])
+    /**
+     * Generate the output to call for all outstanding queues
+     *
+     * @param array $properties extra parameters to pass to outputter
+     * @return array a bunch of individual call text (may be a single element).
+     */
+    function generateFlush($properties=array())
+    {
+        $returns = array();
+        foreach($this->_queues as $queueName=>$queue) {
+            $returns = array_merge($returns, $this->generate($queueName,$properties));
+        }
+        return $returns;
+    }
+    // }}}
+    // {{{ - generate([$queue,$properties])
+    /**
+     * Generate the output to call for a given queue
+     *
+     * @param string $queue The queue to generate output
+     * @param array $properties extra parameters to pass to outputter
+     * @return array a bunch of individual call text (may contain a single
+     *  element, or none at all).
+     */
+    function generate($queue='_default', $properties=array())
+    {
+        // empty queue case {{{
+        if (!array_key_exists($queue,$this->_queues)) {
+            return array();
+        }
+        // }}}
+        // build the list of files and dependencies: {{{
+        //printf("<pre>queue: %s\n, list:%s, output:%s pos:%s</pre>", $queue, var_export($this->_queues[$queue], true), var_export($this->_outputList, true),var_export(debug_backtrace(true)));
+        $file_list_data = array();
+        $this->_buildFileList($this->_queues[$queue], $file_list_data);
+        //printf("<pre>queue: %s\n, filelistdata:%s</pre>", $queue, var_export($file_list_data, true));
+        // }}}
+        // queue has been emptied, files will be written
+        unset($this->_queues[$queue]);
+        foreach ($file_list_data as $key=>$data) {
+            $this->_outputList[] = $key;
+        }
+        
+        $urls = $this->_buildUrls($file_list_data);
+
+        $count = 0;
+        $returns = array();
+        $add_properties = (!isset($properties['id']));
+        foreach ($urls as $url) {
+            if ( $add_properties ) {
+                $properties['id'] = $queue;
+                $properties['id'] .= ($count) ? '-'.$count : '';
+            }
+            $returns[] = $this->_generateHtml($url, $properties);
+            ++$count;
+        }
+        return $returns;
+    }
+    // }}}
     // {{{ - generateSingle($files)
     /**
-     * Generate the url of the a single file to call (no dependencies)
+     * Generate the url of the a single file to call (bypass dependencies).
+     *
+     * The purpose of this is to have a receiver function so that ajax can
+     * load extra scripts without having the dependency system kick in.
+     *
      * @param $files string|array a list of files to turn into a single file
-     * @return array The first parameter is either true or false. If true,
-     * then the second param is the URL to redirect to. If false, then the
-     * second param is the data itself.
+     * @return array two values The first is the type that explains the second
+     * - redirect: value is the url to redirect to.
+     * - data: value is the compiled file data itself.
+     * @todo untested
      */
     function generateSingle($files)
     {
@@ -223,136 +293,147 @@ class tgif_compiler
         if (!is_array($files)) { $files = array($files); }
         foreach ($files as $file) {
             $this->_grabFileData($file);
-            if (!array_key_exists($file,$this->_fileData)) { continue; }
-            $file_list_data[$file] = $this->_fileData[$file];
+            if ( !array_key_exists($file,$this->_fileDataList) ) { continue; }
+            $file_list_data[$file] = $this->_fileDataList[$file];
         }
         // }}}
-        if (empty($file_list_data)) { return array(false,''); }
-        $files = $this->_buildFiles($file_list_data, true);
-        if (count($files) > 1) {
-            // more than one file? return the contents of all of them {{{
-            $data = '';
-            foreach ($files as $file) {
-                if ($file[1]) {
-                    $data .= file_get_contents($file[0]);
-                } else {
-                    $file_data = $file[0];
-                    if ($file_data['is_file']) {
-                        $data .= file_get_contents($file_data['file_path']);
-                    }
-                }
-            }
-            return array (false, $data);
-            // }}}
-        } else {
-            // one file? return its url {{{
-            $file = $files[0];
-            if ($file[1]) {
-                return array(true, $this->_generateTargetUrl($file[0]));
-            } else {
-                return array(true, $this->_generateSourceUrl($file[0]));
-            }
+        if ( empty($file_list_data) ) { return array('data',''); }
+
+        if ( $this->_options['use_compiler'] ) {
+            $file_list_data = $this->_compileFiles($file_list_data);
+        }
+        if ( empty($file_list_data) ) { return array('data',''); }
+        if ( $this->_options['use_cat'] && (count($fileDatas) > 1) ) {
+            $file_list_data = $this->_catFiles($file_list_data);
+        }
+        if ( empty($file_list_data) ) { return array('data',''); }
+
+        if ( count($file_list_data) ==  1 ) {
+            // one file, return it's url {{{
+            return array(
+                'redirect',
+                $this->_generateUrl($file_list_data[0])
+            );
             // }}}
         }
-    }
-    // }}}
-    // {{{ - generate([$queue])
-    /**
-     * Generate the output to call for a given queue
-     * @return array a bunch of individual calls (or one call)
-     */
-    function generate($queue='_default')
-    {
-        if (!array_key_exists($queue,$this->_queues)) {
-            return array();
-        }
-        //printf("<pre>queue: %s\n, list:%s, output:%s pos:%s</pre>", $queue, var_export($this->_queues[$queue], true), var_export($this->_outputList, true),var_export(debug_backtrace(true)));
-        $file_list_data = array();
-        $returns = array();
-        // build list of files and dependencies
-        $this->_buildFileList($this->_queues[$queue], $file_list_data);
-        //printf("<pre>queue: %s\n, filelistdata:%s</pre>", $queue, var_export($file_list_data, true));
-        // queue has been emptied
-        unset($this->_queues[$queue]);
-        $urls = $this->_buildUrls($file_list_data);
-        // add results to output list {{{
-        foreach ($file_list_data as $filename=>$file_data) {
-            $this->_outputList[] = $filename;
+        // more than one file? return the contents of all of them {{{
+        $data = '';
+        foreach ($file_list_data as $file_data) {
+            $data .= file_get_contents($file_data['file_path']);
         }
         // }}}
-        // special case - if single file, inject queue name as id {{{
-        if ((count($urls) == 1) && (strcmp($queue,'_default')!==0)) {
-            return array(sprintf($this->_html_with_id, $urls[0], $queue));
-        }
-        // }}}
-        $returns = array();
-        foreach ($urls as $url) {
-            $returns[] = sprintf($this->_html, $url);
-        }
-        return $returns;
     }
     // }}}
-    // {{{ - generateFlush()
+    // SIGNATURE METHODS:
+    // {{{ + sign_filemtime($filePath)
     /**
-     * Generate the output to call for all outstanding queues
-     * @return array a bunch of individual calls (or one call)
+     * Take the last modified time of the file as the signature.
+     *
+     * This is a good one to use in development. This was part of the old
+     * _generateSignature system when $_signatureMode was set to 'filemtime'.
+     *
+     * @param string $filePath path to file
+     * @return string
      */
-    function generateFlush($queue='_default')
+    public static function sign_filemtime($filePath)
     {
-        $returns = array();
-        foreach($this->_queues as $queueName=>$queue) {
-            $returns = array_merge($returns, $this->generate($queueName));
-        }
-        return $returns;
+        // give a random signature if file doesn't exist.
+        if (!file_exists($filePath)) { return uniqid(); }
+        return filemtime($filePath);
     }
     // }}}
-    // {{{ - printQueue([$queue])
+    // {{{ + sign_md5($filePath)
     /**
-     * Print out the HTML of a file
+     * Take the md5 of the file contents as the signature.
+     *
+     * Use this when the file exists in a part of a filesystem that may have the
+     * filemtime part disabled. This was part of the old _generateSignature
+     * system when $_signatureMode was set to 'md5'.
+     *
+     * @param string $filePath path to file
+     * @return string
      */
-    function printQueue($queue='_default')
+    public static function sign_md5($filePath)
     {
-        echo implode("\n",$this->generate($queue));
-        echo "\n";
+        // give a random signature if file doesn't exist.
+        if (!file_exists($filePath)) { return uniqid(); }
+        return md5(file_get_contents($filePath));
     }
     // }}}
-    // {{{ - printAll()
+    // {{{ + sign_global($filePath)
     /**
-     * Print out the HTML of a file
+     * Use the global version as the signature.
+     *
+     * This is a good one to use on a live site because it saves a bunch of
+     * wasted file system calls, but can be updated later. To do that, use
+     * the {@link generate_global_version.php} after every deploy. This was
+     * part of the old _generateSignature system when $_signatureMode was set
+     * to 'global'.
+     *
+     * @param string $filePath path to file
+     * @return string
      */
-    function printAll()
+    public static function sign_global($filePath)
     {
-        echo implode("\n",$this->generateFlush());
-        echo "\n";
+        return $_TAG->config('global_version');
     }
     // }}}
-    // PRIVATE/PROTECTED METHODS
     // {{{ - _isValid($fileData)
     /**
-     * Determine whether or not a file is valid.
+     * Determine whether or not a filedata is valid.
      *
-     * This only gets called if the filedata "is_file" param is true.
+     * The old version only got called if this was a file, the new version
+     * can understand the library abstraction to know to use the library
+     * to validate a signature.
      * @return boolean
      */
     private function _isValid($fileData)
     {
-        return ($this->_generateSignature($fileData['file_path']) == $fileData['signature']);
+        $sig = ( $fileData['library'] )
+             ? $fileData['library']::generate_signature( $fileData['name'] )
+             : call_user_func($this->_options['signature_method'], $fileData['file_path']);
+        return ($sig == $fileData['signature']);
     }
     // }}}
+    // {{{ - _generateKey($fileName)
+    /**
+     * Turn a filename into a cache key
+     *
+     * This is protected in case something else (i18n?) needs this function to
+     * update filedata.
+     *
+     * The old version used to turn it into something messy, the new version
+     * just encodes it well enough for storage. There is no need to add the
+     * {@link tgif_global::symbol() symbol} because that is done automatically
+     * when the same key is used for both smem and memcache.
+     * 
+     * @return string
+     */
+    protected function _generateKey($fileName)
+    {
+        return urlencode($fileName);
+    }
+    // }}}
+    // PRIVATE METHODS: FILEDATA
     // {{{ - _grabFileData($fileName)
     /**
      * Make sure we load the filedata for a given file
-     * @return true if the file exists and filedata exist
+     *
+     * @return true if the file exists and filedata exist (and is loaded)
      */
     private function _grabFileData($fileName)
     {
-        if (array_key_exists($fileName,$this->_fileData)) {
+        // if we already have the file data, we're good to go :-)
+        if (array_key_exists($fileName,$this->_fileDataList)) {
             return true;
         }
         // grab from cache {{{
-        $key = $this->_generateKey($fileName);
-        if ($file_data = tgif_global_loader::get_from_cache($key,$this->_useSmem,$this->_useMemcache)) {
-            if ($this->_isValid($file_data)) {
+        $cache_key = array(
+            'group' => 'compile',
+            'key'   => $this->_generateKey($fileName),
+        );
+        if ( $file_data = tgif_global_loader::get_from_cache($cache_key, $this->_options['use_smem'], $this->_options['use_memcache']) ) {
+            if ( $this->_isValid($file_data) ) {
                 $this->_registerFileData($file_data);
                 return true;
             }
@@ -361,52 +442,535 @@ class tgif_compiler
         // create file data
         $file_data = $this->_generateFileData($fileName);
         if (!$file_data) { return false; }
-        if ($file_data['is_file']) {
-            tgif_global_loader::save_to_cache($key, $file_data, $this->_useSmem, $this->_useMemcache);
-        }
+        tgif_global_loader::set_to_cache($cache_key, $file_data, $this->_options['use_smem'], $this->_options['use_memcache']);
         $this->_registerFileData($file_data);
         return true;
     }
     // }}}
+    // {{{ - _generateFileData($fileName)
+    /**
+     * Generate file data.
+     *
+     * The old verison would add an 'is_file' and need to be overridden,
+     * the new version knows how to handle standard files and can pass stuff
+     * over to library interface.
+     *
+     * Thus the old stuff in _generateFilePath() is now contained here, however
+     * we have wiped out the old crap related to _useReleasteName which was
+     * confusing as hell.
+     *
+     * @return false|array if false there is no file data, else it
+     *      returns an array hash containing the file data
+     */
+    private function _generateFileData($fileName)
+    {
+        // check if the file is in the file system
+        $file_path = $this->_options['resource_dir'].DIRECTORY_SEPARATOR.$fileName;
+        if (file_exists($file_path)) {
+            return array(
+                'name'          => $fileName,
+                'is_resource'   => true,
+                'library'       => '',
+                'dependencies'  => $this->_findDependencies($file_path, $fileName),
+                'signature'     => call_user_func($this->_options['signature_method'], $file_path),
+                'file_path'     => $file_path,
+            );
+        }
+        // check if a library recognizes the file
+        foreach ($this->_options['libraries'] as $class) {
+            $file_data = $class::generate_file_data($fileName);
+            if ($file_data) {
+                $file_data['name']      = $fileName;
+                $file_data['library']   = $class;
+                if (!isset($file_data['signature'])) {
+                    $file_data['signature'] = $class::generate_signature($fileName);
+                }
+                return $file_data;
+            }
+        }
+        return false;
+    }
+    // }}}
     // {{{ - _registerFileData($fileData)
     /**
-     * Make sure we load all filedata that is dependent on this
+     * Make sure we load all filedata that is dependent on this one (recursion).
      */
     private function _registerFileData($fileData)
     {
-        $this->_fileData[$fileData['name']] = $fileData;
+        $this->_fileDataList[$fileData['name']] = $fileData;
         foreach ($fileData['dependencies'] as $filename) {
             $this->_grabFileData($filename);
         }
     }
     // }}}
-    // {{{ - _buildFileList($queue,$fileListData)
+    // PRIVATE METHODS: COMPILING
+    // {{{ - _buildFileList($queue,$fileDatas)
     /**
-     * Recursive function to list of files to compile
+     * Recursive function generates list of files to compile
      *
-     * @param $queue array a list of files to render to html
-     * @param $fileDataList array a list of filedata objeccts that need to be compiled
-     * @return true if the file exists and filedata exist
+     * @param array $queue a list of files to compile or cat
+     * @param array $fileDataList a list of filedata objeccts that need to be
+     *      compiled
      */
-    private function _buildFileList($queue, &$fileListData)
+    private function _buildFileList($queue, &$fileDatas)
     {
         foreach ($queue as $filename) {
             // don't compile files that don't exist
-            if (!array_key_exists($filename, $this->_fileData)) { continue; }
+            if (!array_key_exists($filename, $this->_fileDataList)) { continue; }
+
             // handle case where file is already outputted
             if (in_array($filename, $this->_outputList)) { continue; }
-            $file_data = $this->_fileData[$filename];
+
+            $file_data = $this->_fileDataList[$filename];
             if (!empty($file_data['dependencies'])) {
-                $this->_buildFileList($file_data['dependencies'], $fileListData);
+                $this->_buildFileList($file_data['dependencies'], $fileDatas);
             }
+
             // add file to list if it isn't already there {{{
-            if (array_key_exists($filename, $fileListData)) { continue; }
-            $fileListData[$filename] = $file_data;
+            if (array_key_exists($filename, $fileDatas)) { continue; }
+            $fileDatas[$filename] = $file_data;
             // }}}
         }
     }
     // }}}
-    // {{{ - _writeTrackFile($fileListData)
+    // {{{ - _buildUrls($fileDatas)
+    /**
+     * Turns a list of files into urls.
+     *
+     * @param array $fileDatas The file data of all the files to compile
+     * (in order).
+     * @return array a list of urls to include
+     */
+    protected function _buildUrls($fileDatas)
+    {
+        //var_dump(array('_buildUrls',$fileDatas));
+        // compilation step
+        if ( $this->_options['use_compiler'] ) {
+            $fileDatas = $this->_compileFiles($fileDatas);
+        }
+        //var_dump(array('_buildUrls::post_compile',$fileDatas));
+
+        // don't even think of generating an empty file!
+        if ( empty($fileDatas) ) { return array(); }
+
+        // concatenation step
+        if ( $this->_options['use_cat'] && (count($fileDatas) > 1) ) {
+            $fileDatas = $this->_catFiles($fileDatas);
+        }
+        //var_dump(array('_buildUrls::post_cat',$fileDatas));
+
+        $returns = array();
+        foreach ($fileDatas as $filename=>$file_data) {
+            $returns[] = $this->_generateUrl($file_data);
+        }
+        //var_dump(array('_buildUrls::return',$returns));
+
+        return $returns;
+    }
+    // }}}
+    // {{{ - _compileFiles($fileDatas)
+    /**
+     * This takes each file and generates the compiled file of each of them.
+     *
+     * Only call this if use_compiler flag is already set in {@link $_options}.
+     * This also handles caching the success.
+     *
+     * This used to be _buildFiles($fileDatas,$forceCat) and the old
+     * _compileFiles() was eliminated, but in this version, each file is
+     * compiled then catted instead of catted then compiled. Therefore this only
+     * handles the compilation of the file. When an external library compiles a
+     * file into a local one than can be catted as part of the internal system,
+     * it needs to add the 'file_path' <strong>and</strong> remove its name
+     * from 'library'. This way,
+     * a later part
+     * knows this element can be added to the concatenation list. Thus, no more
+     * need for the 'is_file' to be set and detected. The old forceCat file
+     * was used by the i18n code to turn urls into a single file.
+     *
+     * @param array $fileDatas the list of file data to compile/catenate
+     * indexed by their file name and ordered by their compile order.
+     * @return array an array of file data (transformed $fileDatas)
+     */
+    private function _compileFiles(&$fileDatas)
+    {
+        // don't even think of generating an empty compiled file!
+        if (empty($fileDatas)) {  return array(); }
+
+        $use_smem       = $this->_options['use_smem'];
+        $use_memcache   = $this->_options['use_memcache'];
+
+        $returns = array();
+        foreach ($fileDatas as $filename=>$file_data) {
+            $target_file = $this->_generateTargetFileName(array($file_data));
+            $cache_key = array(
+                'group' => 'compile',
+                'key'   => $this->_generateKey($target_file),
+            );
+            if ( $result = tgif_global_loader::get_from_cache($cache_key,$use_smem,$use_memcache) ) {
+                $file_data = $result;
+            } else {
+                $success = $this->_compileFile($file_data,$target_file,$cache_key);
+                $file_data['final'] = $success;
+                tgif_global_loader::set_to_cache($cache_key, $file_data, $use_smem,$use_memcache);
+            }
+            $returns[$filename] = $file_data;
+        }
+        return $returns;
+    }
+    // }}}
+    // {{{ - _compileFile($fileData,$targetFileName,$cacheKey)
+    /**
+     * Single file compile, see {@link _compileFiles()} for a complete
+     * description.
+     *
+     * This assumes that you have looked in a cache (you can index by the target
+     * file name) before going here. If that is not the case, it will still
+     * not compile the file if it has already been compiled (if the target
+     * file path exists).
+     * This will not compile the file if it has already been compiled (it knows
+     * this by setting the target file name as the cache key or, if the target
+     * file already). This understands the concept of libraries also.
+     *
+     * Because target file name (most likely) uses a signature system, if
+     * the signature is changed, the file ceases to exist and will be rebuilt.
+     *
+     * @param array $fileData the file data of the file to compile
+     * @param string $targetFileName where to compile the file
+     * @param array $cacheKey the cache to load/store manipulate.
+     * @return boolean whether or not the compile suceeded or failed
+     */
+    private function _compileFile(&$fileData, $targetFileName, &$cacheKey)
+    {
+        $target_file_path = $this->_generateTargetFilePath($targetFileName);
+
+        // it's already been compiled earlier, but not in cache {{{
+        if ( file_exists($target_file_path) ) {
+            $fileData['name']       = $targetFileName;
+            $fileData['is_resource']= false;
+            $fileData['library']    = '';
+            $fileData['file_path']  = $target_file_path;
+            return true;
+        }
+        // }}}
+
+        if ( $this->_options['use_service'] ) {
+            if ( $class = $fileData['library'] ) {
+                $class::compile_file_service($fileData, $targetFileName, $target_file_path, $this);
+            } else {
+                $this->_compileFileInternal($fileData, $targetFileName, $target_file_path, true);
+            }
+            // temporarily store the uncompiled file into cache
+            $cacheKey['smem_lifetime']      = $this->_options['cache_file_not_foud_ttl'];
+            $cacheKey['memcache_lifetime']  = $this->_options['cache_file_not_foud_ttl'];
+            return false;
+        } else  {
+            if ( $class = $fileData['library'] ) {
+                return $class::compile_file($fileData, $targetFileName, $target_file_path, $this);
+            } else {
+                return $this->compileFileInternal($fileData, $targetFileName, $target_file_path);
+            }
+        }
+    }
+    // }}}
+    // {{{ - _compileFileInternal($sourceFileData,$targetFileName,$targetFilePath[,$inBackground])
+    /**
+     * Enables the compiling of files using a safe temp file-based method
+     * that calls {@link _compileFileExec()} for the key step.
+     *
+     * This is public static in order to allow it to be called by a library
+     * compile if the internal compiler might be needed by the library system
+     * to make it even smaller.
+     *
+     * Was _compileFileUsingFiles() but since moved here since it is a single
+     * file. Also added support for backgrounding instead of the old use
+     * service hack. Thus _compileFileService() no longer exists at this level.
+     *
+     * @param array $sourceFileData the file data of the file to compile.
+     *  will be transformed to the target file data.
+     * @param string $targetFileName the file name to write on success
+     * @param string $targetFilePath the path to file to compile to
+     * @param boolean $inBackground should we background the call so it
+     *  returns immediately?
+     * @return array returns the updated file data
+     */
+    public function compileFileInternal( &$sourceFileData, $targetFileName, $targetFilePath, $inBackground=false )
+    {
+        $base_dir = dirname($targetFilePath);
+        // ensure path to source exists {{{
+        if (!file_exists($base_dir)) {
+            mkdir($base_dir, $this->_options['dir_chmod'], true);
+        }
+        // }}}
+        // special case: service callback {{{
+        if ( $inBackground && $this->_options['use_service'] && $this->_options['service_callback'] ) {
+            return call_user_func($this->_options['service_callback'], $sourceFileData, $targetFilePath);
+        }
+        // }}}
+        // generate temp file in the path
+        $com_path = tempnam($base_dir,'com_');
+        if ( $inBackground ) {
+            unlink($com_path); //delete it because of a race condition
+            $success = $this->_compileFileExec( $sourceFileData['file_path'], $targetFilePath, $com_path );
+            // service is in background, so $success should be false.
+        } else {
+            $success = $this->_compileFileExec( $sourceFileData['file_path'], $com_path );
+            if ($success) {
+                tgif_file::move($com_path, $targetFilePath, $this->_options['file_chmod']);
+            }
+        }
+        if ( $success ) {
+            $sourceFileData['name']         = $targetFileName;
+            $sourceFileData['isResource']   = false;
+            $sourceFileData['file_path']    = $targetFilePath;
+            //$sourceFileData['library']      = ''; //already assumed by internal designation
+        }
+        return $success;
+    }
+    // }}}
+    // {{{ - _catFiles($fileDatas)
+    /**
+     * This takes each file and generates a single (or pair) of files daata
+     *
+     * Only call this if use_cat flag is already set in {@link $_options}
+     * This also handles caching the success.
+     *
+     * This understands the concept of libraries. But since libraries may
+     * be made such that they generate a single external url or call local
+     * files, this handles that also by having two calls to the external
+     * libraries. :-)
+     *
+     * @param array $fileDatas the list of file data to compile/catenate
+     * indexed by their file name and ordered by their compile order.
+     * @return array an array of file data (transformed $fileDatas)
+     */
+    private function _catFiles(&$fileDatas)
+    {
+        //global $_TAG;
+        // No need to check for empty case because this will never be called
+        //   for an empty list or a single file concatenation.
+
+        $use_smem           = $this->_options['use_smem'];
+        $use_memcache       = $this->_options['use_memcache'];
+        $target_file_name   = $this->_generateTargetFileName($fileDatas);
+        $cache_key = array(
+            'group' => 'compile',
+            'key'   => $this->_generateKey($target_file_name),
+        );
+
+        // Check cache
+        if ( $returns = tgif_global_loader::get_from_cache($cache_key,$use_smem,$use_memcache) ) {
+            return $returns;
+        }
+
+        // Option to merge files within the library class :-)
+        $returns = array();
+        foreach ($this->_options['libraries'] as $class) {
+            $returns = array_merge($returns, $class::precat_files($fileDatas));
+        }
+
+        if ( count($fileDatas) <= 1 ) {
+            $returns = array_merge($returns, $fileDatas);
+        } else {
+            // regenerate target file name because it may be outdated
+            $target_file_name   = $this->_generateTargetFileName($fileDatas);
+            $target_file_path   = $this->_generateTargetFilePath($target_file_name);
+            if ( !file_exists($target_file_path) ) {
+                // build the file {{{
+                $_TAG->diagnostics->startTimer('file', 'cat', array(
+                        'dest_file' => $target_file_path,
+                    ));
+                $source_files = array();
+                $add_sep = $this->_options['cat_add_separator'];
+                $base_dir = dirname($target_file_path);
+                // ensure path to target exists {{{
+                if (!file_exists($base_dir)) {
+                    mkdir($base_dir, $this->_options['dir_chmod'], true);
+                }
+                // }}}
+                $tmp_path = tempnam($base_dir,'cat_');
+                $fp = fopen($tmp_path, 'w');
+                foreach ($fileDatas as $filename=>$file_data) {
+                    // Skip concatenation of stuff we don't know how to find
+                    // (this is unnecessary as all of these should be pruned out
+                    // by this point).
+                    //if ( $file_data['library'] ) { continue; }
+                    $source_file = $file_data['file_path'];
+                    $source_files[] = $source_file;
+                    if ($add_sep) {
+                        fwrite($fp, $this->_generateSeparator($filename,$file_data));
+                    }
+                    fwrite($fp, file_get_contents($source_file));
+                }
+                fclose($fp);
+                tgif_file::move($tmp_path,$target_file_path,$this->_options['file_chmod']);
+                $_TAG->diagnostics->stopTimer('file', array(
+                        'source_files'  => $source_files,
+                    ));
+                // }}}
+            }
+            $file_data = array(
+                'name'          => $target_file_name,
+                'is_resource'   => false,
+                'library'       => '',
+                'dependencies'  => array(),
+                'signature'     => call_user_func($this->_options['signature_method'], $target_file_path),
+                'file_path'     => $target_file_path,
+            );
+
+            // Can always write because we will generate a different key on
+            // successful compile than one on a delayed compare because how
+            // we manipulate the $fileData after a compile.
+            $returns[] = $file_data;
+        }
+        tgif_global_loader::set_to_cache($cache_key, $returns, $use_smem, $use_memcache);
+        return $returns;
+    }
+    // }}}
+    // OVERRIDES
+    // {{{ - _findDependencies($filePath,$fileName)
+    /**
+     * Find all the embeded dependencies in the codebase.
+     *
+     * @param string $filePath The path to the file
+     * @param string $fileName The "name" of the file in the compiler
+     * @return array list of "files" that depend on this one
+     */
+    protected function _findDependencies($filePath,$fileName)
+    {
+        return array();
+    }
+    // }}}
+    // {{{ - _generateTargetFileName($fileDatas)
+    /**
+     * Figure out target file name in a normalized manner.
+     *
+     * Override this (and call it) in order to add filetype extensions.
+     *
+     * Note that even if the compile order of files is slightly different, this
+     * generates the same key. The assumption is that the build order may
+     * vary slightly differently, but roughly things should be okay.
+     *
+     * @param array $fileDatas This is an array of file data to sort. If you
+     *  want to generate a file for a single file, then just wrap it in an
+     *  array.
+     * @return string This version generates a hash key based on the file list
+     *  data. The old version used the use_compiler flag, but it is unnecessary
+     *  now as this and the cat stage are now separate..
+     */
+    protected function _generateTargetFileName($fileDatas)
+    {
+        ksort($fileDatas);
+        return tgif_encode::create_key(serialize($fileDatas));
+    }
+    // }}}
+    // {{{ - _generateTargetFilePath($targetFileName)
+    /**
+     * Prepend the path onto the target file name
+     *
+     * @param string $targetFileName
+     * @return string Full path to the target file
+     */
+    protected function _generateTargetFilePath($targetFileName)
+    {
+        return $this->_options['target_dir'].DIRECTORY_SEPARATOR.$targetFileName;
+    }
+    // }}}
+    // {{{ - _generateUrl($fileData)
+    /**
+     * Figure out url in a normalized manner
+     *
+     * It is best not to override this, instead, it is probably better to
+     * make a third party function for generating the url by passing in
+     * the option url_callback()
+     *
+     * Note that even if the compile order of files is slightly different, this
+     * generates the same key. The assumption is that the build order may
+     * vary slightly differently, but roughly things should be okay.
+     *
+     * @param array $fileData This is a single file to return the url for.
+     * @return string full path url to the resource.
+     */
+    protected function _generateUrl($fileData)
+    {
+        if ( $class = $fileData['library'] ) {
+            return call_user_func($class::generate_url($fileData));
+        }
+        if ( $this->_options['url_callback'] ) {
+            return call_user_func($this->_options['url_callback'], $fileData);
+        }
+        if ( $fileData['is_resource'] ) {
+            return $this->_options['resource_url'].'/'.$fileData['name'];
+        } else {
+            return $this->_options['target_url'].'/'.$fileData['name'];
+        }
+    }
+    // }}}
+    // {{{ - _generateSeparator($filename, $fileData)
+    /**
+     * Between files in a concatenation, add a comment with a separtor
+     *
+     * @param array $fileData The file to put in the separtor
+     * @return string The separator to write
+     */
+    protected function _generateSeparator($filename, $fileData)
+    {
+        return sprintf("\n\n/* key:%s, filename:%s %s */\n",
+            $filename,
+            $fileData['name'],
+            (isset($fileData['copyright'])) ? 'copyright:'.$fileData['copyright'] : ''
+        );
+    }
+    // }}}
+    // {{{ - _generateHtml($url,$properties
+    /**
+     * Generates the HTML for a bunch of $urls in a normalized manner
+     *
+     * Override this (and call it) in order to change the way it renders
+     *
+     * @param string $url The full URL to link
+     * @param array $properties the properties to add to the URL
+     * @return string The HTML
+     */
+    protected function generateHtml($url, $properties)
+    {
+        $return = $url;
+        foreach ($properties as $key=>$value) {
+            $return .= ' '.$key.':'.$value;
+        }
+        return $return;
+    }
+    // }}}
+    // {{{ - _compileFileExec($sourcePath,$destPath[,$backgroundPath])
+    /**
+     * Command to compile from one file to another.
+     *
+     * This version does nothing but copy the file. No such concept as
+     * backgrounding. Please override.
+     *
+     * @param string $sourcePath the file to compile
+     * @param string $destPath where to dump the final output to
+     * @param stirng $backgroundPath if specified, then do the work in the
+     *  background and this is the intermediate file.
+     * @return boolean Has the compiled file been created (backgrounding may
+     *  prevent this from happening.
+     */
+    protected function _compileFileExec($sourcePath, $destPath, $backgroundPath='')
+    {
+        return tgif_file::copy($sourcePath, $destPath);
+    }
+    // }}}
+
+    // Library interface
+    //+ (string) generate_signature($fileName)
+    //+ (array) generate_file_data($fileName)
+    //+ (bool $success) compile_file(&$sourceFileData,$targetFileName,$targetFilePath,$compilerObj)
+    //+ (void) compile_file_service($sourceFileData,$targetFileName,$targetFilePath,$compilerObj)
+    //+ $fileDatas = cat_files(&$fileDatas) (check and clear fileDatas)
+    //+ (string) generate_url($file_data);
+
+    // deprecated
+    // PRIVATE/PROTECTED METHODS
+    // {{{ - _writeTrackFile($fileDatas)
     /**
      * Make sure a track file gets written to.
      *
@@ -424,11 +988,11 @@ class tgif_compiler
      * the file can be created (and thus this isn't called) by another process
      * during the time this file is being written to.
      */
-    private function _writeTrackFile($fileListData)
+    private function _writeTrackFile($fileDatas)
     {
         // build the file list (without non-specific data) {{{
         $files = array();
-        foreach ($fileListData as $file_list) {
+        foreach ($fileDatas as $file_list) {
             $files[] = $file_list['name'];
         }
         // }}}
@@ -468,86 +1032,6 @@ class tgif_compiler
         return tgif_encode::create_key(serialize($files));
     }
     // }}}
-    // {{{ - _generateKey($fileName)
-    /**
-     * Turn a filename into a key array
-     *
-     * This is now protected because tag_compiler_js needs this function to
-     * update the filedata when handling i18n intermediate compile
-     * 
-     * @return array
-     */
-    protected function _generateKey($fileName)
-    {
-        //global $_TAG; //runkit
-        return array(get_class($this).'_'.tgif_encode::create_key($fileName), $_TAG->symbol());
-    }
-    // }}}
-    // {{{ - _generateSignature($filePath)
-    /**
-     * Generate a signature from the file.
-     *
-     * This only gets called if the file data "is_file" parameter is true.
-     *
-     * @return string
-     */
-    private function _generateSignature($filePath)
-    {
-        //global $_TAG; //runkit
-        switch ($this->_signatureMode) {
-            case 'md5':
-            if (!file_exists($filePath)) { return false; }
-            return md5(file_get_contents($filePath));
-            case 'global':
-            return $_TAG->config('global_version');
-            case 'filemtime':
-            default:
-            if (!file_exists($filePath)) { return false; }
-            return filemtime($filePath);
-        }
-    }
-    // }}}
-    // {{{ - _generateFilePath($fileName)
-    /**
-     * @return mixed if return false then no file exists else
-     *  it returns a filepath to the resource in question
-     */
-    private function _generateFilePath($fileName)
-    {
-        //global $_TAG; //runkit
-        if($this->_useReleaseName) {
-            $file_path = sprintf('%s/%s%s/%s',
-                $_TAG->config('release_dir'),
-                $_TAG->config('release_name'),
-                $this->_resourceDir,
-                $fileName);
-        } else {
-            $file_path = sprintf('%s%s/%s', $_TAG->config('dir_static'), $this->_resourceDir, $fileName);
-        }
-        if (!file_exists($file_path)) { return false; }
-        return $file_path;
-    }
-    // }}}
-    // {{{ - _generateTargetFileName($fileListData)
-    /**
-     * Figure out target file name in a normalized manner.
-     *
-     * Override this to do break into different paths and add file type
-     * extensions.
-     *
-     * @return string This version generates a hash key based on the file list
-     *  data, the compiler. This doesn't use the {@link $_useCat} because if it
-     *  is catenated then the file list data will look different if multiple
-     *  files.  This doesn't use the {@link $_useService} so that it can allow
-     *  generation of files using an offline command line script that will
-     *  allow service bypass.
-     */
-    protected function _generateTargetFileName($fileListData)
-    {
-        ksort($fileListData);
-        return tgif_encode::create_key(serialize(array($this->_useCompiler, $fileListData)));
-    }
-    // }}}
     // {{{ - _generateSourceUrl($fileName)
     /**
      * Turn a filename into a url (when it is a soruce url
@@ -572,290 +1056,6 @@ class tgif_compiler
         return $_TAG->url->chrome($this->_targetDir.'/'.$fileName);
     }
     // }}}
-    // PROTECTED METHODS (FINAL)
-    // {{{ - _compileFiles($fileName, $fileListData)
-    /**
-     * Enables the compiling of files to a destination file.
-     *
-     * If the file exists it will not compile, but will return true instead.
-     * To determine existance, it will check the shared memory or memcache
-     * (depending on configuration) for that existence. This avoids a
-     * {@link file_exists()} call which on remote mounted volumes with
-     * linux overloaded may be slow(?), or, at the very least, the speed
-     * is undetermined whereas calls to shared memory or memcache are
-     * strictly determined. On successful compile, it updates the cache
-     * with this.
-     *
-     * Note that if the {@link $_signatureMode} is changed, then this
-     * will assume the file doesn't exist!
-     *
-     * @param $fileName string the name of the file to use for the compiled
-     *      file. This is unique across a file list.
-     * @param $fileListData array the data of the files that need to be compiled
-     *      in an order such that dependencies are resolved correctly.
-     * @return boolean returns success or failure
-     */
-    protected function _compileFiles($fileName, $fileListData)
-    {
-        //global $_TAG; //runkit
-        $file_path = sprintf('%s%s/%s', $_TAG->config('dir_static'), $this->_targetDir, $fileName);
-        // check shared cache for whether file has been marked as existing {{{
-        $cache_key = $this->_generateKey($file_path);
-        $file_exists_signature = tgif_global_loader::get_from_cache($cache_key,$this->_useSmem,$this->_useMemcache);
-        if ($file_exists_signature) {
-            if ($file_exists_signature == $this->_generateSignature($file_path)) {
-                return true;
-            }
-            if ('file_not_found' === $file_exists_signature) {
-                return false;
-            }
-        }
-        // }}}
-        // check if file exists {{{
-        if (file_exists($file_path)) {
-            tgif_global_loader::save_to_cache($cache_key, $this->_generateSignature($file_path), $this->_useSmem, $this->_useMemcache);
-            return true;
-        } else {
-            // temporarily cache file-not-founds to spare fs ops
-            tgif_global_loader::save_to_cache($cache_key, 'file_not_found', $this->_useSmem, $this->_useMemcache, self::CACHE_FILE_NOT_FOUND_TTL);
-        }
-        // }}}
-        if ($this->_trackFile) {
-            $this->_writeTrackFile($fileListData);
-        }
-        $source_files = array();
-        foreach ($fileListData as $key=>$file_data) {
-            $source_files[] = $file_data['file_path'];
-        }
-        if ($this->_useCompiler && $this->_useService) {
-            $success = $this->_compileFileService($file_path, $source_files);
-        } else {
-            $success = $this->_compileFileUsingFiles($file_path, $source_files);
-        }
-        // mark file as existing {{{
-        if ($success) {
-            tgif_global_loader::save_to_cache($cache_key, $this->_generateSignature($file_path), $this->_useSmem, $this->_useMemcache);
-        }
-        // }}}
-        return $success;
-    }
-    // }}}
-    // {{{ - _compileFileUsingFiles($filePath,$sourceFiles)
-    /**
-     * Enables the compiling of files using a safe temp file-based method
-     * that calls {@link _compileFileExec()} for the key step.
-     *
-     * No need to check the cat flag but we do need to check the compile flag.
-     * This is because upstream processing handles that case.
-     * @param $filePath string the path to the file to use for the compiled file
-     * @param $sourceFiles array the paths of the files that need to be compiled
-     *      in an order such that dependencies are resolved correctly.
-     * @return boolean always returns sucess
-     */
-    final protected function _compileFileUsingFiles($filePath, $sourceFiles)
-    {
-        $base_dir = dirname($filePath);
-        // ensure path to source exists
-        if (!file_exists($base_dir)) {
-            mkdir($base_dir, 0777, true);
-        }
-        // generate temp file in the path
-        // cat all data together {{{
-        $cat_path = tempnam($base_dir,'cat_');
-        $fp = fopen($cat_path, 'w');
-        foreach ($sourceFiles as $paths) {
-            fwrite($fp, file_get_contents($paths));
-        }
-        fclose($fp);
-        // }}}
-        // compile if necessary {{{
-        if ($this->_useCompiler) {
-            $com_path = tempnam($base_dir,'com_');
-            $success = $this->_compileFileExec($cat_path, $com_path);
-            unlink($cat_path);
-            $source_file = $com_path;
-        } else {
-            $source_file = $cat_path;
-            $success = true;
-        }
-        // }}}
-        // atomic file copy {{{
-        if ($success) {
-            // link effectively copies files atomically in linux. however,
-            // when running in a local vmware environment on windows host,
-            // link doen't work. thus, we fail through to copy (which works :))
-            if (!link($filePath, $source_file)) {
-                copy($source_file, $filePath);
-            }
-            chmod($filePath,0666);
-        }
-        unlink($source_file);
-        //chmod($com_path,0666);
-        //chmod($cat_path,0666);
-        // }}}
-        return $success;
-    }
-    // }}}
-    // OVERRIDES
-    // {{{ + $_html, $_html_with_id
-    /**
-     * Mapping when outputting a queue to html as a single file
-     * @var string
-     */
-    protected $_html_with_id = '%1$s id:%2$s';
-    /**
-     * Mapping when outputting a url to html
-     * @var string
-     */
-    protected $_html = '%s';
-    // }}}
-    // {{{ - _findDependencies($filePath)
-    /**
-     * Find all the embeded dependencies in the codebase.
-     *
-     * @return array list of "files" that depend on this one
-     */
-    protected function _findDependencies($filePath)
-    {
-        return array();
-    }
-    // }}}
-    // {{{ - _buildUrls($fileListData)
-    /**
-     * Turns a list of files into urls.
-     *
-     * This code assumes that all {@link $fileListData} has 'is_file' set to
-     * true (they are all files). So if this is the case, there is no need to
-     * ovverride this function.
-     *
-     * @return array a list of urls to include
-     */
-    protected function _buildUrls($fileListData)
-    {
-        // don't even think of generating an empty compiled file!
-        $returns = array();
-        if (empty($fileListData)) { return $returns; }
-        $files = $this->_buildFiles($fileListData);
-        foreach ($files as $file_parts) {
-            if(!is_array($file_parts)) {
-                $returns[] = $file_parts;
-            } else if ($file_parts[1]) {
-                $returns[] = $this->_generateTargetUrl($file_parts[0]);
-            } else {
-                $returns[] = $this->_generateSourceUrl($file_parts[0]);
-            }
-        }
-        return $returns;
-    }
-    // }}}
-    // {{{ - _buildFiles($fileListData[,$forceCat])
-    /**
-     * Turns a list of files into a new list of files (compiled and catted)
-     *
-     * This code assumes that all {@link $fileListData} has 'is_file' set to
-     * true (they are all files). So if this is the case, there is no need to
-     * ovverride this function.
-     *
-     * @param array $fileListData the list of files to compile/catenate
-     * @param boolean $forceCat Set to true to force catenation (used by i18n
-     * code) to turn the urls into a single file.
-     * @return array a list of urls consisting of two parts, the second part
-     * is true for target file or false for source files. If the second part
-     * is true, then the first part is the target filename, if the second part
-     * is false, then the second part is the file data (it seems weird but this
-     * allows building via {@link _generateSourceUrl()} and
-     * {@link _generateTargetUrl}.
-     */
-    protected function _buildFiles($fileListData, $forceCat=false)
-    {
-        // don't even think of generating an empty compiled file!
-        $returns = array();
-        if (empty($fileListData)) { return $returns; }
-        if ($this->_useCat || $forceCat) {
-            $target_file = $this->_generateTargetFileName($fileListData);
-            $success = $this->_compileFiles($target_file,$fileListData);
-            if ($success) {
-                $returns[] = array($target_file,true);
-            } else {
-                foreach($fileListData as $filename=>$file_data) {
-                    $returns[] = array($file_data,false);
-                }
-            }
-            return $returns;
-        }
-        if ($this->_useCompiler) {
-            foreach($fileListData as $filename=>$file_data) {
-                $temp = array($filename=>$file_data);
-                $target_file = $this->_generateTargetFileName($temp);
-                $success = $this->_compileFiles($target_file,$temp);
-                if ($success) {
-                    $returns[] = array($target_file,true);
-                } else {
-                    $returns[] = array($file_data,false);
-                }
-            }
-        } else {
-           foreach($fileListData as $filename=>$file_data) {
-               $returns[] = array($file_data,false);
-            }
-        }
-        return $returns;
-    }
-    // }}}
-    // {{{ - _compileFileExec($sourcePath, $destPath)
-    /**
-     * Exec command to compile from one file to another
-     *
-     * This version does nothing but copy the file.
-     *
-     * @param $sourcePath string the catenated file to compile
-     * @param $destPath string where to dump the final output to
-     */
-    protected function _compileFileExec($sourcePath, $destPath)
-    {
-        link($destPath, $sourcePath);
-    }
-    // }}}
-    // {{{ - _compileFileService($targetPath, $sourcePaths)
-    /**
-     * Service command to compile a file list.
-     *
-     * Concatenate and compile. This service should block until the file is
-     * written. The file should not be written until the service is done. If
-     * you run into an error condition, just return false.
-     *
-     * This version does nothing but return false.
-     *
-     * @param $destPath string where to dump the final output to
-     * @param $sourcePaths array the files to compile (in order)
-     */
-    protected function _compileFileService($targetPath, $sourcePaths)
-    {
-        return false;
-    }
-    // }}}
-    // {{{ - _generateFileData($fileName)
-    /**
-     * Generate file data.
-     *
-     * This version grabs the file from the file system and returns an array
-     * with 'name', 'is_file, 'file_path', 'signature' and 'dependencies'. As
-     * such, it doesn't actually need to be overridden if you don't need it
-     * @return mixed if false there is no file data, else it
-     *      returns an array hash
-     */
-    protected function _generateFileData($fileName)
-    {
-        $file_path = $this->_generateFilePath($fileName);
-        if (!$file_path) { return false; }
-        return array(
-            'name'          => $fileName,
-            'is_file'       => true,
-            'file_path'     => $file_path,
-            'signature'     => $this->_generateSignature($file_path),
-            'dependencies'  => $this->_findDependencies($file_path),
-            );
-    }
-    // }}}
 }
 // }}}
+?>

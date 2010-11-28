@@ -426,6 +426,10 @@ pushd samples
         echo "### Building .htaccess file for samples...."
         cat res/default.htaccess | sed "s|{{{BASE_DIR}}}|${BASE_DIR}|" >www/.htaccess
     fi
+    if [ ! -d www/m/dyn ]; then
+        mkdir www/m/dyn
+        chmod 777 www/m/dyn
+    fi
 popd
 # }}}
 # Install WebGrind {{{

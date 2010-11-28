@@ -6,7 +6,7 @@
  *
  * @package tgiframework
  * @subpackage ui
- * @copyright 2008-2009 Tagged, Inc, 2009 terry chay
+ * @copyright 2008-2009 Tagged, Inc, 2009-2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  */
 // {{{ tgif_compiler_css
@@ -16,131 +16,179 @@
  * @package tgiframework
  * @subpackage ui
  * @author terry chay <tychay@php.net>
- * @author Nate Kresge <nkgresge@tagged.com> added hessian service
- * @author Itai Zukerman <izukerman@tagged.com> add hessian UDP protocol
  */
 class tgif_compiler_css extends tgif_compiler
 {
-    // {{{ + $_html, $_html_with_id
-    protected $_html_with_id = '<link rel="stylesheet" type="text/css" href="%1$s" id="%2$s" />';
-    protected $_html = '<link rel="stylesheet" type="text/css" href="%s" />';
-    // }}}
-    // {{{ - $_javaCmd
+    // {{{ - _regex_import
     /**
-     * file path of the java engine
-     * @var string
+     * Regular expression for extracting css files
      */
-    private $_javaCmd;
+    const _regex_import = '!@import\s+url\(["\']([^ ]+)["\']\)!';
     // }}}
-    // {{{ - $_yuiCompressor
-    /**
-     * file path of yui compresor
-     * @var string
-     */
-    private $_yuiCompressor;
-    // }}}
+    // OVERRIDES
     // {{{ __construct($options)
     /**
+     * Same as parent, but allows presets 'bin_java' and 'yui_compressor'
+     * variables.
+     *
+     * To make life easier, overwrite 'use_compiler' if something goes wrong.
      */
     function __construct($options)
     {
-        foreach ($options as $key=>$value) {
-            switch($key) {
-                case 'java_cmd'         : $this->_javaCmd = $value; break;
-                case 'yui_compressor'   : $this->_yuiCompressor = $value; break;
-            }
+        //global $_TAG;
+        if ( !isset($options['bin_java']) ) {
+            $options['bin_java'] = $_TAG->config('bin_java');
         }
-        $this->_useCompiler = ($this->_javaCmd && $this->_yuiCompressor);
+        if ( !isset($options['yui_compressor']) ) {
+            $options['yui_compressor'] = $_TAG->config('yui.compressor_jar', true);
+        }
+
         parent::__construct($options);
-    }
-    // }}}
-    // {{{ __sleep()
-    /**
-     * Make sure temporary structures aren't stored between saves.
-     *
-     * This includes {@link $_strings}.
-     */
-    function _sleep()
-    {
-        return array_merge(parent::__sleep(), array( '_html', '_html_with_id', '_javaCmd',));
-    }
-    // }}}
-    // {{{ - _compileFileExec($targetPath, $sourcePath)
-    /**
-     * Exec command to compile from one file to another
-     *
-     * This version uses YUI compressor and java to compile the file.
-     *
-     * @param $sourcePath string the catenated file to compile
-     * @param $destPath string where to dump the final output to
-     */
-    protected function _compileFileExec($sourcePath, $destPath)
-    {
-        if (!file_exists($this->_javaCmd)) { return false; }
-        if (!file_exists($this->_yuiCompressor)) { return false; }
-        //printf('%s -jar %s --type css -o %s %s', $this->_javaCmd, $this->_yuiCompressor, escapeshellarg($destPath), escapeshellarg($sourcePath));
-        exec(sprintf('%s -jar %s --type css -o %s %s', $this->_javaCmd, $this->_yuiCompressor, escapeshellarg($destPath), escapeshellarg($sourcePath)));
-        return true;
-    }
-    // }}}
-    // {{{ - _compileFileService($targetPath, $sourcePaths)
-    /**
-     * Service command to compile a file list.
-     *
-     * Concatenate and compile. This service should block until the file is
-     * written. The file should not be written until the service is done. If
-     * you run into an error condition, just return false.
-     *
-     * This version does nothing but return false.
-     *
-     * @param $destPath string where to dump the final output to
-     * @param $sourcePaths array the files to compile (in order)
-     */
-    protected function _compileFileService($targetPath, $sourcePaths)
-    {
-        global $_TAG;
-        $h = new tag_service_hessianClient(
-            $_TAG->config('js_css_compiler_udp_host'),
-            array('use_udp'  => true));
-        try {
-            $return = $h->compile('css', $sourcePaths, $targetPath);
-        } catch (Exception $e) {
-            trigger_error("Exception in css compiler: " . $e->getMessage(), E_USER_NOTICE);
-            return false;
-        }
-        // return $return;
-        // we find the compiled files are still missing suggesting fstat is cached
-        // a workaround is to always return false;
-        return false;
+
+        $this->_options['use_compiler'] = $this->_options['use_compiler'] && file_exists($options['bin_java']) && file_exists($options['yui_compressor']);
     }
     // }}}
     // {{{ - _findDependencies($filePath)
     /**
-     * Find all the embeded dependencies in the codebase
-     * @return array list of "files" that depend on this one
+     * Find all the embeded dependencies in the codebase.
+     *
+     * CSS files can use an @import line to embed dependencies. They must use
+     * the format:
+     * @import url(...)
+     *
+     * Note that it is recommended that you embed this in the comments of the
+     * css file instead of the css file itself. If you do not, you will end
+     * up with a double include of the css file.
+     *
+     * Also note that dependencies, no matter where they are placed in the
+     * actual file, are assumed to be placed in the beginning.
+     *
+     * Currently there is no absolute URL or absolute uris that are currently
+     * allowed. There are no plans to add it because of the fungible status
+     * of the concept of absolute uris in the framework.
      */
-    protected function _findDependencies($filePath)
+    protected function _findDependencies($filePath,$fileName)
     {
         $data = file_get_contents($filePath);
-        if (!preg_match_all('!\*\s+@import\s+url\(["\']([^ ]+)["\']\)!', $data, $matches, PREG_PATTERN_ORDER)) {
+        if ( !preg_match_all(self::_regex_import, $data, $matches, PREG_PATTERN_ORDER) ) {
             return array();
         }
+        $this_dir = dirname($filePath).'/';
+        $ignore_path_len = strlen($filePath)-strlen($fileName);
         foreach ($matches[1] as $key=>$value) {
-            $matches[1][$key] = trim($matches[1][$key]);
+            $depend_file = trim($matches[1][$key]);
+            // prune out relative paths {{{
+            $test_file = preg_replace('/\w+\/\.\.\//', '', $this_dir.$depend_file);
+            if ( file_exists($test_file) ) {
+                $depend_file = substr($test_file, $ignore_path_len);
+            }
+            // }}}
+            $matches[1][$key] = $depend_file;
         }
         return $matches[1];
     }
     // }}}
     // {{{ - _generateTargetFileName($fileListData)
     /**
-     * Figure out target file name in a normalized manner.
-     *
-     * @return string
+     * Adds .css to the target name, and put it in a supdirectory.
      */
     protected function _generateTargetFileName($fileListData)
     {
         $signature = parent::_generateTargetFileName($fileListData);
         return sprintf('%s/%s.css', substr($signature,0,1), substr($signature,1,10));
+    }
+    // }}}
+    // {{{ - _generateHtml($url,$properties)
+    /**
+     * Make a css style tag include
+     */
+    protected function _generateHtml($url, $properties)
+    {
+        $attributes = '';
+        foreach ($properties as $key=>$value) {
+            if ( $key == 'id' ) {
+                $value = 'css'.$value;
+            }
+            $attributes .= sprintf(' %s="%s"', $key, htmlentities($value));
+        }
+        return sprintf('<link rel="stylesheet" type="text/css" href="%s"%s />',
+            htmlentities($url),
+            $attributes
+        );
+    }
+    // }}}
+    // {{{ - _compileFileExec($sourcePath, $destPath, $backgroundPath)
+    /**
+     * Exec command to compile from one file to another
+     *
+     * This version uses YUI compressor and java to compile the file.
+     */
+    protected function _compileFileExec($sourcePath, $destPath, $backgroundPath='')
+    {
+        //global $_TAG;
+        $cmd = sprintf('%s -jar %s --type css -o %s %s',
+            $this->_options['bin_java'],
+            $this->_options['yui_compressor'],
+            ($backgroundPath) ? escapeshellarg($backgroundPath) : escapeshellarg($destPath),
+            escapeshellarg($sourcePath)
+        );
+        if ($backgroundPath) {
+            // chain command
+            $cmd = sprintf('%s;mv %s %s', $cmd, escapeshellarg($backgroundPath), escapeshellarg($destPath));
+            // background and nohub command chain
+            $cmd = sprintf('nohup sh -c %s &', escapeshellarg($cmd));
+        }
+        $_TAG->diagnostics->startTimer(
+            'exec',
+            get_class($this).'::_compileFileExec',
+            array( 'cmd' => $cmd )
+        );
+        exec($cmd,$output,$return_var);
+        $_TAG->diagnostics->stopTimer(
+            'exec',
+            array(
+                'output' => implode("\n", $output),
+                'return' => $return_var,
+            )
+        );
+        return ($backgroundPath) ? false : true;
+    }
+    // }}}
+    // DEPRECATED
+    // {{{ + compile_file_service(&$sourceFileData, $targetFilePath)
+    /**
+     * Service command to compile a file list.
+     *
+     * This service should block until the file is written. The file should
+     * not be written until the service is done. If you run into an error
+     * condition, just return the $sourceFileData.
+     *
+     * This is an adaptation of what Tagged was using to compile files.
+     *
+     * @deprecated untested
+     * @author Nate Kresge <nkgresge@tagged.com> added hessian service
+     * @author Itai Zukerman <izukerman@tagged.com> add hessian UDP protocol
+     * @author terry chay <tychay@php.net> modified for compatibility
+     * @param $destPath string where to dump the final output to
+     * @param $sourcePaths array the files to compile (in order)
+     * @return boolean success
+     */
+    public static function compile_file_service($sourceFileData, $targetFilePath)
+    {
+        //global $_TAG;
+        $h = new tag_service_hessianClient(
+            $_TAG->config('js_css_compiler_udp_host'),
+            array('use_udp'  => true)
+        );
+        try {
+            $return = $h->compile('css', array($sourceFileData['file_path']), $targetPath);
+        } catch (Exception $e) {
+            trigger_error("Exception in css compiler: " . $e->getMessage(), E_USER_NOTICE);
+            return false;
+        }
+        // we find the compiled files are still missing suggesting fstat is
+        // cached a workaround is to always return failure mode.
+        return false;
     }
     // }}}
 }
