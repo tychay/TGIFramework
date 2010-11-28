@@ -68,7 +68,9 @@ class tgif_compiler
      * - dir_chmod (integer): the chmod of any directories created
      * - file_chmod (integer): the chmod of any files created
      * - libraries (array): external libraries the compiler needs to know
-     *   about
+     *   about. These are arrays where the key is is the class name of the
+     *   object (that implements {@link tgif_compiler_library} and the value is
+     *   the config variable to pass into its constructor.
      *
      * UNSUPPORTED:
      * - track_file (string): If set, this is the path to a file to keep a log
@@ -107,6 +109,15 @@ class tgif_compiler
         'track_db'          => '',
         /* */
     );
+    // }}}
+    // {{{ - $_libraries
+    /**
+     * An array indexed by class name  of any external lirbaries for the
+     * compiler
+     *
+     * @var array
+     */
+    protected $_libraries = array();
     // }}}
     // {{{ - $_fileDataList
     /**
@@ -153,7 +164,11 @@ class tgif_compiler
      */
     protected function __construct($options)
     {
+        //global $_TAG;
         $this->_options = array_merge($this->_options, $options);
+        foreach ($this->_options['libraries'] as $class_name=>$config_name) {
+            $this->_libraries[$class_name] = new $class_name($_TAG->config($config_name, true));
+        }
     }
     // }}}
     // {{{ __sleep()
@@ -162,7 +177,7 @@ class tgif_compiler
      */
     function _sleep()
     {
-        return array('_options');
+        return array('_options','_libraries');
     }
     // }}}
     // {{{ __wakeup()
@@ -263,18 +278,7 @@ class tgif_compiler
         
         $urls = $this->_buildUrls($file_list_data);
 
-        $count = 0;
-        $returns = array();
-        $add_properties = (!isset($properties['id']));
-        foreach ($urls as $url) {
-            if ( $add_properties ) {
-                $properties['id'] = $queue;
-                $properties['id'] .= ($count) ? '-'.$count : '';
-            }
-            $returns[] = $this->_generateHtml($url, $properties);
-            ++$count;
-        }
-        return $returns;
+        return $this->_generateHtmls($urls,$properties,$queue);
     }
     // }}}
     // {{{ - generateSingle($files)
@@ -393,8 +397,8 @@ class tgif_compiler
      */
     private function _isValid($fileData)
     {
-        $sig = ( $fileData['library'] )
-             ? $fileData['library']::generate_signature( $fileData['name'] )
+        $sig = ( $class = $fileData['library'] )
+             ? $this->_libraries[$class]->generate_signature( $fileData['name'] )
              : call_user_func($this->_options['signature_method'], $fileData['file_path']);
         return ($sig == $fileData['signature']);
     }
@@ -481,13 +485,13 @@ class tgif_compiler
             );
         }
         // check if a library recognizes the file
-        foreach ($this->_options['libraries'] as $class) {
-            $file_data = $class::generate_file_data($fileName);
+        foreach ($this->_libraries as $class=>$library_obj) {
+            $file_data = $library_obj->generateFileData($fileName);
             if ($file_data) {
                 $file_data['name']      = $fileName;
                 $file_data['library']   = $class;
                 if (!isset($file_data['signature'])) {
-                    $file_data['signature'] = $class::generate_signature($fileName);
+                    $file_data['signature'] = $library_obj->generateSignature($fileName);
                 }
                 return $file_data;
             }
@@ -659,20 +663,23 @@ class tgif_compiler
 
         if ( $this->_options['use_service'] ) {
             if ( $class = $fileData['library'] ) {
-                $class::compile_file_service($fileData, $targetFileName, $target_file_path, $this);
+                $success = $this->_libraries[$class]->compileFileService($fileData, $targetFileName, $target_file_path, $this);
             } else {
                 $this->_compileFileInternal($fileData, $targetFileName, $target_file_path, true);
+                $success = false; 
             }
-            // temporarily store the uncompiled file into cache
-            $cacheKey['smem_lifetime']      = $this->_options['cache_file_not_foud_ttl'];
-            $cacheKey['memcache_lifetime']  = $this->_options['cache_file_not_foud_ttl'];
-            return false;
         } else  {
             if ( $class = $fileData['library'] ) {
-                return $class::compile_file($fileData, $targetFileName, $target_file_path, $this);
+                $success = $this->_libraries[$class]->compileFile($fileData, $targetFileName, $target_file_path, $this);
             } else {
-                return $this->compileFileInternal($fileData, $targetFileName, $target_file_path);
+                $success = $this->compileFileInternal($fileData, $targetFileName, $target_file_path);
             }
+        }
+        if ( !$success ) {
+            // temporarily store the uncompiled file into cache for parallel
+            // requests to give the compiler service time to complete.
+            $cacheKey['smem_lifetime']      = $this->_options['cache_file_not_foud_ttl'];
+            $cacheKey['memcache_lifetime']  = $this->_options['cache_file_not_foud_ttl'];
         }
     }
     // }}}
@@ -683,7 +690,7 @@ class tgif_compiler
      *
      * This is public static in order to allow it to be called by a library
      * compile if the internal compiler might be needed by the library system
-     * to make it even smaller.
+     * to make a file even smaller.
      *
      * Was _compileFileUsingFiles() but since moved here since it is a single
      * file. Also added support for backgrounding instead of the old use
@@ -768,8 +775,8 @@ class tgif_compiler
 
         // Option to merge files within the library class :-)
         $returns = array();
-        foreach ($this->_options['libraries'] as $class) {
-            $returns = array_merge($returns, $class::precat_files($fileDatas));
+        foreach ($this->_libraries as $obj) {
+            $returns = array_merge($returns, $obj->catFiles($fileDatas));
         }
 
         if ( count($fileDatas) <= 1 ) {
@@ -898,7 +905,7 @@ class tgif_compiler
     protected function _generateUrl($fileData)
     {
         if ( $class = $fileData['library'] ) {
-            return call_user_func($class::generate_url($fileData));
+            return $this->_obj[$class]->generateUrl($fileData);
         }
         if ( $this->_options['url_callback'] ) {
             return call_user_func($this->_options['url_callback'], $fileData);
@@ -926,7 +933,35 @@ class tgif_compiler
         );
     }
     // }}}
-    // {{{ - _generateHtml($url,$properties
+    // {{{ - _generateHtmls($urls,$properties,$queue)
+    /**
+     * Generates the HTML for a bunch of $urls in a normalized manner
+     *
+     * You can override this in order to embed properties differently than
+     * serially (example: css includes using @import).
+     *
+     * @param array $urls The urls to all the resources
+     * @param array $properties the properties to add to the URL
+     * @param string $queue the name of the queue rendering
+     * @return array an array of html tags that can be imploded
+     */
+    protected function _generateHtmls($url, $properties, $queue)
+    {
+        $count = 0;
+        $returns = array();
+        $add_properties = (!isset($properties['id']));
+        foreach ($urls as $url) {
+            if ( $add_properties ) {
+                $properties['id'] = $queue;
+                $properties['id'] .= ($count) ? '-'.$count : '';
+            }
+            $returns[] = $this->_generateHtml($url, $properties);
+            ++$count;
+        }
+        return $returns;
+    }
+    // }}}
+    // {{{ - _generateHtml($url,$properties)
     /**
      * Generates the HTML for a bunch of $urls in a normalized manner
      *
@@ -965,14 +1000,6 @@ class tgif_compiler
     }
     // }}}
 
-    // Library interface
-    //+ (string) generate_signature($fileName)
-    //+ (array) generate_file_data($fileName)
-    //+ (bool $success) compile_file(&$sourceFileData,$targetFileName,$targetFilePath,$compilerObj)
-    //+ (void) compile_file_service($sourceFileData,$targetFileName,$targetFilePath,$compilerObj)
-    //+ $fileDatas = cat_files(&$fileDatas) (check and clear fileDatas)
-    //+ (string) generate_url($file_data);
-
     // deprecated
     // PRIVATE/PROTECTED METHODS
     // {{{ - _writeTrackFile($fileDatas)
@@ -992,6 +1019,7 @@ class tgif_compiler
      * This is vulnerable to a race condition when used on the live site as
      * the file can be created (and thus this isn't called) by another process
      * during the time this file is being written to.
+     * @deprecated
      */
     private function _writeTrackFile($fileDatas)
     {
@@ -1030,35 +1058,12 @@ class tgif_compiler
     // {{{ - _generateKeyFromFiles($files)
     /**
      * @param array $files a list of files to be compiled
+     * @deprecated
      */
     private function _generateKeyFromFiles($files)
     {
         sort($files);
         return tgif_encode::create_key(serialize($files));
-    }
-    // }}}
-    // {{{ - _generateSourceUrl($fileName)
-    /**
-     * Turn a filename into a url (when it is a soruce url
-     * @return string
-     */
-    protected function _generateSourceUrl($fileName)
-    {
-        //global $_TAG; //runkit
-        return (empty($fileData['url']))
-               ? $_TAG->url->chrome($this->_resourceDir.'/'.$fileData['name'].'?v='.$_TAG->config('global_version'))
-               : $_TAG->url->chrome($fileData['url'].'?v='.$_TAG->config('global_version'));
-    }
-    // }}}
-    // {{{ - _generateTargetUrl($fileName)
-    /**
-     * Turn a filename into a url (when it is a target url)
-     * @return string
-     */
-    private function _generateTargetUrl($fileName)
-    {
-        //global $_TAG; //runkit
-        return $_TAG->url->chrome($this->_targetDir.'/'.$fileName);
     }
     // }}}
 }

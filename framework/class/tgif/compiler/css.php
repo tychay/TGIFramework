@@ -98,6 +98,27 @@ class tgif_compiler_css extends tgif_compiler
         return sprintf('%s/%s.css', substr($signature,0,1), substr($signature,1,10));
     }
     // }}}
+    // {{{ - _generateHtmls($urls,$properties,$queue)
+    /**
+     * Make a css style tag using @import instead of href
+     */
+    protected function _generateHtmls($urls, $properties, $queue)
+    {
+        $attributes = '';
+        if ( !isset($properties['id']) ) {
+            $properties['id'] = 'css'.$queue;
+        }
+        foreach ($properties as $key=>$value) {
+            $attributes .= sprintf(' %s="%s"', $key, htmlentities($value));
+        }
+        $html = '<style type="text/css"'.$attributes.'>';
+        foreach($urls as $url) {
+            $html .= sprintf('@import url(%s);', escapeshellarg($url));
+        }
+        $html .= '</style>';
+        return array($html);
+    }
+    // }}}
     // {{{ - _generateHtml($url,$properties)
     /**
      * Make a css style tag include
