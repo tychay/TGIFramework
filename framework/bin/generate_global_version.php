@@ -1,4 +1,4 @@
-#!/usr/bin/env php
+#!/usr/bin/env php -drunkit.superglobal="_TAG"
 <?php
 // vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
 /**
@@ -12,11 +12,19 @@
  * @subpackage bootstrap
  * @copyright 2009 terry chay <tychay@php.net
  */
-$latest_version = max(explode(':',exec('svnversion -n'))); //sometimes you get back a range...
+if (!isset($symbol) && !defined('SYMBOL_FILE')) {
+    // bootstrap framework based include system
+    $symbol = 'bin';
+    include(dirname(dirname(__FILE__)).'/inc/preinclude.php');
+}
+
+
+//sometimes you get back a range, so just take the largest value
+$latest_version = max(explode(':',exec('svnversion -n')));
+
 $data = sprintf('<?php /** @package tgiframework */ return array(\'global_version\'=>%d); ?>',$latest_version);
 /**
  * Bootstrap tgif_file for writing
  */
-include_once(dirname(dirname(__FILE__)).'/class/tgif/file.php');
 tgif_file::put_contents($_SERVER['argv'][1], $data);
 ?>
