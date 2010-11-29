@@ -30,10 +30,10 @@ class tgif_compiler
     // {{{ - $_options
     /**
      * The configuration for the compiler:
-     * - source_dir (string): where the source files can be found. Was
+     * - resource_dir (string): where the source files can be found. Was
      *   $_resourceDir.
-     * - source_url (string): where the source directory can be found (via url).
-     *   This can be bypassed with url_callback
+     * - resource_url (string): where the source directory can be found (via
+     *   url). This can be bypassed with url_callback
      * - target_dir (string): The directory to write concatenated/compiled files
      *   to. Was $_targetDir.
      * - target_url (string): where the target_dir can be found (via url).
@@ -82,8 +82,8 @@ class tgif_compiler
      * @var array
      */
     protected $_options = array(
-        'source_dir'        => '',
-        'source_url'        => '',
+        'resource_dir'      => '',
+        'resource_url'      => '',
         'target_dir'        => '',
         'target_url'        => '',
         'url_callback'      => '',
@@ -134,6 +134,9 @@ class tgif_compiler
      *   resource, if the resource was dynamically built, it is set to false
      * - file_path (required): path to file in filesystem (written inside {@link
      *   _generateFileData()}
+     * - provides (optional): packages that this one also obsoletes/supersedes
+     * - url (optional): allows overriding of the url generator for this file
+     *   to be this one
      * @var array
      */
     private $_fileDataList = array();
@@ -272,9 +275,7 @@ class tgif_compiler
         // }}}
         // queue has been emptied, files will be written
         unset($this->_queues[$queue]);
-        foreach ($file_list_data as $key=>$data) {
-            $this->_outputList[] = $key;
-        }
+        $this->_updateOutput($file_list_data);
         
         $urls = $this->_buildUrls($file_list_data);
 
@@ -287,6 +288,8 @@ class tgif_compiler
      *
      * The purpose of this is to have a receiver function so that ajax can
      * load extra scripts without having the dependency system kick in.
+     *
+     * This does not update the output list.
      *
      * @param $files string|array a list of files to turn into a single file
      * @return array two values The first is the type that explains the second
@@ -386,6 +389,19 @@ class tgif_compiler
         return $_TAG->config('global_version');
     }
     // }}}
+    // {{{ - signature($fileData)
+    /**
+     * returns signature of $fileData
+     *
+     * @return string
+     */
+    public function signature($fileData)
+    {
+        return ( $class = $fileData['library'] )
+             ? $this->_libraries[$class]->generateSignature( $fileData['name'] )
+             : call_user_func($this->_options['signature_method'], $fileData['file_path']);
+    }
+    // }}}
     // {{{ - _isValid($fileData)
     /**
      * Determine whether or not a filedata is valid.
@@ -393,13 +409,12 @@ class tgif_compiler
      * The old version only got called if this was a file, the new version
      * can understand the library abstraction to know to use the library
      * to validate a signature.
+     *
      * @return boolean
      */
     private function _isValid($fileData)
     {
-        $sig = ( $class = $fileData['library'] )
-             ? $this->_libraries[$class]->generate_signature( $fileData['name'] )
-             : call_user_func($this->_options['signature_method'], $fileData['file_path']);
+        $sig = $this->signature($fileData);
         return ($sig == $fileData['signature']);
     }
     // }}}
@@ -472,7 +487,7 @@ class tgif_compiler
      */
     private function _generateFileData($fileName)
     {
-        // check if the file is in the file system
+        // check if the file is in the file system {{{
         $file_path = $this->_options['resource_dir'].DIRECTORY_SEPARATOR.$fileName;
         if (file_exists($file_path)) {
             return array(
@@ -484,7 +499,8 @@ class tgif_compiler
                 'file_path'     => $file_path,
             );
         }
-        // check if a library recognizes the file
+        // }}}
+        // check if a library recognizes the file {{{
         foreach ($this->_libraries as $class=>$library_obj) {
             $file_data = $library_obj->generateFileData($fileName);
             if ($file_data) {
@@ -496,6 +512,7 @@ class tgif_compiler
                 return $file_data;
             }
         }
+        // }}}
         return false;
     }
     // }}}
@@ -508,6 +525,24 @@ class tgif_compiler
         $this->_fileDataList[$fileData['name']] = $fileData;
         foreach ($fileData['dependencies'] as $filename) {
             $this->_grabFileData($filename);
+        }
+    }
+    // }}}
+    // {{{ - _updateOutput($fileDatas)
+    /**
+     * Mark files as having been outputted to avoid redundant includes.
+     *
+     * @param array $fileDatas 
+     */
+    private function _updateOutput($fileDatas)
+    {
+        foreach ($fileDatas as $key=>$data) {
+            $this->_outputList[] = $key;
+            if (key_exists('provides',$data)) {
+                foreach ($data['provides'] as $file) {
+                    $this->_outputList[] = $file;
+                }
+            }
         }
     }
     // }}}
@@ -776,7 +811,7 @@ class tgif_compiler
         // Option to merge files within the library class :-)
         $returns = array();
         foreach ($this->_libraries as $obj) {
-            $returns = array_merge($returns, $obj->catFiles($fileDatas));
+            $returns = array_merge($returns, $obj->catFiles($fileDatas,$this));
         }
 
         if ( count($fileDatas) <= 1 ) {
@@ -899,13 +934,19 @@ class tgif_compiler
      * generates the same key. The assumption is that the build order may
      * vary slightly differently, but roughly things should be okay.
      *
+     * You can pre-empt this routine simply by embedding the url in the
+     * 'url' key of the file data.
+     *
      * @param array $fileData This is a single file to return the url for.
      * @return string full path url to the resource.
      */
     protected function _generateUrl($fileData)
     {
+        if ( array_key_exists('url', $fileData) ) {
+            return $fileData['url'];
+        }
         if ( $class = $fileData['library'] ) {
-            return $this->_obj[$class]->generateUrl($fileData);
+            return $this->_libraries[$class]->generateUrl($fileData);
         }
         if ( $this->_options['url_callback'] ) {
             return call_user_func($this->_options['url_callback'], $fileData);

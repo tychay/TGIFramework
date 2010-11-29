@@ -54,15 +54,17 @@ return array(
         // http://developer.yahoo.com/yui/compressor/
         'compressor_jar'    => TGIF_RES_DIR.'/yuicompressor-2.4.2.jar',
         'js'                => array(
-            'version'       => '2.4.0',
-            'use_cdn'       => 'yahoo',
-            'use_combine'   => true, //can only work when yahoo is use_cdn
-            'use_rollup'    => true, //prefer rollup javascripts
+            'version'       => '2.8.2r1',
+            //'version'     => '2.5.2',
+            'use_cdn'       => 'yahoo', //If you make your own repository,
+                                        // this is the base url
+            'use_combine'   => true,    //yahoo must be cdn, or make own combo
+            'use_rollup'    => false,   //prefer rollup javascripts
         ),
         'css'               => array(
             'version'       => '2.8.2r1',
             'use_cdn'       => 'yahoo',
-            'use_combine'   => false, //can only work when yahoo is use_cdn
+            'use_combine'   => true, //can only work when yahoo is use_cdn
         ),
     ),
     // }}}

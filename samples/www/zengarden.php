@@ -1,7 +1,9 @@
 <?php
 //$_TAG->css->add('YAHOO/reset');
 $_TAG->css->add('001.css');
-//var_dump($_TAG->css);
+$_TAG->css->add('colors_clean.css','colors_clean');
+$_TAG->js->add('colors_clean.js');
+//var_dump($_TAG->js);
 ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
@@ -38,7 +40,8 @@ $_TAG->css->printAll(array('media'=>'screen','title'=>'currentStyle'));
 -->
 
 <body id="css-zen-garden">
-
+<div id="demo">Demo</div>
+<button id="demo-run">run</button>
 <div id="container">
 	<div id="intro">
 		<div id="pageHeader">
@@ -142,6 +145,7 @@ $_TAG->css->printAll(array('media'=>'screen','title'=>'currentStyle'));
 <div id="extraDiv4"><span></span></div><div id="extraDiv5"><span></span></div><div id="extraDiv6"><span></span></div>
 
 <?php
+	$_TAG->js->printAll();
 	$data = $_TAG->diagnostics->summary('data');
 	var_dump($data);
 	foreach ($data['times'] as $key=>$times) {

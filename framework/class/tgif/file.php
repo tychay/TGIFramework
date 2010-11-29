@@ -88,6 +88,33 @@ class tgif_file
         return $success;
     }
     // }}}
+    // {{{ + get_contents($filename[,$use_include_path])
+    /**
+     * A wrapper for 
+     * {@link http://php.net/file_put_contents/ file_get_context()}.
+     *
+     * I don't implement any of the following: context, offset, maxlen)
+     *
+     * @param string $filename the file to write to
+     * @param string $data the data to put in there.
+     * @param integer|false $chmod octal number for chmod of file of destination
+     * @return success Unlike the native version, tis does not return the number
+     *  of byptes writen
+     * @todo implement context
+     */
+    static function get_contents($filename, $use_include_path=false)
+    {
+        $isRunning = self::_diag_start('get_contents', array(
+                'source_file'       => $filename,
+                'use_include_path'  => $use_include_path,
+            ));
+
+        $result = file_get_contents($filename, $use_include_path);
+
+        self::_diag_stop($isRunning);
+        return $result;
+    }
+    // }}}
     // {{{ + put_contents($filename,$data[,$chmod])
     /**
      * A race safe version of
