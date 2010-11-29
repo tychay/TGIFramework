@@ -32,7 +32,7 @@ return array(
     'yui.css.base_url'          => '{{{url_static}}}/res/yui/',
     /* */
     // }}}
-    // $_TAG->css {{{
+    // $_TAG->js {{{
     //'gld_js.ids.signature_method'  => array('tgif_compiler','sign_md5'), //try using md5 hash
     'gld_js.isSmemable'         => false,   //store compiler config in
     //'gld_js.isMemcacheable'     => true,    // memcache instead of smem
@@ -42,9 +42,9 @@ return array(
     'gld_js.ids.use_smem'       => true,    //store file info in smem
     'gld_js.ids.libraries'   => array(
         'tgif_compiler_library_yuijs'  => 'yui.js',
+        'tgif_compiler_library_jquery' => 'jquery',
     ),
     /* */
     // }}}
-
 );
 ?>

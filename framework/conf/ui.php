@@ -59,7 +59,7 @@ return array(
             'use_cdn'       => 'yahoo', //If you make your own repository,
                                         // this is the base url
             'use_combine'   => true,    //yahoo must be cdn, or make own combo
-            'use_rollup'    => false,   //prefer rollup javascripts
+            'use_rollup'    => false,   //prefer rollup javascripts (not supportd)
         ),
         'css'               => array(
             'version'       => '2.8.2r1',
@@ -72,7 +72,6 @@ return array(
     'jquery' => array(
         'version'           => '1.4.4',
         'ui_version'        => '1.8.6',
-        'cdn'               => 'google',
     ),
     // }}}
     

@@ -2,6 +2,7 @@
 $_TAG->css->add('YAHOO/reset');
 $_TAG->css->add('001.css');
 $_TAG->css->add('colors_clean.css','colors_clean');
+$_TAG->js->add('jquery.js');
 $_TAG->js->add('colors_clean.js');
 //var_dump($_TAG->js);
 ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"

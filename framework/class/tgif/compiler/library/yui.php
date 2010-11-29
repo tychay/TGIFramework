@@ -268,13 +268,14 @@ class tgif_compiler_library_yui implements tgif_compiler_library
      */
     public function catFiles(&$fileDatas,$compilerObj)
     {
+        $library_name = get_class($this);
         //var_dump('catFiles',$fileDatas,$this->_options);die;
         if ( $this->_options['use_cdn'] ) {
             // extract list of files
             $yui_files  = array();
             $paths      = array();
             foreach ($fileDatas as $key=>$fileData) {
-                if ( $fileData['library'] != get_class($this) ) { continue; }
+                if ( $fileData['library'] != $library_name ) { continue; }
                 $yui_files[$key] = $fileData;
                 $paths[] = $fileData['path'];
                 unset($fileDatas[$key]);
@@ -288,7 +289,7 @@ class tgif_compiler_library_yui implements tgif_compiler_library
             $return = array(
                 'name'          => $file_name,
                 'is_resource'   => false,
-                'library'       => get_class($this),
+                'library'       => $library_name,
                 'dependencies'  => array(), //not needed at this point
                 'signature'     => $this->generateSignature($file_name),
                 'file_path'     => '', //not needed in this point
@@ -299,7 +300,7 @@ class tgif_compiler_library_yui implements tgif_compiler_library
         }
         // local file system: replace with local version in place
         foreach ($fileDatas as &$fileData) {
-            if ( $fileData['library'] != get_class($this) ) { continue; }
+            if ( $fileData['library'] != $library_name ) { continue; }
             $url       = $this->generateUrl($fileData);
             $file_path = $this->_options['base_dir'].'/'.$fileData['path'];
             $fileData['library']    = '';
