@@ -1,7 +1,9 @@
 class	class libraries where the directory structure maps into
 	str_replace('_',DIR_SEP,$class_name).'.php';
 conf	base configurations loaded into global configs (can be overridden)
-ext	external libraries (not PEAR related)
 func	utility functions
 inc	free energy (php snippets to just be included for "free") may
-	return information
+	return information. Also includes the script that should be loaded
+	as part of the preinclude
+res	resources (most of these would be built automatically by bootstrap
+	but are versioned here anyway to make life easier)

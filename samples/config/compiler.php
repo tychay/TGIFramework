@@ -11,20 +11,25 @@
  * @todo find a better way to generate the static url?
  */
 return array(
+    //'_readConfig'   => true,
     'dir_static'                => APP_DIR.'/www/m',
     'url_static'                => '/tgif/m', //TODO: EDIT ME
 
     // $_TAG->css {{{
-    //'gld_css.ids.signature_method'  => array('tgif_compiler','md5'), //try using md5 hash
-    //'gld_css.ids.signature_method'  => array('tgif_compiler','global'), //try using a global version
-    'gld_css.isSmemable'        => false,   //store compiler config in
+    //'gld_css.ids.signature_method'  => array('tgif_compiler','sign_md5'), //try using md5 hash
+    //'gld_css.ids.signature_method'  => array('tgif_compiler','sign_global'), //try using a global version
+    //'gld_css.isSmemable'        => false,   //store compiler config in
     //'gld_css.isMemcacheable'    => true,    // memcache instead of smem
 
     'gld_css.ids.use_cat'       => true,    //try concatenation
     'gld_css.ids.use_compiler'  => true,    //try using a compiler
     //'gld_css.ids.use_smem'      => true,    //store file info in smem
     //'gld_css.ids.use_memcache'  => true,    //store in memcache
-    //'gld_css.ids.libraries'   => array( 'tgif_compiler_library_yuicss',),
+    /*
+    'gld_css.ids.libraries'   => array(
+        'tgif_compiler_library_yuicss'  => 'yui.css',
+    ),
+    /* */
     // }}}
 );
 ?>

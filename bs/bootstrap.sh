@@ -390,7 +390,7 @@ $SUDO pear channel-discover pear.firephp.org
 pear_update_or_install FirePHPCore firephp/FirePHPCore pear.firephp.org
 pear_update_or_install PhpDocumentor
 # }}}
-# Install YUI Compressor {{{
+# FRAMEWORK: Install YUI Compressor {{{
 pushd packages
     if [ ! -f ${YUIC_PKG} ]; then
         echo "### Downloading $YUIC_URL..."
@@ -403,14 +403,14 @@ pushd build
         unzip $BASE_DIR/packages/${YUIC_PKG}
     fi
 popd
-pushd framework/bin
+pushd framework/res
     if [ ! -f ${YUIC_BIN}.jar ]; then
         echo "### INSTALLING ${YUIC_BIN}.jar..."
         cp $BASE_DIR/build/$YUIC_BIN/build/${YUIC_BIN}.jar .
     fi
 popd
 # }}}
-# Install samples {{{
+# SAMPLES: Install samples {{{
 echo "### Building global_version config...."
 ./framework/bin/generate_global_version.php samples/config/global_version.php
 pushd samples
@@ -432,7 +432,7 @@ pushd samples
     fi
 popd
 # }}}
-# Install WebGrind {{{
+# SAMPLES: Install WebGrind {{{
 pushd packages
     if [ ! -f ${WEBGRIND_PKG} ]; then
         echo "### Downloading $WEBGRIND_URL..."

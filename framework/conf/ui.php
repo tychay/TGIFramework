@@ -21,8 +21,12 @@ return array(
             'target_dir'        => '{{{dir_static}}}/dyn/css',
             'resource_url'      => '{{{url_static}}}/res/css',
             'target_url'        => '{{{url_static}}}/dyn/css',
-            // add other options
-            //'libraries'         => array('tgif_compiler_library_yuicss'), // add css libraries
+            /* // extend functionality
+            'libraries'         => array(
+                'tgif_compiler_library_yuicss'  => 'yui.css',
+                'tgif_compiler_library_jquery'  => 'jquery',
+            ),
+            /* */
         ),
     ),
     // }}}
@@ -36,25 +40,30 @@ return array(
             'target_dir'        => '{{{dir_static}}}/dyn/js',
             'resource_url'      => '{{{url_static}}}/res/js',
             'target_url'        => '{{{url_static}}}/dyn/js',
-            //'libraries'         => array('tgif_compiler_library_yuijs','tgif_compiler_library_jquery'),
+            /* // extend functionality
+            'libraries'         => array(
+                'tgif_compiler_library_yuijs'   => 'yui.js',
+                'tgif_compiler_library_jquery'  => 'jquery',
+            ),
+            /* */
         ),
     ),
     // }}}
     // {{{ - yui
     'yui' => array(
-        'version'           => '2.4.0',
         // http://developer.yahoo.com/yui/compressor/
-        'compressor_jar'    => TGIF_BIN_DIR.'/yuicompressor-2.4.2.jar',
-        'use_service'       => true,
-        'cdn'               => 'yahoo',
-        'use_combine'       => true, //can only work with yahoo as cdn
-    ),
-    // }}}
-    // {{{ - yuiCss
-    'yuiCss' => array(
-        'version'           => '2.8.2r1',
-        'cdn'               => 'yahoo',
-        'use_combine'       => false,
+        'compressor_jar'    => TGIF_RES_DIR.'/yuicompressor-2.4.2.jar',
+        'js'                => array(
+            'version'       => '2.4.0',
+            'use_cdn'       => 'yahoo',
+            'use_combine'   => true, //can only work when yahoo is use_cdn
+            'use_rollup'    => true, //prefer rollup javascripts
+        ),
+        'css'               => array(
+            'version'       => '2.8.2r1',
+            'use_cdn'       => 'yahoo',
+            'use_combine'   => false, //can only work when yahoo is use_cdn
+        ),
     ),
     // }}}
     // {{{ - jquery

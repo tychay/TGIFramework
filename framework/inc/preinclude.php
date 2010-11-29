@@ -47,16 +47,16 @@ define('TGIF_FUNC_DIRD', TGIF_DIR.DIRECTORY_SEPARATOR.'func'.DIRECTORY_SEPARATOR
  */
 define('TGIF_CLASS_DIR', TGIF_DIR.DIRECTORY_SEPARATOR.'class');
 // }}}
-// TGIF_BIN_DIR {{{
+// TGIF_RES_DIR {{{
 /**
- * The directory where framework binaries are stored.
+ * The directory where framework resources are stored
  */
-define('TGIF_BIN_DIR', TGIF_DIR.DIRECTORY_SEPARATOR.'bin');
+define('TGIF_RES_DIR', TGIF_DIR.DIRECTORY_SEPARATOR.'res');
 // }}}
-// {{{ TGIF_DIR
+// {{{ TGIF_CONF_PATH
 if (!defined('TGIF_CONF_PATH')) {
     /**
-     * where ot get configururation overrides
+     * where to get configururation overrides
      */
     define('TGIF_CONF_PATH','');
 }
