@@ -1,5 +1,5 @@
 <?php
-//$_TAG->css->add('YAHOO/reset');
+$_TAG->css->add('YAHOO/reset');
 $_TAG->css->add('001.css');
 $_TAG->css->add('colors_clean.css','colors_clean');
 $_TAG->js->add('colors_clean.js');

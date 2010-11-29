@@ -2,15 +2,15 @@
 // vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 /**
- * Holder of {@link tag_compiler_library_yuijs}
+ * Holder of {@link tag_compiler_library_yuicss}
  *
  * @package tgiframework
  * @subpackage ui
- * @copyright 2010 terry chay (parts of the code may be c.2008 Tagged Inc.)
+ * @copyright 2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
  */
-// {{{ tgif_compiler_library_yuijs
+// {{{ tgif_compiler_library_yuicss
 /**
  * Compiling Javascript files using YUI Compressor with support for YUI
  * libraries.
@@ -19,7 +19,7 @@
  * @subpackage ui
  * @author terry chay <tychay@php.net>
  */
-class tgif_compiler_library_yuijs extends tgif_compiler_library_yui
+class tgif_compiler_library_yuicss extends tgif_compiler_library_yui
 {
     // CONSTRUCT
     // {{{ __construct($options)
@@ -28,7 +28,7 @@ class tgif_compiler_library_yuijs extends tgif_compiler_library_yui
      */
     function __construct($options)
     {
-        parent::__construct($options,'js');
+        parent::__construct($options,'css');
     }
     // }}}
     // SIGNATURE METHODS:
@@ -50,7 +50,7 @@ class tgif_compiler_library_yuijs extends tgif_compiler_library_yui
         }
         $lib_name = substr($fileName, 6); // $fileName = YAHOO/$lib_name
         //'file_path'     => '', //append later
-        return $this->_extractYui2Module($lib_name, 'js');
+        return $this->_extractYui2Module($lib_name, 'css');
     }
     // }}}
     // {{{ - compileFile($sourceFileData,$targetFileName,$targetFilePath,$compilerObj)
@@ -68,7 +68,7 @@ class tgif_compiler_library_yuijs extends tgif_compiler_library_yui
                 $path = str_replace('-min','-debug',$path);
                 break;
             default:
-                $path = substr($path, 0, -3).'-min'.substr($path, -3);
+                $path = substr($path, 0, -4).'-min'.substr($path, -4);
                 //break;
         }
         return true;

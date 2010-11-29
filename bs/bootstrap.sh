@@ -26,7 +26,7 @@ APACHECTL=`which apachectl`
 # Set this to php-memcached instead of php-memcache
 LIBMEMCACHED=""
 PHP_INI=/etc/php.ini # TODO: check php --ini
-DO_UPGRADE='1' #Set this to upgrade
+#DO_UPGRADE='1' #Set this to upgrade
 
 # MacPorts:
 if [ $DISTRIBUTION = "macports" ]; then
@@ -85,9 +85,11 @@ if [ $DISTRIBUTION = "macports" ]; then
 # --)$ sudo port load memcached
 # install sqlite3
 # }}}
-    $SUDO port -v selfupdate
+    if [ $DO_UPGRADE ]; then
+        $SUDO port -v selfupdate
+        #$SUDO port upgrade outdated
+    fi
     $SUDO port install memcached
-    #$SUDO port upgrade outdated
     #PHP=/opt/local/bin/php
     APACHECTL=/opt/local/apache2/bin/apachectl
     #PHP_INI=/opt/local/etc
@@ -204,15 +206,19 @@ fi
 #PHPDOC='PhpDocumentor'
 # }}}
 # downloads {{{
-# WEBGRIND {{{
+# YUI & YUI compressor {{{
+YUI='yui'
+YUI_VERSION='2.8.2r1'
+YUI_BIN="yui_${YUI_VERSION}"
+YUI_PKG="${YUI_BIN}.zip"
+YUI_URL="http://yuilibrary.com/downloads/yui2/${YUI_PKG}"
+
 YUIC='yuicompressor'
 YUIC_VERSION='2.4.2'
 YUIC_BIN="${YUIC}-${YUIC_VERSION}"
 YUIC_PKG="${YUIC_BIN}.zip"
 YUIC_URL="http://www.julienlecomte.net/yuicompressor/${YUIC_PKG}"
 # }}}
-# }}}
-# web software {{{
 # WEBGRIND {{{
 WEBGRIND='webgrind'
 WEBGRIND_VERSION='1.0'
@@ -390,14 +396,22 @@ $SUDO pear channel-discover pear.firephp.org
 pear_update_or_install FirePHPCore firephp/FirePHPCore pear.firephp.org
 pear_update_or_install PhpDocumentor
 # }}}
-# FRAMEWORK: Install YUI Compressor {{{
+# FRAMEWORK: Install YUI && YUI Compressor {{{
 pushd packages
+    if [ ! -f ${YUI_PKG} ]; then
+        echo "### Downloading $YUI_URL..."
+        curl -O $YUI_URL;
+    fi
     if [ ! -f ${YUIC_PKG} ]; then
         echo "### Downloading $YUIC_URL..."
         curl -O $YUIC_URL;
     fi
 popd
 pushd build
+    if [ ! -d yui ]; then
+        echo "### Unpacking ${YUI_PKG}..."
+        unzip $BASE_DIR/packages/${YUI_PKG}
+    fi
     if [ ! -d ${YUIC_BIN} ]; then
         echo "### Unpacking ${YUIC_PKG}..."
         unzip $BASE_DIR/packages/${YUIC_PKG}
@@ -407,6 +421,15 @@ pushd framework/res
     if [ ! -f ${YUIC_BIN}.jar ]; then
         echo "### INSTALLING ${YUIC_BIN}.jar..."
         cp $BASE_DIR/build/$YUIC_BIN/build/${YUIC_BIN}.jar .
+    fi
+popd
+pushd samples/www/m/res
+    if [ ! -d yui ]; then
+        mkdir yui
+    fi
+    if [ ! -d yui/${YUI_VERSION} ]; then
+        echo "### INSTALLING yui/${YUI_VERSION}..."
+        mv $BASE_DIR/build/yui ./yui/${YUI_VERSION}
     fi
 popd
 # }}}

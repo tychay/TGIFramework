@@ -24,10 +24,12 @@ return array(
     'gld_css.ids.use_cat'       => true,    //try concatenation
     'gld_css.ids.use_smem'      => true,    //store file info in smem
     //'gld_css.ids.use_memcache'  => true,    //store in memcache
-    /*
-    'gld_css.ids.libraries'   => array(
+    'gld_css.ids.libraries'     => array(
         'tgif_compiler_library_yuicss'  => 'yui.css',
     ),
+    'yui.css.use_cdn'           => false,
+    'yui.css.base_dir'          => '{{{dir_static}}}/res/yui',
+    'yui.css.base_url'          => '{{{url_static}}}/res/yui/',
     /* */
     // }}}
     // $_TAG->css {{{
@@ -41,6 +43,7 @@ return array(
     'gld_js.ids.libraries'   => array(
         'tgif_compiler_library_yuijs'  => 'yui.js',
     ),
+    /* */
     // }}}
 
 );
