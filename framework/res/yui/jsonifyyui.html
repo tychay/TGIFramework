@@ -41,10 +41,11 @@
     if (yui_major_version == 2) {
       var loader = new YAHOO.util.YUILoader();
       document.getElementById('result').innerHTML = YAHOO.lang.JSON.stringify(loader.moduleInfo); 
+      //console.log(loader.moduleInfo);
     } else if (yui_major_version == 3) {
       YUI().use("json-stringify", 'loader', function(Y) {
          document.getElementById('result').innerHTML = Y.JSON.stringify(Y.Env._loader.moduleInfo); 
-         console.log(Y.Env);
+         //console.log(Y.Env._loader.moduleInfo);
       });
     }
   };
