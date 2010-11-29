@@ -945,7 +945,7 @@ class tgif_compiler
      * @param string $queue the name of the queue rendering
      * @return array an array of html tags that can be imploded
      */
-    protected function _generateHtmls($url, $properties, $queue)
+    protected function _generateHtmls($urls, $properties, $queue)
     {
         $count = 0;
         $returns = array();
