@@ -21,15 +21,32 @@
     document.getElementsByTagName('head')[0].appendChild(fileref);
   }
 
-  if (version == '2.5.2') {
+  var yui_major_version = 2;
+  if (!version) {
+    document.getElementById('result').innerHTML = 'Type in a version as the query string to generate a yui-(version).json file';
+    yui_major_version = 0;
+  } else if (version == '2.5.2') {
+    //yui loader is in beta
     load_js('http://yui.yahooapis.com/'+version+'/build/yuiloader/yuiloader-beta.js');
+  } else if (version.substr(0,1) == '3') {
+    load_js('http://yui.yahooapis.com/'+version+'/build/yui/yui.js');
+    document.getElementById('result').innerHTML = 'WHOA NELLIE'
+    yui_major_version = 3;
   } else {
     load_js('http://yui.yahooapis.com/'+version+'/build/yuiloader/yuiloader.js');
   }
   load_js('http://yui.yahooapis.com/'+version+'/build/json/json.js');
+
   window.onload = function() {
-    var loader = new YAHOO.util.YUILoader();
-    document.getElementById('result').innerHTML = YAHOO.lang.JSON.stringify(loader.moduleInfo); 
+    if (yui_major_version == 2) {
+      var loader = new YAHOO.util.YUILoader();
+      document.getElementById('result').innerHTML = YAHOO.lang.JSON.stringify(loader.moduleInfo); 
+    } else if (yui_major_version == 3) {
+      YUI().use("json-stringify", 'loader', function(Y) {
+         document.getElementById('result').innerHTML = Y.JSON.stringify(Y.Env._loader.moduleInfo); 
+         console.log(Y.Env);
+      });
+    }
   };
 </script>
 </body>
