@@ -54,7 +54,7 @@ return array(
     'yui' => array(
         // http://developer.yahoo.com/yui/compressor/
         'compressor_jar'    => TGIF_RES_DIR.'/yuicompressor-2.4.2.jar',
-        /* //defaults
+        //defaults
         'js'                => array(
             'version'       => '2.8.2r1',
             //'version'     => '2.5.2',
