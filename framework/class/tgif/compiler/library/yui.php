@@ -211,7 +211,7 @@ class tgif_compiler_library_yui implements tgif_compiler_library
     }
     // }}}
     // SIGNATURE METHODS:
-    // {{{ - generateSignature($fileName)
+    // {{{ - generateSignature($fileName,$compileObj)
     /**
      * What YUI version number
      *
@@ -222,7 +222,7 @@ class tgif_compiler_library_yui implements tgif_compiler_library
      * @param string $fileName the name of the library file
      * @return string the signature
      */
-    public function generateSignature($fileName)
+    public function generateSignature($fileName, $compileObj)
     {
         //var_dump('generateSignature',$fileName,$this);die;
         return $this->_options['version'];

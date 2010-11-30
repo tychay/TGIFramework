@@ -23,8 +23,8 @@ return array(
             'target_url'        => '{{{url_static}}}/dyn/css',
             /* // extend functionality
             'libraries'         => array(
+                'tgif_compiler_library_ext'     => 'css_ext',
                 'tgif_compiler_library_yuicss'  => 'yui.css',
-                'tgif_compiler_library_jquery'  => 'jquery',
             ),
             /* */
         ),
@@ -42,6 +42,7 @@ return array(
             'target_url'        => '{{{url_static}}}/dyn/js',
             /* // extend functionality
             'libraries'         => array(
+                'tgif_compiler_library_ext'     => 'js_ext',
                 'tgif_compiler_library_yuijs'   => 'yui.js',
                 'tgif_compiler_library_jquery'  => 'jquery',
             ),
@@ -53,6 +54,7 @@ return array(
     'yui' => array(
         // http://developer.yahoo.com/yui/compressor/
         'compressor_jar'    => TGIF_RES_DIR.'/yuicompressor-2.4.2.jar',
+        /* //defaults
         'js'                => array(
             'version'       => '2.8.2r1',
             //'version'     => '2.5.2',
@@ -66,12 +68,22 @@ return array(
             'use_cdn'       => 'yahoo',
             'use_combine'   => true, //can only work when yahoo is use_cdn
         ),
+        /* */
     ),
     // }}}
     // {{{ - jquery
-    'jquery' => array(
+    'jquery' => array( /* // defaults
         'version'           => '1.4.4',
         'ui_version'        => '1.8.6',
+    /* */
+    ),
+    // }}}
+    // {{{ - css_ext
+    'css_ext' => array(
+    ),
+    // }}}
+    // {{{ - js_ext
+    'js_ext' => array(
     ),
     // }}}
     

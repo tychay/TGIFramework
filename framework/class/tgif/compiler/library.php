@@ -22,14 +22,16 @@
 interface tgif_compiler_library
 {
     // SIGNATURE METHODS:
-    // {{{ - generateSignature($fileName)
+    // {{{ - generateSignature($fileName,$compileObj)
     /**
      * Figure a way of making a signature unique
      *
      * @param string $fileName the name of the library file
+     * @param tgif_compiler $compilerObj for introspection as needed (for
+     * instance, you want to recursively call generate signature.
      * @return string the signature
      */
-    public function generateSignature($fileName);
+    public function generateSignature($fileName, $compileObj);
     // }}}
     // {{{ - generateFileData($fileName)
     /**

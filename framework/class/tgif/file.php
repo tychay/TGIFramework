@@ -5,7 +5,7 @@
  *
  * @package tgiframework
  * @subpackage utilities
- * @copyright 2009 terry chay
+ * @copyright 2009-2010 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  */
 // {{{ tgif_file
@@ -146,6 +146,21 @@ class tgif_file
         return $success;
     }
     // }}}
+    // CHMOD FUNCTIONS
+    // {{{ + dir_chmod($chmod)
+    /**
+     * Turn on complimentary execute bits for directories.
+     *
+     * @param integer $chmod
+     */
+    private static function dir_chmod($chmod)
+    {
+        if ($chmod & 03)   { $chmod = $chmod | 01; }
+        if ($chmod & 030)  { $chmod = $chmod | 010; }
+        if ($chmod & 0300) { $chmod = $chmod | 0100; }
+        return $chmod;
+    }
+    // }}}
     // DIAGNOSTICS METHODS
     // {{{ + _diag_start($function[,$data])
     /**
@@ -180,6 +195,7 @@ class tgif_file
         $_TAG->diagnostics->stopTimer('file', $data=array());
     }
     // }}}
+
 }
 // }}}
 ?>

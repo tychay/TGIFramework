@@ -398,7 +398,7 @@ class tgif_compiler
     public function signature($fileData)
     {
         return ( $class = $fileData['library'] )
-             ? $this->_libraries[$class]->generateSignature( $fileData['name'] )
+             ? $this->_libraries[$class]->generateSignature( $fileData['name'], $this )
              : call_user_func($this->_options['signature_method'], $fileData['file_path']);
     }
     // }}}

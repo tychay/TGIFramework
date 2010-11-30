@@ -2,7 +2,7 @@
 // vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 /**
- * Holder of {@link tag_compiler_library_yuijs}
+ * Holder of {@link tag_compiler_library_jquery}
  *
  * @package tgiframework
  * @subpackage ui
@@ -51,14 +51,14 @@ class tgif_compiler_library_jquery implements tgif_compiler_library
     }
     // }}}
     // SIGNATURE METHODS:
-    // {{{ - generateSignature($fileName)
+    // {{{ - generateSignature($fileName,$compileObj)
     /**
      * Figure a way of making a signature unique
      *
      * @param string $fileName the name of the library file
      * @return string the signature
      */
-    public function generateSignature($fileName)
+    public function generateSignature($fileName, $compileObj)
     {
         switch ($fileName) {
             case 'jquery'    : return $this->_options['version'];
