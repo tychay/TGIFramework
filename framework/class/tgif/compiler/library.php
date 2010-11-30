@@ -33,14 +33,16 @@ interface tgif_compiler_library
      */
     public function generateSignature($fileName, $compileObj);
     // }}}
-    // {{{ - generateFileData($fileName)
+    // {{{ - generateFileData($fileName,$compileObj)
     /**
      * Turn a file name into file data
      *
      * @param string $fileName the name of the library file
+     * @param tgif_compiler $compilerObj for introspection as needed (for
+     * instance, you want to recursively call generate signature.
      * @return array The library file's filedata, empty if no match
      */
-    public function generateFileData($fileName);
+    public function generateFileData($fileName,$compileObj);
     // }}}
     // {{{ - compileFile($sourceFileData,$targetFileName,$targetFilePath,$compilerObj)
     /**

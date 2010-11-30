@@ -228,11 +228,11 @@ class tgif_compiler_library_yui implements tgif_compiler_library
         return $this->_options['version'];
     }
     // }}}
-    // {{{ - generateFileData($fileName)
+    // {{{ - generateFileData($fileName,$compileObj)
     /**
      * Override this.
      */
-    public function generateFileData($fileName) { }
+    public function generateFileData($fileName, $compileObj) { }
     // }}}
     // {{{ - compileFile($sourceFileData,$targetFileName,$targetFilePath,$compilerObj)
     /**
@@ -283,15 +283,22 @@ class tgif_compiler_library_yui implements tgif_compiler_library
             if ( !$this->_options['use_combine'] ) {
                 return $yui_files;
             }
-            $path = 'combo?'.implode('&', $paths);
-            sort($paths);
-            $file_name = implode('_',$paths);
+            if (count($paths) == 0) {
+                return array();
+            } elseif (count($paths) == 1) {
+                $path = $path[0];
+                $file_name = $fileDatas[0]['name'];
+            } else {
+                $path = 'combo?'.implode('&', $paths);
+                sort($paths);
+                $file_name = implode('_',$paths);
+            }
             $return = array(
                 'name'          => $file_name,
                 'is_resource'   => false,
                 'library'       => $library_name,
                 'dependencies'  => array(), //not needed at this point
-                'signature'     => $this->generateSignature($file_name),
+                'signature'     => $this->generateSignature($file_name,$compilerObj),
                 'file_path'     => '', //not needed in this point
                 'path'          => $path,
                 'provides'      => array(), //not needed at this point

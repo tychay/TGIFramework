@@ -66,14 +66,14 @@ class tgif_compiler_library_jquery implements tgif_compiler_library
         }
     }
     // }}}
-    // {{{ - generateFileData($fileName)
+    // {{{ - generateFileData($fileName,$compileObj)
     /**
      * Intercept any calls to jquery or jqueryui and replace with this.
      *
      * @param string $fileName the name of the library file
      * @return array The library file's filedata, empty if no match.
      */
-    public function generateFileData($fileName)
+    public function generateFileData($fileName,$compileObj)
     {
         switch ($fileName) {
             case 'jquery':
@@ -81,6 +81,7 @@ class tgif_compiler_library_jquery implements tgif_compiler_library
             case 'ext/jquery.js':
                 return array(
                     'name'          => 'jquery',
+                    'signature'     => $this->_options['version'],
                     'is_resource'   => true,
                     'library'       => get_class($this),
                     'dependencies'  => array(),
@@ -93,6 +94,7 @@ class tgif_compiler_library_jquery implements tgif_compiler_library
             case 'ext/jqueryui.js':
                 return array(
                     'name'          => 'jqueryui',
+                    'signature'     => $this->_options['ui_version'],
                     'is_resource'   => true,
                     'library'       => get_class($this),
                     'dependencies'  => array('jquery'),

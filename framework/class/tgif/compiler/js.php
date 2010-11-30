@@ -214,21 +214,21 @@ class tgif_compiler_js extends tgif_compiler
      * The base dir for finding localizations in PHP
      * @var string
      */
-    private $_l10nDir = '';
+    //private $_l10nDir = '';
     // }}}
     // {{{ - $_l10nTargetDir
     /**
      * The dir to write localized javascript strings
      * @var string
      */
-    private $_l10nTargetDir = '';
+    //private $_l10nTargetDir = '';
     // }}}
     // {{{ - $_l10nTargetUrl
     /**
      * The dir of target url accessible from the web
      * @var string
      */
-    private $_l10nTargetUrl = '';
+    //private $_l10nTargetUrl = '';
     // }}}
     // {{{ - $_l10nGenerator
     /**
@@ -237,7 +237,7 @@ class tgif_compiler_js extends tgif_compiler
      * file name.
      * @var string|array
      */
-    private $_l10nGenerator = array('tag_compiler_js','export_strings');
+    //private $_l10nGenerator = array('tag_compiler_js','export_strings');
     // }}}
     // {{{ - _l10nFilename($fileData)
     /**

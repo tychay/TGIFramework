@@ -153,7 +153,7 @@ class tgif_file
      *
      * @param integer $chmod
      */
-    private static function dir_chmod($chmod)
+    static function dir_chmod($chmod)
     {
         if ($chmod & 03)   { $chmod = $chmod | 01; }
         if ($chmod & 030)  { $chmod = $chmod | 010; }

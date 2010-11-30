@@ -69,6 +69,8 @@ class tgif_compiler_library_ext implements tgif_compiler_library
      *
      * - name (string): the local path to the file (computed from base_dir)
      * - url (string): Where to grab the file
+     * - requires (array optional):
+     * - provides (array optional):
      * @var array
      */
     protected $_moduleInfo = array();
@@ -82,7 +84,7 @@ class tgif_compiler_library_ext implements tgif_compiler_library
     {
         if ( isset($options['modules']) ) {
             $modules = $options['modules'];
-            unset $options['modules'];
+            unset($options['modules']);
         }
         $this->_options = array_merge($this->_options, $options);
         $this->_moduleInfo = array_merge($this->_moduleInfo, $modules);
@@ -108,38 +110,43 @@ class tgif_compiler_library_ext implements tgif_compiler_library
         return $compileObj->signature($sign_this);
     }
     // }}}
-    // {{{ - generateFileData($fileName)
+    // {{{ - generateFileData($fileName,$compileObj)
     /**
      * Intercept anything matching the keys in the loaded $_moduleInfo
      *
      * @param string $fileName the name of the library file
      * @return array The library file's filedata, empty if no match.
      */
-    public function generateFileData($fileName)
+    public function generateFileData($fileName,$compileObj)
     {
         // only libraries we've found
-        if ( !array_key_exists($fileName,$this->_moduleInfo) ) { return array(); }
+        if ( !array_key_exists($fileName,$this->_moduleInfo) ) { 
+            return array();
+        }
+        //if ( !array_key_exists($fileName,$this->_moduleInfo) ) { return array(); }
 
         $return = array_merge( $this->_options['default_filedata'], $this->_moduleInfo[$fileName] );
-        if ( !$return['name'] ) { $return['name'] = $fileName; 
-        $return['file_path'] = $this->options['base_path'] . $return['name'];
+        if ( !$return['name'] ) { $return['name'] = $fileName;  }
+        $return['file_path'] = $this->_options['base_path'] . $return['name'];
 
-        if (!$result = tgif_http_client::fetch_into($return['url'], $return['file_path'], $this->_options['chmod']) {
+        if ( !$result = tgif_http_client::fetch_into($return['url'], $return['file_path'], $this->_options['chmod']) ) {
             // unpredicatable things happen at this point!
             return $return;
         }
 
         // Update the signature
-        $return['signature'] = $this->generateSignature($return);
+        $return['signature'] = $this->generateSignature($return, $compileObj);
 
         // Update the url link
-        if ($base_url = $this->_options['base_url']) {
-            $return['url'] = $base_url . $return['name'];
+        if ( $callback = $this->_options['url_callback'] ) {
+            $return['url'] = call_user_func($callback, $return);
+        } elseif ( $base_url = $this->_options['base_url'] ) {
+            $return['url'] = $base_url . '/'. $return['name'];
         }
         // Remove the library parameter (to make the intenal system handle the
         // file going forward
         $return['library'] = '';
-        return array();
+        return $return;
     }
     // }}}
     // {{{ - compileFile($sourceFileData,$targetFileName,$targetFilePath,$compilerObj)

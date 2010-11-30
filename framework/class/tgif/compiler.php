@@ -23,6 +23,7 @@
  * @author terry chay <tychay@php.net>
  * @author Nate Kresge <nkresge@tagged.com> added caching for file not found
  * @author Mark Jen <markjen@tagged.com> replaced hashing algorithm
+ * @todo handle edge case where two names (a name and in the provides) ends up allowing it possible to add a script (external) twice in the same queue
  */
 class tgif_compiler
 {
@@ -276,7 +277,6 @@ class tgif_compiler
         // queue has been emptied, files will be written
         unset($this->_queues[$queue]);
         $this->_updateOutput($file_list_data);
-        
         $urls = $this->_buildUrls($file_list_data);
 
         return $this->_generateHtmls($urls,$properties,$queue);
@@ -440,7 +440,8 @@ class tgif_compiler
     // PRIVATE METHODS: FILEDATA
     // {{{ - _grabFileData($fileName)
     /**
-     * Make sure we load the filedata for a given file
+     * Make sure we load the filedata for a given file and all the data that
+     * is dependent on it (recursive).
      *
      * @return true if the file exists and filedata exist (and is loaded)
      */
@@ -466,8 +467,12 @@ class tgif_compiler
         $file_data = $this->_generateFileData($fileName);
         if (!$file_data) { return false; }
         tgif_global_loader::set_to_cache($cache_key, $file_data, $this->_options['use_smem'], $this->_options['use_memcache']);
-        $this->_registerFileData($file_data);
-        return true;
+        $this->_fileDataList[$fileName] = $file_data;
+        $success = true;
+        foreach ($file_data['dependencies'] as $dep_filename) {
+            $success = $this->_grabFileData($dep_filename) && $success;
+        }
+        return $success;
     }
     // }}}
     // {{{ - _generateFileData($fileName)
@@ -502,30 +507,23 @@ class tgif_compiler
         // }}}
         // check if a library recognizes the file {{{
         foreach ($this->_libraries as $class=>$library_obj) {
-            $file_data = $library_obj->generateFileData($fileName);
+            $file_data = $library_obj->generateFileData($fileName,$this);
             if ($file_data) {
-                $file_data['name']      = $fileName;
-                $file_data['library']   = $class;
+                if ( !isset($file_data['name']) ) {
+                    $file_data['name']      = $fileName;
+                }
+                if ( !isset($file_data['library']) ) {
+                    $file_data['library']   = $class;
+                }
                 if (!isset($file_data['signature'])) {
-                    $file_data['signature'] = $library_obj->generateSignature($fileName);
+                    $file_data['signature'] = $library_obj->generateSignature($fileName,$this);
                 }
                 return $file_data;
             }
         }
         // }}}
+        trigger_error(sprintf('%s:_generateFileData(): File \'%s\' not found', get_class($this), $fileName));
         return false;
-    }
-    // }}}
-    // {{{ - _registerFileData($fileData)
-    /**
-     * Make sure we load all filedata that is dependent on this one (recursion).
-     */
-    private function _registerFileData($fileData)
-    {
-        $this->_fileDataList[$fileData['name']] = $fileData;
-        foreach ($fileData['dependencies'] as $filename) {
-            $this->_grabFileData($filename);
-        }
     }
     // }}}
     // {{{ - _updateOutput($fileDatas)
@@ -559,7 +557,10 @@ class tgif_compiler
     {
         foreach ($queue as $filename) {
             // don't compile files that don't exist
-            if (!array_key_exists($filename, $this->_fileDataList)) { continue; }
+            if (!array_key_exists($filename, $this->_fileDataList)) {
+                trigger_error(sprintf('%s::_buildFileList(): %s not found',get_class($this), $filename));
+                continue;
+            }
 
             // handle case where file is already outputted
             if (in_array($filename, $this->_outputList)) { continue; }
@@ -600,7 +601,7 @@ class tgif_compiler
         if ( $this->_options['use_cat'] && (count($fileDatas) > 1) ) {
             $fileDatas = $this->_catFiles($fileDatas);
         }
-        //var_dump(array('_buildUrls::post_cat',$fileDatas));
+       //var_dump(array('_buildUrls::post_cat',$fileDatas));
 
         $returns = array();
         foreach ($fileDatas as $filename=>$file_data) {

@@ -37,12 +37,14 @@ class tgif_http_client
                 'chmod'     => $chmod,
             ));
 
-        $dir_chmod = ( $chmod!==false ) ? dir_chmod($chmod) : 0777;
-        $basepath = dirname($destFile);
-        if ( !mkdir($basepath, $dir_chmod, true) ) {
-            $success = false;
-            self::_diag_stop($isRunning, array('success' => $success));
-            return $success;
+        $base_path = dirname($destFile);
+        if ( !file_exists($base_path) ) {
+            $dir_chmod = ( $chmod!==false ) ? tgif_file::dir_chmod($chmod) : 0777;
+            if ( !mkdir($base_path, $dir_chmod, true) ) {
+                $success = false;
+                self::_diag_stop($isRunning, array('success' => $success));
+                return $success;
+            }
         }
         
         $tmpfile = tempnam($base_path, 'thc_');
@@ -58,7 +60,7 @@ class tgif_http_client
             return $success;
         }
 
-        $success = tgif_file::move($destFile, $tmpfile);
+        $success = tgif_file::move($tmpfile, $destFile, $chmod);
         self::_diag_stop($isRunning, array('success' => $success));
         return $success;
     }

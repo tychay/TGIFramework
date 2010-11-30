@@ -32,7 +32,7 @@ class tgif_compiler_library_yuicss extends tgif_compiler_library_yui
     }
     // }}}
     // SIGNATURE METHODS:
-    // {{{ - generateFileData($fileName)
+    // {{{ - generateFileData($fileName,$compileObj)
     /**
      * Turn a file name into file data
      *
@@ -42,7 +42,7 @@ class tgif_compiler_library_yuicss extends tgif_compiler_library_yui
      * @param string $fileName the name of the library file
      * @return array The library file's filedata, empty if no match.
      */
-    public function generateFileData($fileName)
+    public function generateFileData($fileName,$compileObj)
     {
         //var_dump('generateFileData',$fileName,$this);die;
         if ( strcmp(substr($fileName,0,6),'YAHOO/') === false ) {
