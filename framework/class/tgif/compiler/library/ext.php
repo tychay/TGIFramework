@@ -129,9 +129,11 @@ class tgif_compiler_library_ext implements tgif_compiler_library
         if ( !$return['name'] ) { $return['name'] = $fileName;  }
         $return['file_path'] = $this->_options['base_path'] . $return['name'];
 
-        if ( !$result = tgif_http_client::fetch_into($return['url'], $return['file_path'], $this->_options['chmod']) ) {
-            // unpredicatable things happen at this point!
-            return $return;
+        if ( !file_exists($return['file_path']) ) {
+            if ( !$result = tgif_http_client::fetch_into($return['url'], $return['file_path'], $this->_options['chmod']) ) {
+                // unpredicatable things happen at this point!
+                return $return;
+            }
         }
 
         // Update the signature
