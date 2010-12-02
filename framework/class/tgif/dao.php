@@ -134,19 +134,52 @@ class tgif_dao
                 $select_keys = array($key_name => $primary_keys);
                 $wheres = array($key_name.'=:'.$key_name);
             } else {
-                $wheres = array();
                 $select_keys = array();
                 foreach ($primary_keys as $key=>$value) {
                     // unnammed array passed in from global system
                     if (is_int($key)) {
                         $key = $this->_primaryKeys[$key];
                     }
-                    $wheres[] = $key.'=:'.$key;
                     $select_keys[$key] = $value;
                 }
             }
-            $this->_data = $_TAG->dbh->getRow( sprintf(self::_SQL_READ, $this->_table_name, implode(' AND ',$wheres)), $select_keys );
+            if ( !$this->_read($select_keys) ) {
+                // no row? create object
+                foreach ($select_keys as $key=>$value) {
+                    $this->_data[$key] = $value;
+                }
+                // update data (unknown missing fields)
+                $this->insert(true);
+            }
         }
+    }
+    // }}}
+    // {{{ - _read([$whereKeys])
+    /**
+     * Read from database where key
+     *
+     * @param array $whereKeys a hash of keys to do the where lookup on (AND)
+     * If the array is empty, it will try to generate the wheres from internal
+     * list of primary keys.
+     * @return array|false $this->_data
+     */
+    function _read($whereKeys=array())
+    {
+        //global $_TAG;
+        $wheres = array();
+        if ( empty($whereKeys) ) {
+            foreach ($this->_primaryKeys as $key) {
+                $whereKeys[$key] = $this->_data[$key];
+                $wheres[] = $key.'=:'.$key;
+            }
+        } else {
+            foreach ($whereKeys as $key=>$value) {
+                // unnammed array passed in from global system
+                $wheres[] = $key.'=:'.$key;
+            }
+        }
+        $this->_data = $_TAG->dbh->getRow( sprintf(self::_SQL_READ, $this->_table_name, implode(' AND ',$wheres)), $whereKeys );
+        return $this->_data;
     }
     // }}}
     // {{{ __destruct()
@@ -177,7 +210,7 @@ class tgif_dao
     }
     // }}}
     // CREATE
-    // {{{ - insert()
+    // {{{ - insert([$forceUpdate])
     /**
      * Create a new row (but not a creation operator).
      *
@@ -193,7 +226,7 @@ class tgif_dao
      * @return boolean success or failure
      * @todo failure should trigger exception
      */
-    function insert()
+    function insert($forceUpdate=false)
     {
         //global $_TAG;
         $dbh = $_TAG->dbh;
@@ -206,10 +239,14 @@ class tgif_dao
         if ($this->_autoIncrement) {
             $this->_data[$this->_autoIncrement] = $dbh->insertId;
         }
+        if ( $forceUpdate ) {
+            $this->_read();
+        }
         $this->_saveToCache();
+        return true;
     }
     // }}}
-    // {{{ - insertOrUpdate($whereKeys)
+    // {{{ - insertOrUpdate($whereKeys[,$forceUpdate])
     /**
      * Do an insertOrUpdate()
      *
@@ -217,7 +254,7 @@ class tgif_dao
      * @return boolean success or failure
      * @todo failure should trigger exception
      */
-    function insertOrUpdate($whereKeys)
+    function insertOrUpdate($whereKeys, $forceUpdate=false)
     {
         //global $_TAG;
         $dbh    = $_TAG->dbh;
@@ -232,8 +269,12 @@ class tgif_dao
             //trigger exception
             return false;
         }
+        // there ar missing files :-(
         if ($this->_autoIncrement) {
             $this->_data[$this->_autoIncrement] = $dbh->insertId;
+        }
+        if ( $forceUpdate ) {
+            $this->_read($wheres);
         }
         $this->_saveToCache();
         return true;
@@ -312,6 +353,7 @@ class tgif_dao
      */
     public function save()
     {
+        //global $_TAG;
         // don't db call if nothing changed
         if (!$this->_isChanged) { return; }
         $this->_isChanged = false;
@@ -322,7 +364,7 @@ class tgif_dao
             unset($data[$key]);
         }
         // save to database
-        $success = $dbh->update( $this->_table_name, $data, $where );
+        $success = $_TAG->dbh->update( $this->_table_name, $data, $where );
         if ( $success) {
             $this->_saveToCache();
         }
