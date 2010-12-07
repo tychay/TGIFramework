@@ -97,6 +97,7 @@ class tgif_http
     // {{{ + url_fullize($url)
     /**
      * Returns the URL of itself
+     * @todo handle relative path?
      */
     public static function url_fullize($url)
     {
