@@ -217,7 +217,7 @@ class tgif_dao
      * Example:<code>
      * $obj = new tgif_dao_tablename($data,true); // create new object but not database lookup
      * $obj->create(); //now object is in the database and autoincrement key bound
-     * $_TAG->dao_tablename[$obj->autoIncremeent()] = $objl //bind to global
+     * $_TAG->dao_tablename[$obj->autoIncremeent()] = $obj; //bind to global
      * </code>
      *
      * Note that this does not bind to any global becuase it is in the base class of something else (which knows what global to bind to).
