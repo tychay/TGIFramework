@@ -89,7 +89,7 @@ class tgif_encode {
     }
     // }}}
     // Integer manipulations
-    // + int_to_base64 {{{
+    // {{{ + int_to_base64($number)
     /**
      * Converts a base 10 number to a base 64 encoded string.
      *
@@ -113,7 +113,7 @@ class tgif_encode {
         return implode(array_reverse($encoded_arr));
     }
     // }}}
-    // {{{ + base64_to_int($string,$base=64) {
+    // {{{ + base64_to_int($string)
     /**
      * Takes a base 64 encoded string and turns it back into a base 10 number.
      *
@@ -129,7 +129,7 @@ class tgif_encode {
      * @param string $string
      * @return int
      */
-    public static function base64_to_int($string, $base=64)
+    public static function base64_to_int($string)
     {
         $digits = str_split($string);
         $decoded = 0;

@@ -20,6 +20,34 @@
 // }}}
 class tgif_http_client
 {
+    // {{{ + fetch($url,$post)
+    /**
+     * cURL fetch a url return body as string
+     *
+     * @param string $url where to grab data
+     * @param array $post post variables no support yet
+     * @param integer|false $chmod octal number for chmod of file with set.
+     * @return boolean success or failure
+     */
+    static function fetch($url, $post=array())
+    {
+        $isRunning = self::_diag_start('fetch_into', array(
+                'url'       => $url,
+                'post'      => $post,
+            ));
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        if ($post) {
+            curl_setopt($ch, CURLOPT_POST, 1); 
+            curl_setopt($ch, CURLOPT_POSTFIELDS, tgif_http::url_encode($post));
+        }
+        $return = curl_exec($ch);
+        curl_close($ch); //must close curl handle first
+
+        return $return;
+    }
+    // }}}
     // {{{ + fetch_into($url,$destFile,$chmod=false)
     /**
      * cURL fetch a url into a file (in an atomic manner).

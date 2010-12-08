@@ -216,7 +216,7 @@ class tgif_dao
      *
      * Example:<code>
      * $obj = new tgif_dao_tablename($data,true); // create new object but not database lookup
-     * $obj->create(); //now object is in the database and autoincrement key bound
+     * $obj->insert(); //now object is in the database and autoincrement key bound
      * $_TAG->dao_tablename[$obj->autoIncremeent()] = $obj; //bind to global
      * </code>
      *
