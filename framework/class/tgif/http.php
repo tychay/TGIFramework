@@ -45,8 +45,8 @@ class tgif_http
             exit;
         }
         // We support post type redirect also
-        if (!is_string($post)) {
-            $post = self::url_encode($post);
+        if (is_string($post)) {
+            $post = self::url_decode($post);
         }
         echo '<html><head><title>Redirecting</title></head><body onload="document.forms.redirect_form.submit()">';
         printf('<p>Redirecting to %1$s&hellip;</p><form name="redirect_form" id="redirect_form" method="POST" action="%1$s">', $url);
