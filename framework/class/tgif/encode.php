@@ -134,7 +134,7 @@ class tgif_encode {
         $digits = str_split($string);
         $decoded = 0;
         for($i=0,$lim=count($digits); $i<$lim; $i++) {
-            $decoded *= $base;
+            $decoded *= 64;
             $decoded += self::$_base_decode_map[$digits[$i]];
         }
         return $decoded;
