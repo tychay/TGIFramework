@@ -206,7 +206,6 @@ class tgif_db_pdo extends pdo
         $_TAG->diagnostics->startTimer('db', sprintf('%s::getResults()',get_class($this)), array( 'bindings'=>$bindings ));
         $sth = $this->_prepareQuery($query,$bindings);
         $sth->execute();
-        $sth->debugDumpParams();
 
         $_TAG->diagnostics->stopTimer('db', array( 'query' => $query ) );
         return $sth->fetchAll($this->_guessStyle($output_type));
