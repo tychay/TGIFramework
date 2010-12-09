@@ -51,7 +51,7 @@ class tgif_http
         echo '<html><head><title>Redirecting</title></head><body onload="document.forms.redirect_form.submit()">';
         printf('<p>Redirecting to %1$s&hellip;</p><form name="redirect_form" id="redirect_form" method="POST" action="%1$s">', $url);
         foreach ($post as $key=>$value) {
-            printf('<input type-"hidden" name="%s" value="%s" />', htmlspecialchars($key), htmlspecialchars($value));
+            printf('<input type="hidden" name="%s" value="%s" />', htmlspecialchars($key), htmlspecialchars($value));
         }
         echo '</form></body></html>';
         exit();
