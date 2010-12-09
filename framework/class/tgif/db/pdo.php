@@ -205,8 +205,8 @@ class tgif_db_pdo extends pdo
     {
         $_TAG->diagnostics->startTimer('db', sprintf('%s::getResults()',get_class($this)), array( 'bindings'=>$bindings ));
         $sth = $this->_prepareQuery($query,$bindings);
-
         $sth->execute();
+        $sth->debugDumpParams();
 
         $_TAG->diagnostics->stopTimer('db', array( 'query' => $query ) );
         return $sth->fetchAll($this->_guessStyle($output_type));
@@ -303,9 +303,9 @@ class tgif_db_pdo extends pdo
             // make sure there is a : at the beginning of the bindparam
             $key = ( substr($key,0,1) == ':' ) ? $key : ':'.$key;
             if (is_int($value)) {
-		        $return_obj->bindParam($key, $value, PDO::PARAM_INT);
+		        $return_obj->bindValue($key, $value, PDO::PARAM_INT);
             } else {
-		        $return_obj->bindParam($key, $value, PDO::PARAM_INT);
+		        $return_obj->bindValue($key, $value, PDO::PARAM_INT);
             }
         }
         return $return_obj;
