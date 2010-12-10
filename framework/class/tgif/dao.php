@@ -176,7 +176,6 @@ class tgif_dao
                 // Single value passed in from global system
                 $key_name = $this->_primaryKeys[0];
                 $select_keys = array($key_name => $primary_keys);
-                $wheres = array($key_name.'=:'.$key_name);
             } else {
                 $select_keys = array();
                 foreach ($primary_keys as $key=>$value) {
@@ -200,6 +199,8 @@ class tgif_dao
                 }
                 $this->_exists = false;
                 // }}}
+            } else {
+                $this->_exists = true;
             }
         }
     }
@@ -286,6 +287,7 @@ class tgif_dao
             trigger_error('Insert failed!');
             return false;
         }
+        $this->_exists = true;
         if ($this->_autoIncrement) {
             $this->_data[$this->_autoIncrement] = $dbh->insertId;
         }
@@ -319,6 +321,7 @@ class tgif_dao
             //trigger exception
             return false;
         }
+        $this->_exists = true;
         // there ar missing files :-(
         if ($this->_autoIncrement) {
             $this->_data[$this->_autoIncrement] = $dbh->insertId;
