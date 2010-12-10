@@ -9,6 +9,8 @@
  * @copyright c. 2010 5, Inc. and c. 2010 Terry Chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  *
+ * @todo clean up handling of new element creation or insertOrUpdate
+ * @todo make _table_name and _primaryKeys and _autoIncremenet class variables via static:: (and test serialize deserialize)
  */
 // {{{ tgif_dao
 // docs {{{
@@ -95,6 +97,14 @@ class tgif_dao
      */
     protected $_autoIncrement = '';
     // }}}
+    // {{{ - $_exists
+    /**
+     * If set to false it means the table doesn't exist yet
+     * @var boolean
+     */
+    protected $_exists = true;
+    // }}}
+    // CACHING VARS
     // {{{ - $_isChanged
     /**
      * @var boolean Has the row been changed?
@@ -106,6 +116,39 @@ class tgif_dao
      * @var tgif_global_loader
      */
     private $_loader;
+    // }}}
+    // COLUMN STUFF
+    // {{{ - _SQL_GET_COL
+    /**
+     * This is the select for getting column names (when no rows returned)
+     */
+    const _SQL_GET_COL = 'SHOW COLUMNS FROM %s';
+    // }}}
+    // {{{ + $_cols
+    /**
+     * This stores the column names.
+     * Please see {@link _get_cols()}
+     * @var array
+     */
+    static $_cols;
+    // }}}
+    // {{{ - _get_cols()
+    /**
+     * Get the columsn titles
+     *
+     * The static stuf caches the columns but the static:: stuff is needed
+     * to prevent self:: from working on the parent class.
+     *
+     * @return array the table columns
+     */
+    private function _get_cols()
+    {
+        //global $_TAG;
+        if ( !static::$_cols )  {
+            static::$_cols = $_TAG->dbh->getResults( sprintf(self::_SQL_GET_COL, $this->_table_name), array(), 'ARRAY_N' );
+        }
+        return static::$_cols;
+    }
     // }}}
     // CREATION/DESTRUCTION
     // {{{ __construct($primary_keys[,$bypassDb])
@@ -126,7 +169,8 @@ class tgif_dao
     {
         if ($bypassDb) {
             // primary keys actually data
-            $this->_data = $primary_keys;
+            $this->_data    = $primary_keys;
+            $this->_exists  = false;
         } else {
             if ( !is_array($primary_keys) ) {
                 // Single value passed in from global system
@@ -148,8 +192,14 @@ class tgif_dao
                 foreach ($select_keys as $key=>$value) {
                     $this->_data[$key] = $value;
                 }
-                // update data (unknown missing fields)
-                $this->insert(true);
+                // update data (unknown missing fields) {{{
+                $cols = $this->_get_cols();
+                foreach ($cols as $col_data) {
+                    if ( isset($this->_data[$col_data[0]]) ) { continue; }
+                    $this->_data[$col_data[0]] = $col_data[4];
+                }
+                $this->_exists = false;
+                // }}}
             }
         }
     }
@@ -197,7 +247,7 @@ class tgif_dao
      */
     function __sleep()
     {
-        return array('_table_name','_data','_primaryKeys','_autoIncrement');
+        return array('_table_name','_data','_primaryKeys','_autoIncrement','_exists');
     }
     // }}}
     // {{{ __wakeup()
@@ -330,6 +380,17 @@ class tgif_dao
     }
     // }}}
     // ACCESSORS
+    // {{{ exists()
+    /**
+     * Returns if the object really exists (bound to a table)
+     *
+     * @return array The data used to reconstruct
+     */
+    function exists()
+    {
+        return $this->_exists;
+    }
+    // }}}
     // {{{ getData()
     /**
      * Get all the data necessary to be able to reconstruct.
