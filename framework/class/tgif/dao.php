@@ -130,7 +130,7 @@ class tgif_dao
      * Please see {@link _get_cols()}
      * @var array
      */
-    static $_cols;
+    static protected $_cols;
     // }}}
     // {{{ - _get_cols()
     /**
@@ -147,6 +147,7 @@ class tgif_dao
         if ( !static::$_cols )  {
             static::$_cols = $_TAG->dbh->getResults( sprintf(self::_SQL_GET_COL, $this->_table_name), array(), 'ARRAY_N' );
         }
+        var_dump(static::$_cols);
         return static::$_cols;
     }
     // }}}
