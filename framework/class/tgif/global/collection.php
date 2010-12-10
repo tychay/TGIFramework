@@ -142,7 +142,7 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
                 $params['ids'] = array($offset);
             }
             // a collection of collections is already "done" {{{
-            if ($params['params'] > 1) {
+            if ( isset($params['params']) && ($params['params'] > 1) ) {
                 --$params['params'];
                 $this->_array[$offset] = new tgif_global_collection($params);
                 return $this->_array[$offset];
