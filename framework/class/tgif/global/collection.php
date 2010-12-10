@@ -132,7 +132,6 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
         if (array_key_exists($offset,$this->_array)) {
             return $this->_array[$offset];
         }
-
         $params = $this->_params;
         // if it isnt in the collection, add it to the loaders {{{
         if (!array_key_exists($offset,$this->_loaders)) {
@@ -142,7 +141,7 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
                 $params['ids'] = array($offset);
             }
             // a collection of collections is already "done" {{{
-            if ( isset($params['params']) && ($params['params'] > 1) ) {
+            if ( $params['params'] > 1 ) {
                 --$params['params'];
                 $this->_array[$offset] = new tgif_global_collection($params);
                 return $this->_array[$offset];
@@ -176,7 +175,7 @@ class tgif_global_collection extends tgif_global_object implements ArrayAccess
         }
         $this->_array[$offset] = $value;
 
-        $params =& $this->_params;
+        $params = $this->_params;
         // bind the loader or update the cache on set {{{
         // since the default values are nil, we can use isset here
         if ( isset($params['loaderLoader']) || isset($params['cacheUpdateOnSet']) ) {
