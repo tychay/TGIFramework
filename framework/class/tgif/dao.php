@@ -147,7 +147,6 @@ class tgif_dao
         if ( !static::$_cols )  {
             static::$_cols = $_TAG->dbh->getResults( sprintf(self::_SQL_GET_COL, $this->_table_name), array(), 'ARRAY_N' );
         }
-        var_dump(static::$_cols);
         return static::$_cols;
     }
     // }}}
