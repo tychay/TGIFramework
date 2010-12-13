@@ -1,5 +1,6 @@
 <?php
 // vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
 /**
  * Container for {@link tgif_http}
  *
@@ -30,16 +31,22 @@ class tgif_http
     }
     // }}}
     // STATIC: REDIRECT
-    // {{{ + redirect($url[,$post])
+    // {{{ + redirect($url[,$post,$permanent])
     /**
+     * @param array|null if set, then it will do a POST redirect
+     * @param boolean $isPermanent If set, it will do a 301 redirect instead.
+     *  Note that post type redirects cannot be performed this way.
      * @uses tgif_http::url_encode()
      */
-    public static function redirect($url,$post=null)
+    public static function redirect($url, $post=null, $isPermanent=false)
     {
         // Ugly, but until we do the right thing with logging, necessary.
         //PageViewLogger::setRedirect();
 
         $url = self::url_fullize($url);
+        if ( $isPermanent && !$post ) {
+            header('HTTP/1.1 301 Moved Permanently'); 
+        }
         if (is_null($post)) {
             header(sprintf('Location: %s', $url));
             exit;
