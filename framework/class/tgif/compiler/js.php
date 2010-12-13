@@ -100,7 +100,7 @@ class tgif_compiler_js extends tgif_compiler
             }
             $attributes .= sprintf(' %s="%s"', $key, htmlentities($value));
         }
-        return sprintf('<script language="javascript" type="text/javascript" src="%s"%s></script>',
+        return sprintf('<script type="text/javascript" src="%s"%s></script>',
             htmlentities($url),
             $attributes
         );
