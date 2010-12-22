@@ -27,7 +27,9 @@ class tgif_db
      */
     static function pdo()
     {
-        return new tgif_db_pdo(func_get_args());
+        $return_obj = new tgif_db_pdo(func_get_args());
+        $return_obj->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        return $return_obj;
     }
     // }}}
 }

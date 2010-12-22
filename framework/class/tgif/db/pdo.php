@@ -180,6 +180,10 @@ class tgif_db_pdo extends pdo
             ($autoIncrement) ? sprintf('%1$s=LAST_INSERT_ID(%1$s),', $autoIncrement) : '',
             implode(',',$sets)
         );
+        // special case: $sets can be empty and end up creating invalid SQL syntax due to hanging comma
+        if ( empty($sets) ) {
+            $query = substr($query,0,-1);
+        }
         // }}}
         //$sth = $this->_prepareQuery($query,$data);
         $sth = $this->prepare($query);

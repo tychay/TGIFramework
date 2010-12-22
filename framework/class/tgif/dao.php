@@ -303,8 +303,11 @@ class tgif_dao
      * Do an insertOrUpdate()
      *
      * @param array $whereKeys a list of keys to use in the where cause.
+     * @param boolean $forceUpdate orce a re-read of the entry into the object
      * @return boolean success or failure
      * @todo failure should trigger exception
+     * @todo things like this should be static method
+     * @todo if no parameter provided assume primary keys
      */
     function insertOrUpdate($whereKeys, $forceUpdate=false)
     {
@@ -317,17 +320,19 @@ class tgif_dao
             unset($data[$key]);
         }
         $success = $dbh->insertOrUpdate( $this->_table_name, $data, $wheres, $this->_autoIncrement );
-        if ( !$success ) {
-            //trigger exception
-            return false;
-        }
-        $this->_exists = true;
-        // there ar missing files :-(
-        if ($this->_autoIncrement) {
-            $this->_data[$this->_autoIncrement] = $dbh->insertId;
-        }
+        // special case, if force update, no need to include autoincrement, and it may cause update to never return true
         if ( $forceUpdate ) {
             $this->_read($wheres);
+        } else {
+            if ( !$success ) {
+                //trigger exception
+                return false;
+            }
+            $this->_exists = true;
+            // there are missing files :-(
+            if ( $this->_autoIncrement ) {
+                $this->_data[$this->_autoIncrement] = $dbh->insertId;
+            }
         }
         $this->_saveToCache();
         return true;
