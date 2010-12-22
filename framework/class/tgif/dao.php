@@ -425,6 +425,8 @@ class tgif_dao
         //global $_TAG;
         // don't db call if nothing changed
         if (!$this->_isChanged) { return; }
+        // weird error case: __destruct() function sometimes doesn't have superglobal
+        if ( !isset($_TAG) ) { return; }
         $this->_isChanged = false;
         $data = $this->_data;
         $where = array();
