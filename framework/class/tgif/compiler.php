@@ -238,7 +238,9 @@ class tgif_compiler
     // }}}
     // {{{ - generateFlush([$properties])
     /**
-     * Generate the output to call for all outstanding queues
+     * Generate the output to call for all outstanding queues.
+     *
+     * It will do the queues in alphabetical order.
      *
      * @param array $properties extra parameters to pass to outputter
      * @return array a bunch of individual call text (may be a single element).
@@ -246,6 +248,7 @@ class tgif_compiler
     function generateFlush($properties=array())
     {
         $returns = array();
+        ksort($this->_queues);
         foreach($this->_queues as $queueName=>$queue) {
             $returns = array_merge($returns, $this->generate($queueName,$properties));
         }
