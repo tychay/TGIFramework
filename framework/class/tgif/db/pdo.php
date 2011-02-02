@@ -328,6 +328,8 @@ class tgif_db_pdo extends pdo
      * @param string $query SQL query to execute
      * @param array $binding bind variables
      * @return PDOStatement a statement handle of the prepared query
+     * @todo PARAM_BOOL (boolean)
+     * @todo PARAM_LOB (large object)
      */
     private function _prepareQuery($query, $bindings=array())
     {
@@ -336,10 +338,13 @@ class tgif_db_pdo extends pdo
         foreach ($bindings as $key=>$value) {
             // make sure there is a : at the beginning of the bindparam
             $key = ( substr($key,0,1) == ':' ) ? $key : ':'.$key;
-            if (is_int($value)) {
+            // type checking
+            if (is_null($value)) {
+		        $return_obj->bindValue($key, null, PDO::PARAM_NULL);
+            } elseif (is_int($value)) {
 		        $return_obj->bindValue($key, $value, PDO::PARAM_INT);
             } else {
-		        $return_obj->bindValue($key, $value, PDO::PARAM_INT);
+		        $return_obj->bindValue($key, $value, PDO::PARAM_STR);
             }
         }
         return $return_obj;
