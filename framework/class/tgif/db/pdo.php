@@ -54,7 +54,7 @@ class tgif_db_pdo extends pdo
         }
     }
     // }}}
-    // CREATE, UPDATE
+    // CREATE, UPDATE, DELETE
     // {{{ - insert($table,$data)
     /**
      * Insert a row into a table
@@ -106,7 +106,7 @@ class tgif_db_pdo extends pdo
      */
     function update($table, $data, $where)
     {
-        $_TAG->diagnostics->startTimer('db', sprintf('%s::insertOrUpdate()',get_class($this)), array( 'data'=>array_merge($data,$where) ));
+        $_TAG->diagnostics->startTimer('db', sprintf('%s::update()',get_class($this)), array( 'data'=>array_merge($data,$where) ));
         // format query {{{
         $sets = array();
         $wheres = array();
@@ -132,6 +132,37 @@ class tgif_db_pdo extends pdo
         $this->insertId = $this->lastInsertId();
         $_TAG->diagnostics->stopTimer('db', array( 'query' => $query ) );
         return ($result) ? true : false;
+    }
+    // }}}
+    // {{{ - delete($table,$where)
+    /**
+     * Delete a row (or rows) from a table
+     *
+     * @param string $table the name of the table to nsert data into
+     * @param array $where WHERE clause. Multiple clauses joined by "AND"
+     * @return integer the number of rows deleted (MySQL calls ROW_COUNT() automatically)
+     */
+    function delete($table, $where)
+    {
+        $_TAG->diagnostics->startTimer('db', sprintf('%s::delete()',get_class($this)), array( 'data'=>$where ));
+        // format query {{{
+        $wheres = array();
+        $data = array();
+        foreach ($where as $key=>$value) {
+            $wheres[] = sprintf('%1$s=:%1$s', $key);
+            $data[':'.$key] = $value;
+        }
+        $query = sprintf('DELETE FROM %s WHERE %s',
+            $table,
+            implode(' AND ',$wheres)
+        );
+        // }}}
+        //$sth = $this->_prepareQuery($query,$data);
+        //$result = $sth->execute();
+        $sth = $this->prepare($query);
+        $result = $sth->execute($data);
+        $_TAG->diagnostics->stopTimer('db', array( 'query' => $query, 'row_count'=>$result ) );
+        return $result;
     }
     // }}}
     // {{{ - insertOrUpdate($table,$data,$where[,$autoIncrement])
