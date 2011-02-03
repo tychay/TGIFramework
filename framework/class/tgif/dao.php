@@ -368,6 +368,7 @@ class tgif_dao
             $this->_data[$name] = $value;
             if ($old_value != $value) {
                 $this->_isChanged = true;
+                //var_dump(array($name,$old_value,$value));
             }
         }
     }
