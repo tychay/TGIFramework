@@ -283,7 +283,7 @@ class tgif_db_pdo extends pdo
      * @param array $binding bind variables
      * @param integer $column_offset The desired column
      * @param integer $row_offset The desired row
-     * @return mixed the varible from the database. If no result found then null
+     * @return mixed the varible from the database. If no result found then null or false (PDO::fetchColumn() returns false on failure)
      */
     function getVar($query, $bindings=array(), $column_offset=0, $row_offset=0)
     {
