@@ -74,7 +74,7 @@ class tgif_http
         static $self;
         if ( !$self ) {
             $scheme = self::self_url_scheme();
-            $port = ($_SERVER['SERVER_PORT'] == '80')
+            $port = ($_SERVER['SERVER_PORT'] == '80' || $_SERVER['SERVER_PORT'] == '443')
                   ? ''
                   : (':'.$_SERVER['SERVER_PORT']);
             $self = $scheme . '://' . $_SERVER['SERVER_NAME'] . $port . $_SERVER['REQUEST_URI'];
