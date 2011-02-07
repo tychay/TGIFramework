@@ -86,7 +86,11 @@ class tgif_compiler_library_jquery implements tgif_compiler_library
                     'library'       => get_class($this),
                     'dependencies'  => array(),
                     'file_path'     => '', //not needed as it is remote
-                    'url'           => sprintf('http://ajax.googleapis.com/ajax/libs/jquery/%s/jquery.js', $this->_options['version']),
+                    'url'           => sprintf(
+                        'http%s://ajax.googleapis.com/ajax/libs/jquery/%s/jquery.js', 
+                        (tgif_http::self_url_scheme() == 'https') ? 's' : '',
+                        $this->_options['version']
+                    ),
                     'provides'      => array('jquery','jquery.js','ext/jquery.js'),
                 );
             case 'jqueryui':
@@ -99,7 +103,11 @@ class tgif_compiler_library_jquery implements tgif_compiler_library
                     'library'       => get_class($this),
                     'dependencies'  => array('jquery'),
                     'file_path'     => '', //not needed as it is remote
-                    'url'           => sprintf('http://ajax.googleapis.com/ajax/libs/jqueryui/%s/jqueryui.js', $this->_options['version']),
+                    'url'           => sprintf(
+                        'http%s://ajax.googleapis.com/ajax/libs/jqueryui/%s/jqueryui.js',
+                        (tgif_http::self_url_scheme() == 'https') ? 's' : '',
+                        $this->_options['version']
+                    ),
                     'provides'      => array('jqueryui','jqueryui.js','ext/jqueryui.js'),
                 );
             default:
