@@ -115,7 +115,7 @@ class tgif_http
         if ( !isset($url_parts['host']) ) {
             $url_parts['host']      = $_SERVER['SERVER_NAME'];
         }
-        if ( !isset($url_parts['port']) && ($_SERVER['SERVER_PORT']!=='80' || $_SERVER['SERVER_PORT']!=='443') ) {
+        if ( !isset($url_parts['port']) && ($_SERVER['SERVER_PORT']!=='80' && $_SERVER['SERVER_PORT']!=='443') ) {
             $url_parts['port']      = $_SERVER['SERVER_PORT'];
         }
         return self::glue_url($url_parts);
