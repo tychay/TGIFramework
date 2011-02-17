@@ -46,6 +46,6 @@ require_once(dirname(__FILE__) . '/testerrorhandler.php');
 
 require_once(TGIF_TEST_ROOT . '/class/dummy.php');
 require_once(TGIF_TEST_ROOT . '/class/dummy2.php');
-require_once(TGIF_TEST_ROOT . '/class/dummyChild.php');
+require_once(TGIF_TEST_ROOT . '/class/dummychild.php');
 
 ?>
