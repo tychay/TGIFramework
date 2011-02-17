@@ -727,6 +727,11 @@ class tgif_global
         foreach ($config_dirs as $config_dir) {
             $this->_loadConfigDir($config_dir, $configs, $filelist);
         }
+        
+        if (defined('TEST_ENV') && TEST_ENV && defined('TGIF_TEST_GLOBAL_DIR')) {
+            $this->_loadConfigDir(TGIF_TEST_GLOBAL_DIR, $configs, $filelist); // testing
+        }
+        
         // After everything has been loaded, expand the macros {{{
         //temporary variable to store unprocessed config
         do {

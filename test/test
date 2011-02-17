@@ -1,0 +1,13 @@
+#!/usr/bin/env php
+<?php
+/*  Test harness entry point.
+ *  @author erik johannessen <ejohannessen@tagged.com>
+ *
+ */
+ 
+include 'include/config.php';
+
+require_once(realpath(dirname(__FILE__) . '/harness/testharness.php'));
+
+testharness::run();
+?>
