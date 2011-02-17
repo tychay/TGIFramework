@@ -89,7 +89,7 @@ class testharness {
                     // TODO: ignore exceptions and continue?
                     continue;
                 }
-                echo "." . ($dots++ % 30 == 0 ? "\n": "");
+                echo "." . (++$dots % 30 == 0 ? "\n": "");
                 
                 foreach($testReflection->getMethods() as $method) {
                     $methodName = $method->name;
