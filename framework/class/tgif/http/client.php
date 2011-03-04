@@ -25,7 +25,7 @@ class tgif_http_client
      * cURL fetch a url return body as string
      *
      * @param string $url where to grab data
-     * @param array $post post variables no support yet
+     * @param array|string $post post variables. If string it is raw post data
      * @param integer|false $chmod octal number for chmod of file with set.
      * @return boolean success or failure
      */
@@ -40,7 +40,11 @@ class tgif_http_client
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         if ($post) {
             curl_setopt($ch, CURLOPT_POST, 1); 
-            curl_setopt($ch, CURLOPT_POSTFIELDS, tgif_http::url_encode($post));
+            if ( is_string($post) ) {
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+            } else {
+                curl_setopt($ch, CURLOPT_POSTFIELDS, tgif_http::url_encode($post));
+            }
         }
         $return = curl_exec($ch);
         curl_close($ch); //must close curl handle first
