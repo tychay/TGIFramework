@@ -31,7 +31,7 @@ class tgif_http_client
      */
     static function fetch($url, $post=array())
     {
-        $isRunning = self::_diag_start('fetch_into', array(
+        $isRunning = self::_diag_start('fetch', array(
                 'url'       => $url,
                 'post'      => $post,
             ));
@@ -48,6 +48,7 @@ class tgif_http_client
         }
         $return = curl_exec($ch);
         curl_close($ch); //must close curl handle first
+        self::_diag_stop($isRunning, array());
 
         return $return;
     }
