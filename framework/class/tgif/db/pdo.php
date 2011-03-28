@@ -55,6 +55,14 @@ class tgif_db_pdo extends pdo
     }
     // }}}
     // CREATE, UPDATE, DELETE
+    // {{{ - query($sql)
+    function query($sql)
+    {
+        $sth = $this->prepare($sql);
+        $result = $sth->execute();
+        return $result;
+    }
+    // }}}
     // {{{ - insert($table,$data)
     /**
      * Insert a row into a table
