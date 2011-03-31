@@ -85,13 +85,13 @@ class tgif_email
         return sprintf('"%s" <%s>', $name, $email);
     }
     // }}}
-    // {{{ + validate_address
+    // {{{ + validate_address($email[,$skipDomainCheck])
     /**
      * @param text $email The email to validate
      * @return string if empty it is invalid else
      *  it returns the sanitized e-mail address
      */
-    static function validate_address($email)
+    static function validate_address($email,$skipDomainCheck=false)
     {
         // Set test to pass
         $valid = true;
@@ -143,7 +143,11 @@ class tgif_email
                 return '';
             }
         }
-        
+
+        if ($skipDomainCheck) {
+            return $email;
+        }
+
         // Whoa, made it this far? Check for domain existance!
         if (!(checkdnsrr($domain,"MX") || checkdnsrr($domain,"A"))) {
             return '';
