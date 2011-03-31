@@ -340,6 +340,10 @@ fi
 # No fedora package for inclued
 pecl_update_or_install inclued $INCLUED '' ''
 # }}}
+# Install mailparse {{{
+# Needed fr parsing RFC822 e-mails
+pecl_update_or_install mailparse mailparse php-pecl-mailparse php5-mailparse
+# }}}
 # Install memcache(d) with igbinary {{{
 if [ $DISTRIBUTION = 'fedora' ] && [ $MEMCACHE = 'memcached' ]; then
     if [ `$PHP_EXT_TEST $1` ]; then
