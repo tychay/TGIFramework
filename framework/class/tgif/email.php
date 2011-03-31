@@ -21,6 +21,70 @@
 class tgif_email
 {
     // STATIC: EMAILADDRESS
+    // {{{ + parse_addresses($text)
+    /**
+     * Just a wrapper for mailparse's parse_address function.
+     *
+     * If the pecl package isn't isntalled it attempts to use the PEAR package.
+     *
+     * @return array A list of e-mails with a hash with the following parameters
+     * - display: name for display purposes
+     * - address: the e-mail address
+     * - is_group: true if newsgroup, false otherwise
+     */
+    static function parse_addresses($text)
+    {
+        if ( function_exists('mailparse_rfc822_parse_addresses') ) {
+            return mailparse_rfc822_parse_addresses($text);
+        }
+        require_once 'PEAR.php';
+        require_once 'Mail/RFC822.php';
+        $res = Mail_RFC822::parseAddressList($text);
+        if (PEAR::isError($res))  {
+            trigger_error($res->getMessage());
+            return array();
+        }
+        $returns = array();
+        foreach ($res as $parse_parts) {
+            $returns[] = array(
+                'display'   => ($parse->personal) ? $parse->personal : $parse_parts->comment,
+                'address'   => $parse_parts->mailbox.'@'.$parse_parts->host,
+                'is_group'  => false,
+            );
+        }
+        return $returns;
+    }
+    // }}}
+    // {{{ + make_address($email[,$name])
+    /**
+     * Turns it to "$name" <$email>.
+     *
+     * This doesn't support () commenting in e-mail. Sorry! It does, however
+     * respect {@link http://www.ietf.org/rfc/rfc0822.txt?number=822 the rfc822}
+     * quoting rule (note the atoms in the email address are unquoteable so
+     * e-mail is passed through).
+     *
+     * @return string
+     * @todo I'm not sure of the rule of linefeeds here. It might be a good idea
+     * to filter those out.
+     */
+    static function make_address($email,$name='')
+    {
+        if ( strcmp($name,$email) === 0) {
+            $name == '';
+        }
+        if (!$name) {
+            return $email;
+        }
+        $name = trim($name); //sometimes passed in whitespace (empty last name field?)
+        $name = str_replace(
+            array('\\','"',"\r"),
+            array('\\\\','\\"',"\\\r"),
+            $name
+        );
+        return sprintf('"%s" <%s>', $name, $email);
+    }
+    // }}}
     // {{{ + validate_address
     /**
      * @param text $email The email to validate
