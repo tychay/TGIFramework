@@ -37,18 +37,28 @@ class tgif_email
         if ( function_exists('mailparse_rfc822_parse_addresses') ) {
             return mailparse_rfc822_parse_addresses($text);
         }
+
+        // try PEAR but deal with strict standards
+        $error_level = error_reporting(E_ALL);
         require_once 'PEAR.php';
         require_once 'Mail/RFC822.php';
         $res = Mail_RFC822::parseAddressList($text);
-        if (PEAR::isError($res))  {
+        if ( PEAR::isError($res) )  {
             trigger_error($res->getMessage());
+            error_reporting($error_level);
             return array();
         }
+        error_reporting($error_level);
         $returns = array();
-        foreach ($res as $parse_parts) {
+        foreach ($res as $parse) {
+            $display_name = ($parse->personal) ? $parse->personal : implode('',$parse->comment); 
+            // strip quote marke
+            if ( substr($display_name,0,1)=='"' ) {
+                $display_name = substr($display_name,1,-1);
+            }
             $returns[] = array(
-                'display'   => ($parse->personal) ? $parse->personal : $parse_parts->comment,
-                'address'   => $parse_parts->mailbox.'@'.$parse_parts->host,
+                'display'   => $display_name,
+                'address'   => $parse->mailbox.'@'.$parse->host,
                 'is_group'  => false,
             );
         }
@@ -71,7 +81,7 @@ class tgif_email
     static function make_address($email,$name='')
     {
         if ( strcmp($name,$email) === 0) {
-            $name == '';
+            $name = '';
         }
         if (!$name) {
             return $email;
@@ -80,9 +90,12 @@ class tgif_email
         $name = str_replace(
             array('\\','"',"\r"),
             array('\\\\','\\"',"\\\r"),
+            //array('\\',"\r"),
+            //array('\\\\',"\\\r"),
             $name
         );
         return sprintf('"%s" <%s>', $name, $email);
+        //return sprintf('%s <%s>', $name, $email);
     }
     // }}}
     // {{{ + validate_address($email[,$skipDomainCheck])
@@ -150,6 +163,10 @@ class tgif_email
 
         // Whoa, made it this far? Check for domain existance!
         if (!(checkdnsrr($domain,"MX") || checkdnsrr($domain,"A"))) {
+            return '';
+        }
+        // example.com (and others?) are known to be illegal
+        if ( in_array($domain, array('example.com')) ) {
             return '';
         }
         return $email;
