@@ -88,7 +88,7 @@ class tgif_encode {
         return str_pad($num64, $length, '0', STR_PAD_LEFT);
     }
     // }}}
-    // {{{ + create_password($str)
+    // {{{ + create_password([$length,$strength])
     /**
      * Simple password generator.
      *
@@ -96,7 +96,7 @@ class tgif_encode {
      *
      * @return string
      **/
-    public static function create_password($length=9,$stringth=0)
+    public static function create_password($length=9,$strength=0)
     {
         $vowels = 'aeuy';
         $consonants = 'bdghjmnpqrstvz';
