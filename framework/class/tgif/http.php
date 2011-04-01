@@ -40,6 +40,9 @@ class tgif_http
      */
     public static function redirect($url, $post=null, $isPermanent=false)
     {
+        if (!empty($_SESSION)) {
+            session_write_close();
+        }
         // Ugly, but until we do the right thing with logging, necessary.
         //PageViewLogger::setRedirect();
 
