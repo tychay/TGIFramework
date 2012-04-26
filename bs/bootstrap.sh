@@ -1,15 +1,18 @@
-#!/bin/sh
+#!/bin/bash
 # vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker:
 # This boostraps the framework, be sure to execute from base directory (not this directory) i.e.: $ ./bs/bootstrap.sh
 
+#DO_UPGRADE='1' #Set this to upgrade
 # EDITME: Set the full path to binaries {{{
 if [ $1 ]; then
     DISTRIBUTION=$1
 else
-    if [ `which port` != '' ]; then
+    if [ "`which port`" != '' ]; then
         DISTRIBUTION='macports'
-    elif [ `which yum` != '' ]; then
+    elif [ "`which yum`" != '' ]; then
         DISTRIBUTION='fedora'
+    elif [ "`which apt-get`" != '' ]; then
+        DISTRIBUTION='ubuntu'
     else
         DISTRIBUTION='???'
     fi
@@ -26,7 +29,6 @@ APACHECTL=`which apachectl`
 # Set this to php-memcached instead of php-memcache
 LIBMEMCACHED=""
 PHP_INI=/etc/php.ini # TODO: check php --ini
-#DO_UPGRADE='1' #Set this to upgrade
 
 # MacPorts:
 if [ $DISTRIBUTION = "macports" ]; then
@@ -102,6 +104,35 @@ if [ $DISTRIBUTION = 'fedora' ]; then
     # Set path to libmemcached (to use php-memcached instead of php-memcache)
     LIBMEMCACHED=/usr
 fi
+
+if [ $DISTRIBUTION = 'ubuntu' ]; then
+    check_dpkg() { dpkg -l $1 | grep ^ii | wc -l; }
+    # Set path to libmemcached (to use php-memcached instead of php-memcache)
+    LIBMEMCACHED=/usr
+    # ubuntu has separate ini files for apache vs. cli.
+    PHP_INI=/etc/php5/apache2/php.ini
+    # build environment for installing on ubuntu
+    if [ $DO_UPGRADE ]; then
+        $SUDO apt-get update
+    fi
+    # Need libpcre3-dev to compile APC
+    if [ `check_dpkg libpcre3-dev` ]; then
+        $SUDO apt-get install libpcre3-dev
+    fi
+    # Need curl to grab packages
+    if [ `check_dpkg curl` ]; then
+        $SUDO apt-get install curl
+    fi
+    # Needed to unzip YUI packages
+    if [ `check_dpkg zip` ]; then
+        $SUDO apt-get install zip
+    fi
+    # Needed to execute YUI compressor
+    if [ `check_dpkg default-jre` ]; then
+        $SUDO apt-get install default-jre
+    fi
+    echo "### REMEMBER! On ubuntu, there are two different directories for CLI PHP and APACHE2 PHP configuration. Both must be updated for this script to work properly"
+fi
 # }}}
 # shell function declarations {{{
 pear_installed () { pear list -a | grep ^$1 | wc -l ; }
@@ -110,14 +141,18 @@ pear_installed () { pear list -a | grep ^$1 | wc -l ; }
 # $2 = package name in pecl (may have -beta or the like)
 # $3 = if set, yum package name
 # $4 = if set, package name in macports
+# $5 = if set, package name in ubuntu
 pecl_update_or_install () {
     if [ `$PHP_EXT_TEST $1` ]; then
         if [ $DO_UPGRADE ]; then
-            if [ $DISTRIBUTION = 'fedora' ] && [ "$3" != '' ]; then
+            if [ "$DISTRIBUTION" = 'fedora' ] && [ "$3" != '' ]; then
                 echo "### UPDATING $1...";
                 $SUDO yum update $3
-            elif [ $DISTRIBUTION = 'macports' ] && [ "$4" != '' ]; then
+            elif [ "$DISTRIBUTION" = 'macports' ] && [ "$4" != '' ]; then
                 echo "### $1 is already up-to-date"
+            elif [ "$DISTRIBUTION" = 'ubuntu' ] && [ "$5" != '' ]; then
+                echo "### UPDATING $1...";
+                $SUDO apt-get update $5
             else
                 echo "### UPGRADING $1...";
                 $SUDO pecl upgrade $2
@@ -125,13 +160,15 @@ pecl_update_or_install () {
         fi
     else
         echo "### INSTALLING $1";
-        if [ $DISTRIBUTION = 'fedora' ] && [ "$3" != '' ]; then
+        if [ "$DISTRIBUTION" = 'fedora' ] && [ "$3" != '' ]; then
             $SUDO yum install $3
-        elif [ $DISTRIBUTION = 'macports' ] && [ "$4" != '' ]; then
+        elif [ "$DISTRIBUTION" = 'macports' ] && [ "$4" != '' ]; then
             $SUDO port install $3
+        elif [ "$DISTRIBUTION" = 'ubuntu' ] && [ "$5" != '' ]; then
+            $SUDO apt-get install $5
         else
             $SUDO pecl install $2
-            if [ $1 = 'xdebug']; then
+            if [ "$1" = 'xdebug' ]; then
                 echo '### Be sure to add to your php.ini: zend_extension="<something>/xdebug.so" NOT! extension=xdebug.so'
             else
                 echo "### Be sure to add to your php.ini: extension=$1.so"
@@ -173,6 +210,7 @@ PHP_VERSION_TEST=$BASE_DIR/bs/version_compare.php
 # RUNKIT {{{
 #RUNKIT='runkit'
 # Runkit is still in beta.
+# New version at https://github.com/zenovich/runkit/
 RUNKIT='channel://pecl.php.net/runkit-0.9'
 # Note that Runkit 0.9 doesn't compile in PHP 5.2+
 if [ `$PHP_VERSION_TEST 5.2` ]; then
@@ -208,16 +246,18 @@ fi
 # downloads {{{
 # YUI & YUI compressor {{{
 YUI='yui'
-YUI_VERSION='2.8.2r1'
+YUI_VERSION='2.9.0'
 YUI_BIN="yui_${YUI_VERSION}"
 YUI_PKG="${YUI_BIN}.zip"
-YUI_URL="http://yuilibrary.com/downloads/yui2/${YUI_PKG}"
+#YUI_URL="http://yuilibrary.com/downloads/yui2/${YUI_PKG}"
+YUI_URL="http://yui.zenfs.com/releases/yui2/${YUI_PKG}"
 
 YUIC='yuicompressor'
-YUIC_VERSION='2.4.2'
+YUIC_VERSION='2.4.7'
 YUIC_BIN="${YUIC}-${YUIC_VERSION}"
 YUIC_PKG="${YUIC_BIN}.zip"
-YUIC_URL="http://www.julienlecomte.net/yuicompressor/${YUIC_PKG}"
+#YUIC_URL="http://www.julienlecomte.net/yuicompressor/${YUIC_PKG}"
+YUIC_URL="http://yui.zenfs.com/releases/yuicompressor/${YUIC_PKG}"
 # }}}
 # WEBGRIND {{{
 WEBGRIND='webgrind'
@@ -277,24 +317,44 @@ else
         RUNKIT="$BASE_DIR/packages/pecl/runkit"
     else
         pushd packages
-            if [ ! -d pecl/runkit ]; then
-                # PHP migrated to svn
-                #cvs -d :pserver:cvsread@cvs.php.net:/repository checkout  pecl/runkit
-                svn co http://svn.php.net/repository/pecl/runkit/trunk/ pecl/runkit
+            RUNKIT='runkit'
+            RUNKIT_VERSION='1.0.3'
+            RUNKIT_DIR="${RUNKIT}-${RUNKIT_VERSION}"
+            RUNKIT_PKG="${RUNKIT_DIR}.tgz"
+            if [ ! -f $RUNKIT_PKG ]; then
+                RUNKIT_URL="https://github.com/downloads/zenovich/runkit/${RUNKIT_PKG}"
+                curl -L -O $RUNKIT_URL
             fi
-            pushd pecl/runkit
-                #cvs update
-                svn update
+            if [ ! -d $RUNKIT_DIR ]; then
+                tar xvf $RUNKIT_PKG
+            fi
+            pushd $RUNKIT_DIR
                 make distclean
-                # Apply patch for bug http://pecl.php.net/bugs/bug.php?id=13363
-                patch -p0 <$BASE_DIR/bs/runkit-bug13363.diff 
                 phpize
+                chmod a+x ./configure
                 ./configure --enable-runkit
                 make
                 make test
                 $SUDO make install
             popd
-         popd
+            #if [ ! -d pecl/runkit ]; then
+            #    # PHP migrated to svn
+            #    #cvs -d :pserver:cvsread@cvs.php.net:/repository checkout  pecl/runkit
+            #    svn co http://svn.php.net/repository/pecl/runkit/trunk/ pecl/runkit
+            #fi
+            #pushd pecl/runkit
+            #    #cvs update
+            #    svn update
+            #    make distclean
+            #    # Apply patch for bug http://pecl.php.net/bugs/bug.php?id=13363
+            #    patch -p0 <$BASE_DIR/bs/runkit-bug13363.diff 
+            #    phpize
+            #    ./configure --enable-runkit
+            #    make
+            #    make test
+            #    $SUDO make install
+            #popd
+        popd
     fi
     echo 'be sure to add to your php.ini: extension=runkit.so'
 fi
@@ -303,38 +363,60 @@ fi
 # TODO: -enable-memcached-igbinary (in php-pecl-memcached)
 # igbinary http://opensource.dynamoid.com/
 # performance settings: http://ilia.ws/archives/211-Igbinary,-The-great-serializer.html#extended  
-if [ `$PHP_EXT_TEST igbinary` ]; then
-    echo '### igbinary installed'
-else
-    if [ $DISTRIBUTION = 'macports' ]; then
-        $SUDO port install php5-igbinary
-    else
-        pushd packages
-            curl -O http://opensource.dynamoid.com/igbinary-1.0.2.tar.gz
-        popd
-        pushd build
-            gzip -dc ../packages/igbinary-1.0.2.tar.gz | tar xf -
-            pushd igbinary-1.0.2
-                phpize
-                ./configure
-                make
-                $SUDO make install
-            popd
-        popd
-    fi
-fi
+#if [ `$PHP_EXT_TEST igbinary` ]; then
+#    echo '### igbinary installed'
+#else
+#    if [ $DISTRIBUTION = 'macports' ]; then
+#        $SUDO port install php5-igbinary
+#    else
+#        pushd packages
+#            curl -O http://opensource.dynamoid.com/igbinary-1.0.2.tar.gz
+#        popd
+#        pushd build
+#            gzip -dc ../packages/igbinary-1.0.2.tar.gz | tar xf -
+#            pushd igbinary-1.0.2
+#                phpize
+#                ./configure
+#                make
+#                $SUDO make install
+#            popd
+#        popd
+#    fi
+#fi
 pecl_update_or_install igbinary igbinary '' php5-igbinary
 # }}}
 # Install XDEBUG {{{
-pecl_update_or_install xdebug xdebug php-pecl-xdebug php5-xdebug
+pecl_update_or_install xdebug xdebug php-pecl-xdebug php5-xdebug php5-xdebug
 # }}}
 # Install big_int {{{ http://pecl.php.net/package/big_int
-echo "### big_int..."
+#pecl_update_or_install big_int big_int
+# BUG: Cannot find config.m4 (in big_int-1.0.7)
 if [ `$PHP_EXT_TEST big_int` ]; then
-    $SUDO pecl upgrade big_int
+    if [ $DO_UPGRADE ]; then
+        echo "### No way to hande upgrading with big_int currently"
+    fi
 else
-    $SUDO pecl install big_int
+    #$SUDO pecl install $2
+    pushd packages
+        $SUDO pecl download big_int
+        tar zxf big_int-*.tgz
+        pushd big_int-*
+            phpize
+            chmod a+x configure
+            ./configure
+            make
+            sudo make install
+        popd
+    popd
+    echo "### Be sure to add to your php.ini: extension=$1.so"
+    PACKAGES_INSTALLED="big_int $PACKAGES_INSTALLED"
 fi
+#echo "### big_int..."
+#if [ `$PHP_EXT_TEST big_int` ]; then
+#    $SUDO pecl upgrade big_int
+#else
+#    $SUDO pecl install big_int
+#fi
 # }}}
 # Install inclued {{{
 # No fedora package for inclued
@@ -387,7 +469,7 @@ if [ $DISTRIBUTION = 'fedora' ] && [ $MEMCACHE = 'memcached' ]; then
 #        popd
     fi
 else
-    pecl_update_or_install $MEMCACHE_PKG $MEMCACHE php-pecl-$MEMCACHE "$MEMCACHE_PORT"
+    pecl_update_or_install $MEMCACHE_PKG $MEMCACHE php-pecl-$MEMCACHE "$MEMCACHE_PORT" php5-memcached
 fi
 # }}}
 # Install PEAR packages: {{{ Savant, FirePHP, PhpDocumentor
