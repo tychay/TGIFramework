@@ -131,7 +131,7 @@ class tgif_queue
             //if (!array_key_exists($class, $pos)) { break; }
             $pos =& $pos[$class];
             // no registrered listeners at this level (shouldn't happen but does)
-            if (!array_key_exists('_registrations', $pos)) { error_log(sprintf('%s: unset class! %s', get_class($this), implode(' ',$class))); continue; }
+            if (!array_key_exists('_registrations', $pos)) { error_log(sprintf('%s: unset class! %s', get_class($this), $class)); continue; }
             foreach ($pos['_registrations'] as &$listener) {
                 $listeners[] =& $listener;
             }

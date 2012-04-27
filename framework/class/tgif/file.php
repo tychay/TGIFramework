@@ -48,7 +48,8 @@ class tgif_file
         if ( file_exists($destFile) ) {
             unlink($destFile);
         }
-        if ( link($sourceFile, $destFile) ) {
+        // need to suppress error when linking across filesystems
+        if ( @link($sourceFile, $destFile) ) {
             $success = true;
         } else {
             $success = copy($sourceFile, $destFile);

@@ -25,12 +25,15 @@ SUDO='sudo'
 BASE_DIR=`pwd`
 
 PHP=`which php`
+if [ $PHP != '/usr/bin/php' ]; then
+    echo "### Do to env POSIXness on Linux, we can not depend on /usr/bin/env. Files such as generate_gloabl_version.php assumes PHP are located at /usr/bin/php which is not the case for you. You may need to update these bin/* scripts for this to work."
+fi
 APACHECTL=`which apachectl`
 # Set this to php-memcached instead of php-memcache
 LIBMEMCACHED=""
 PHP_INI=/etc/php.ini # TODO: check php --ini
 
-# MacPorts:
+# MacPorts: {{{
 if [ $DISTRIBUTION = "macports" ]; then
 # Instructions for installing: {{{
 # http://forums.macnn.com/79/developer-center/322362/tutorial-installing-apache-2-php-5-a/
@@ -99,12 +102,14 @@ if [ $DISTRIBUTION = "macports" ]; then
     # Set path to libmemcached (to use php-memcached instead of php-memcache)
     LIBMEMCACHED=/opt/local
 fi
-
+# }}}
+# Fedora/CentOS: {{{
 if [ $DISTRIBUTION = 'fedora' ]; then
     # Set path to libmemcached (to use php-memcached instead of php-memcache)
     LIBMEMCACHED=/usr
 fi
-
+# }}}
+# Ubuntu/Debian: {{{
 if [ $DISTRIBUTION = 'ubuntu' ]; then
     check_dpkg() { dpkg -l $1 | grep ^ii | wc -l; }
     # Set path to libmemcached (to use php-memcached instead of php-memcache)
@@ -131,8 +136,13 @@ if [ $DISTRIBUTION = 'ubuntu' ]; then
     if [ `check_dpkg default-jre` ]; then
         $SUDO apt-get install default-jre
     fi
+    # Needed to generate version numbers
+    if [ `check_dpkg git` ]; then
+        $SUDO apt-get install git
+    fi
     echo "### REMEMBER! On ubuntu, there are two different directories for CLI PHP and APACHE2 PHP configuration. Both must be updated for this script to work properly"
 fi
+# }}}
 # }}}
 # shell function declarations {{{
 pear_installed () { pear list -a | grep ^$1 | wc -l ; }
@@ -266,6 +276,13 @@ WEBGRIND_BIN="${WEBGRIND}-release-${WEBGRIND_VERSION}"
 WEBGRIND_PKG="${WEBGRIND_BIN}.zip"
 WEBGRIND_URL="http://webgrind.googlecode.com/files/${WEBGRIND_PKG}"
 # }}}
+# RUNKIT {{{
+RUNKIT='runkit'
+RUNKIT_VERSION='1.0.3'
+RUNKIT_DIR="${RUNKIT}-${RUNKIT_VERSION}"
+RUNKIT_PKG="${RUNKIT_DIR}.tgz"
+RUNKIT_URL="https://github.com/downloads/zenovich/runkit/${RUNKIT_PKG}"
+# }}}
 # }}}
 PACKAGES_INSTALLED=""
 # }}}
@@ -317,12 +334,7 @@ else
         RUNKIT="$BASE_DIR/packages/pecl/runkit"
     else
         pushd packages
-            RUNKIT='runkit'
-            RUNKIT_VERSION='1.0.3'
-            RUNKIT_DIR="${RUNKIT}-${RUNKIT_VERSION}"
-            RUNKIT_PKG="${RUNKIT_DIR}.tgz"
             if [ ! -f $RUNKIT_PKG ]; then
-                RUNKIT_URL="https://github.com/downloads/zenovich/runkit/${RUNKIT_PKG}"
                 curl -L -O $RUNKIT_URL
             fi
             if [ ! -d $RUNKIT_DIR ]; then

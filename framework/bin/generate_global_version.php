@@ -1,9 +1,9 @@
-#!/usr/bin/env php -drunkit.superglobal="_TAG"
+#!/usr/bin/php -drunkit.superglobal="_TAG"
 <?php
 // vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
 /**
  * Generate a config file that generates a {@link global_version} based on
- * the subversion version and it into the file specified by $1.
+ * the git version and add into a config file specified by $1.
  *
  * This is done using the
  * {@link http://svnbook.red-bean.com/en/1.1/re57.html svnversion} command.
@@ -19,10 +19,19 @@ if (!isset($symbol) && !defined('SYMBOL_FILE')) {
 }
 
 
+$latest_version = exec('git rev-parse HEAD');
 //sometimes you get back a range, so just take the largest value
-$latest_version = max(explode(':',exec('svnversion -n')));
+//$latest_version = max(explode(':',exec('svnversion -n')));
 
-$data = sprintf('<?php /** @package tgiframework */ return array(\'global_version\'=>%d); ?>',$latest_version);
+$version_txt = '<?php
+/**
+ * @package tgiframework
+ */
+return array(
+    \'global_version\' => \'%s\'
+);
+?>';
+$data = sprintf( $version_txt, $latest_version);
 /**
  * Bootstrap tgif_file for writing
  */
