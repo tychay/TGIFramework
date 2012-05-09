@@ -1,4 +1,11 @@
-packages
 build
+packages
+samples/included
+samples/traces
+samples/www/.htaccess
+samples/www/webgrind
+samples/www/phpdoc
+samples/www/m/dyn
+
 tgiframework.esproj
 *.swp
