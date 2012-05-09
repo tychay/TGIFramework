@@ -102,9 +102,22 @@ if (function_exists('apc_fetch')) {
     }
     // }}}
 /* */
-} elseif (function_exists('shm_attach')) {
+//} elseif (function_exists('shm_attach')) {
+} elseif (false) {
     //echo "shm\n";
     // I need semaphore locking for this code to work. Someone please help!
+    // {{{ ftok(): emulation for windows
+    if (!function_exists('ftok')) {
+        function ftok($filename = "", $proj = "") {
+            $st = @stat($pathname);
+            if (!$st) {
+                return -1;
+            }
+  
+            return sprintf("%u", (($st['ino'] & 0xffff) | (($st['dev'] & 0xff) << 16) | (($proj_id & 0xff) << 24)));
+        }
+    }
+    // }}}
     // hack to use shm segments {{{
     // {{{ _shm_init()
     /**
@@ -112,7 +125,9 @@ if (function_exists('apc_fetch')) {
      */
     function _shm_init()
     {
-        $GLOBALS['tgif_shm'] = shm_attach('tgif_shm',1024*1024*16,0666);
+        if (!file_exists('/tmp/tgif_shm')) { touch('/tmp/tgif_shm'); }
+        $key = ftok('/tmp/tgif_shm', 'a');
+        $GLOBALS['tgif_shm'] = shm_attach($key,1024*1024*16,0666);
         register_shutdown_function('shm_detach',$GLOBALS['tgif_shm']);
     }
     // }}}
@@ -156,7 +171,7 @@ if (function_exists('apc_fetch')) {
     function apc_fetch($key, &$success)
     {
         global $tgif_shm;
-        $success = true; // artifact of key gnerator
+        $success = true; // artifact of key generator
         return shm_get_var($tgif_shm,_shm_key($key));
     }
     // }}}
