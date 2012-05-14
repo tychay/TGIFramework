@@ -56,7 +56,7 @@ return array(
         'compressor_jar'    => TGIF_RES_DIR.'/yuicompressor-2.4.2.jar',
         //defaults
         'js'                => array(
-            'version'       => '2.8.2r1',
+            'version'       => '2.9.0',
             //'version'     => '2.5.2',
             'use_cdn'       => 'yahoo', //If you make your own repository,
                                         // this is the base url
@@ -64,7 +64,7 @@ return array(
             'use_rollup'    => false,   //prefer rollup javascripts (not supportd)
         ),
         'css'               => array(
-            'version'       => '2.8.2r1',
+            'version'       => '2.9.0',
             'use_cdn'       => 'yahoo',
             'use_combine'   => true, //can only work when yahoo is use_cdn
         ),

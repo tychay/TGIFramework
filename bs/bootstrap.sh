@@ -568,7 +568,8 @@ pushd samples/www
     pushd $WEBGRIND
         if [ ! -f .htaccess ]; then
             cp ../../res/webgrind.htaccess .htaccess
-            echo "### Update profilerDir to point to $BASE_DIR/samples/traces"
+            echo "### Update profilerDir to point to $BASE_DIR/samples/traces:"
+            read IGNORE
             vim +20 config.php
         fi
     popd

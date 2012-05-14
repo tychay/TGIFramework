@@ -59,7 +59,7 @@ class tgif_compiler_library_yui implements tgif_compiler_library
      * @var array
      */
     protected $_options = array(
-        'version'       => '2.8.2r1',
+        'version'       => '2.9.0',
         'use_cdn'       => 'yahoo',
         'use_combine'   => true,
         'use_rollup'    => true, //does nothing currently

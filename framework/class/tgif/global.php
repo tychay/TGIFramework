@@ -16,7 +16,7 @@ if (!function_exists('apc_fetch')) {
     /**
      * Need apc_* user cache functions (or emulators)
      */
-    require_once LIB_FUNC_DIRD.'cache.php';
+    require_once TGIF_FUNC_DIRD.'cache.php';
 }
 // }}}
 // {{{ tgif_global

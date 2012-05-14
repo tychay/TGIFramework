@@ -111,7 +111,7 @@ $error_level = error_reporting(0);
 ini_set('date.timezone',false);
 $b1 = new tgif_benchmark_iterate(true);
 //$b1->startStop = true;
-$b1->run(10000, 'date', 'c');
+$b1->run(100000, 'date', 'c');
 $b1->description = 'date("c")';
 // }}}
 //echo var_dump($b1->summary);die;
@@ -119,7 +119,7 @@ $b1->description = 'date("c")';
 ini_set('date.timezone','America/Los_Angeles');
 $b2 = new tgif_benchmark_iterate(true);
 //$b2->startStop = true;
-$b2->run(10000, 'date', 'c');
+$b2->run(100000, 'date', 'c');
 $b2->description = 'date("c") + date.timezone';
 // }}}
 // {{{ iterate date() + ini_set
@@ -131,7 +131,7 @@ function ini_and_date() {
 }
 $b4 = new tgif_benchmark_iterate(true);
 //$b4->startStop = true;
-$b4->run(10000, 'ini_and_date');
+$b4->run(100000, 'ini_and_date');
 $b4->description = 'iterate date("c") + ini_set';
 // }}}
 // {{{ date() + date_default_timezone_set
@@ -139,7 +139,7 @@ ini_set('date.timezone',false);
 date_default_timezone_set('America/Los_Angeles');
 $b3 = new tgif_benchmark_iterate(true);
 //$b3->startStop = true;
-$b3->run(10000, 'date', 'c');
+$b3->run(100000, 'date', 'c');
 $b3->description = 'date("c") + date_default_timezone_set()';
 // }}}
 // {{{ iterate date() + date_default_timezone_set
@@ -180,18 +180,18 @@ $server = (isset($_SERVER['SERVER_ADDR'])) ? $_SERVER['SERVER_ADDR'] : php_uname
 // md5 {{{
 $b1 = new tgif_benchmark_iterate(true);
 //$b1->startStop = true; //(so small get division by 0)
-$b1->runGenerator(1000, 'md5', 'gen_guid_data');
+$b1->runGenerator(10000, 'md5', 'gen_guid_data');
 // }}}
 //echo var_dump($b1->summary);die;
 // crc32 {{{
 $b2 = new tgif_benchmark_iterate(true);
 //$b2->startStop = true; //(so small get division by 0)
-$b2->runGenerator(1000, 'crc32', 'gen_guid_data');
+$b2->runGenerator(10000, 'crc32', 'gen_guid_data');
 // }}}
 // md5 {{{
 $b3 = new tgif_benchmark_iterate(true);
 //$b3->startStop = true; //(so small get division by 0)
-$b3->runGenerator(1000, 'sha1', 'gen_guid_data');
+$b3->runGenerator(10000, 'sha1', 'gen_guid_data');
 // }}}
 echo tgif_benchmark_iterate::format($b1->compare($b2,$b3));
 /* */
