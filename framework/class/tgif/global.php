@@ -576,11 +576,11 @@ class tgif_global
      * @param string $name the config parameter to get. If an empty string is
      * provided, it will return all config variables currently loaded.
      * @param boolean $accessSubProperty If true, then it will parses name for
-     *  subproerties. For performance reasons, this defaults to off.
+     *  subproperties. For performance reasons, this defaults to off.
      * @return mixed configuration. This will call {@link __get()} to actually
      *      get the data.
      */
-    function config($name,$accessSubproperty=false)
+    function config($name='',$accessSubproperty=false)
     {
         if (empty($name)) { return $this->_configs; }
         // high performance access
@@ -818,6 +818,10 @@ class tgif_global
      * Remember that "." in root level names are a special case as it implies
      * an overwrite of a subconfiguration parameter.
      *
+     * Warning: it turns out PHP 5.3 breaks b.c. with DirectoryIterator
+     * on some file systems (Parallels Filesystem). To get around do not use
+     * these filesystems and instead NFS mount (or copy the files).
+     *
      * @param string $dir the directory to load from
      * @param array $configs the array to load configs into
      * @return array a list of file names that were processed
@@ -829,6 +833,8 @@ class tgif_global
         if (!is_dir($dir)) { return; }
         $dir_configs = array();
         foreach (new DirectoryIterator($dir) as $item) {
+        //$iterator = new DirectoryIterator($dir);
+        //foreach ($iterator as $item) {
             $file_data = $this->_readConfigFile($item);
             if (!is_array($file_data)) {
                 trigger_error(sprintf('%s::_loadConfigDir(): Config file %s is improperly formatted',get_class($this), $item), E_USER_ERROR);
