@@ -52,7 +52,9 @@ test_runkit();
 <h2>Configuration & Globals</h2>
 <p>Make sure $_TAG global system works and configuration system is working and properly instantiated.</p>
 <ul>
-<li>Cache configuration? <?php var_dump($_TAG->config('readConfig')); ?></li>
+<li>Superglobal state: <?php var_dump($_TAG); ?></li>
+<li>Config state: <?php var_dump($_TAG->config()); ?></li>
+<li>Cache configuration? <?php var_dump($_TAG->config('_readConfig')); ?></li>
 <li>Files read for configuration: <?php var_dump($_TAG->config('configFiles')); ?></li>
 <li>'gld_firephp' global config is <?php var_dump($_TAG->config('gld_firephp')); ?></li>
 <li>'testConf' local config is <?php var_dump($_TAG->config('testConf')); ?></li>
