@@ -21,8 +21,8 @@
  * @author terry chay <tychay@php.net>
  */
 return array(
-// {{{ readConfig
-'readConfig'    => false,
+// {{{ _readConfig
+'_readConfig'    => false,
 // }}}
 // firephp {{{
 'firephp'   => array(
