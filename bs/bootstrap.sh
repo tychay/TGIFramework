@@ -316,7 +316,7 @@ if [ `which pecl` ]; then
 fi
 # }}}
 # Install APC {{{
-pecl_update_or_install apc $APC php-pecl-apc php5-apc
+pecl_update_or_install apc $APC php-pecl-apc php5-apc php-apc
 # }}}
 # Install runkit {{{
 if [ `$PHP_EXT_TEST runkit` ]; then
