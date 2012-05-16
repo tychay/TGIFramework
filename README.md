@@ -84,6 +84,7 @@ How to install TGIFramework
    `$ git clone git://github.com/tychay/TGIFramework.git`
 2. Go to the root of the directory
 3. `$ ./bs/bootstrap.sh` (YMMV on whether this works without modifications)
+4. `$ ./bs/build_samples.sh` (this will build the samples website)
 4. Add `samples/www` so that your website can access it (I assume Apache if
    with an `.htaccess` file, if using something else, you must port the file)
 5. Access it. It now should work!

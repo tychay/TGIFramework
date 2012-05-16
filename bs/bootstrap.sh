@@ -1,6 +1,8 @@
 #!/bin/bash
 # vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker:
-# This boostraps the framework, be sure to execute from base directory (not this directory) i.e.: $ ./bs/bootstrap.sh
+
+# This boostraps the framework, be sure to execute from base directory (not
+# this directory) i.e.: $ ./bs/bootstrap.sh
 
 #DO_UPGRADE='1' #Set this to upgrade
 # EDITME: Set the full path to binaries {{{
@@ -521,62 +523,7 @@ pushd framework/res
         cp $BASE_DIR/build/$YUIC_BIN/build/${YUIC_BIN}.jar .
     fi
 popd
-pushd samples/www/m/res
-    if [ ! -d yui ]; then
-        mkdir yui
-    fi
-    if [ ! -d yui/${YUI_VERSION} ]; then
-        echo "### INSTALLING yui/${YUI_VERSION}..."
-        mv $BASE_DIR/build/yui ./yui/${YUI_VERSION}
-    fi
-popd
 # }}}
-# SAMPLES: Install samples {{{
-echo "### Building global_version config...."
-./framework/bin/generate_global_version.php samples/config/global_version.php
-pushd samples
-    if [ ! -d traces ]; then
-        mkdir traces
-        chmod 777 traces
-    fi
-    if [ ! -d inclued ]; then
-        mkdir inclued
-        chmod 777 inclued
-    fi
-    if [ ! -f www/.htaccess ]; then
-        echo "### Building .htaccess file for samples...."
-        cat res/default.htaccess | sed "s|{{{BASE_DIR}}}|${BASE_DIR}|" >www/.htaccess
-    fi
-    if [ ! -d www/m/dyn ]; then
-        mkdir www/m/dyn
-        chmod 777 www/m/dyn
-    fi
-popd
-# }}}
-# SAMPLES: Install WebGrind {{{
-pushd packages
-    if [ ! -f ${WEBGRIND_PKG} ]; then
-        echo "### Downloading $WEBGRIND_URL..."
-        curl -O $WEBGRIND_URL;
-    fi
-popd
-pushd samples/www
-    if [ ! -d ${WEBGRIND} ]; then
-        echo "### Unpacking ${WEBGRIND_PKG}..."
-        unzip $BASE_DIR/packages/${WEBGRIND_PKG}
-    fi
-    pushd $WEBGRIND
-        if [ ! -f .htaccess ]; then
-            cp ../../res/webgrind.htaccess .htaccess
-            echo "### Update profilerDir to point to $BASE_DIR/samples/traces:"
-            read IGNORE
-            vim +20 config.php
-        fi
-    popd
-popd
-# }}}
-#echo "### Running phpdoc"
-#./bs/phpdoc.sh
 if [ "$PACKAGES_INSTALLED" ]; then
     echo '### You may need to add stuff to your $PHP_INI (or /etc/php.d/) and restart'
     echo "###  $PACKAGES_INSTALLED"
