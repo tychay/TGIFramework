@@ -86,10 +86,11 @@ How to install TGIFramework
 
 2. Make sure you have the basic LAMP stack set up (ex for ubuntu install)
 
-	$ sudo apt-get intall git  
+	$ sudo apt-get intall git make re2c
 	$ sudo apt-get install apache2  
+	(consider [upgrading to php 5.4](http://www.barryodonovan.com/index.php/2012/05/22/ubuntu-12-04-precise-pangolin-and-php-5-4-again))
 	$ sudo apt-get install php5 libapache2-mod-php5  
-	$ sidp apt-get install php-pear php-pecl  
+	$ sudo apt-get install php-pear php-pecl  
 	(create phpinfo in /var/www/phpinfo.php)  
 	$ sudo apachectl restart  
 
