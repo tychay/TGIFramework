@@ -81,14 +81,25 @@ How to install TGIFramework
 ---------------------------
 
 1. [Download][download tgif] and uncompress TGIFramework or
-   `$ git clone git://github.com/tychay/TGIFramework.git`
-2. Go to the root of the directory
-3. `$ ./bs/bootstrap.sh` (YMMV on whether this works without modifications)
-4. `$ ./bs/build_samples.sh` (this will build the samples website)
-4. Add `samples/www` so that your website can access it (I assume Apache if
+
+	$ git clone git://github.com/tychay/TGIFramework.git
+
+2. Make sure you have the basic LAMP stack set up (ex for ubuntu install)
+
+	$ sudo apt-get intall git  
+	$ sudo apt-get install apache2  
+	$ sudo apt-get install php5 libapache2-mod-php5  
+	$ sidp apt-get install php-pear php-pecl  
+	(create phpinfo in /var/www/phpinfo.php)  
+	$ sudo apachectl restart  
+
+3. Go to the root of the directory
+4. `$ ./bs/bootstrap.sh` (YMMV on whether this works without modifications)
+5. `$ ./bs/build_samples.sh` (this will build the samples website)
+6. Add `samples/www` so that your website can access it (I assume Apache if
    with an `.htaccess` file, if using something else, you must port the file)
-5. Access it. It now should work!
-6. `samples/` can be trolled for a basic outline of how such a application
+7. Access it. It now should work!
+8. `samples/` can be trolled for a basic outline of how such a application
    configuration and such should work. Normally the framework directory should
    live inside your application, but your app can be put inside tgiframewrok
    like `samples/` is.
