@@ -1,19 +1,15 @@
 <?php
 // vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
 /**
- * Container for {@link tgif_page}
+ * Container for {@link tgif_page}.
+ *
+ * This now uses composer to autoload Savant3
  *
  * @package tgiframework
  * @subpackage ui
  * @copyright 2007 Tagged, Inc. <http://www.tagged.com/>, 2009-2010 terry chay <tychay@php.net>
  * @todo fork Savant (remove plugin stuff etc.)
  */
-// imports {{{
-/**
- * Uses savant library for View layer
- */
-require_once 'Savant3.php';
-// }}}
 // {{{ tgif_page
 /**
  * Handle the presentation layer when using Savant to display web pages.
@@ -118,4 +114,3 @@ class tgif_page extends Savant3
 // note that the tag_queue callback for this is already in the config thing
 // We need to ignore user abort because we will be queueing jobs ex post facto
 //ignore_user_abort(true);
-?>
