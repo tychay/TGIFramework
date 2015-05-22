@@ -4,15 +4,21 @@
  * Framework to include on every page
  *
  * This does the following:
+ * - start the timer (if not already)
  * - define a few constants to make referencing easier
+ * - bind the class loader
+ * - get the application symbol and create the application global ($_TAG)
+ * - create the event queue ($_TAG->queue)
+ * - create the diagnostics object ($_TAG->diagnostics)
  * 
  * @package tgiframework
  * @subpackage global
- * @copyright 2009 terry chay
+ * @copyright 2009-2015 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
+ * @todo rename and mov the spl register function
  */
-// start timer {{{
+// start timer
 if (!isset($GLOBALS['_start_time'])) {
     /**
      * As near as we can get to the start time of the script.
@@ -25,71 +31,55 @@ if (!isset($GLOBALS['_start_time'])) {
      */
     $GLOBALS['_start_time'] = microtime();
 }
-// }}}
-// define constants {{{
-// {{{ TGIF_DIR
+
+// define constants
+// TGIF_DIR
 if (!defined('TGIF_DIR')) {
     /**
      * The directory where the framework code is stored
      */
     define('TGIF_DIR',dirname(dirname(realpath(__FILE__))));
 }
-// }}}
-// TGIF_FUNC_DIRD {{{
+// TGIF_FUNC_DIRD
 /**
  * The directory where functions used by the framework are stored
  */
 define('TGIF_FUNC_DIRD', TGIF_DIR.DIRECTORY_SEPARATOR.'func'.DIRECTORY_SEPARATOR);
-// }}}
-// TGIF_CLASS_DIR {{{
+// TGIF_CLASS_DIR
 /**
  * The directory where the "tgif_" namespace classes are stored
  */
 define('TGIF_CLASS_DIR', TGIF_DIR.DIRECTORY_SEPARATOR.'class');
-// }}}
-// TGIF_RES_DIR {{{
+// TGIF_RES_DIR
 /**
  * The directory where framework resources are stored
  */
 define('TGIF_RES_DIR', TGIF_DIR.DIRECTORY_SEPARATOR.'res');
-// }}}
-// {{{ TGIF_CONF_PATH
+// TGIF_CONF_PATH
 if (!defined('TGIF_CONF_PATH')) {
     /**
      * where to get configururation overrides
      */
     define('TGIF_CONF_PATH','');
 }
-// }}}
-// }}}
-// bind autoload {{{
-/**
- * Lookup function for objects
- */
-if (!function_exists('__autoload')) {
-    // Load the default callback so that the framework works
-    require_once TGIF_FUNC_DIRD.'__autoload.php';
-} // else you must have written and defined your own autoloader
-if (strcmp(ini_get('unserialize_callback_func'),'__autoload')!==0) {
-    // Didn't set the serialze to autoload in php.ini
-    ini_set('unserialize_callback_func','__autoload');
-}
-// }}}
-// global config and variables {{{
+
+// bind autoload
+require_once TGIF_FUNC_DIRD.'__autoload.php';
+spl_autoload_register('__autoload');
+
+// global config and variables
 if (empty($symbol)) {
     if (!defined('SYMBOL_FILE')) { die('Define a SYMBOL_FILE to point to a php file that returns a three letter code!'); }
     $symbol = @include(SYMBOL_FILE);
     if (empty($symbol)) { die(sprintf('Set up %s!',$SYMBOL_FILE)); }
 }
-// This should be superglobaled already by runkit (let's hope so!)
-//$GLOBALS['_TAG'] = tgif_global::get_instance($symbol);
-//$_TAG = $GLOBALS['_TAG'];
-$_TAG = tgif_global::get_instance($symbol);
-// }}}
-// Turn on queue and diagnostics {{{
+$GLOBALS['_TAG'] = tgif_global::get_instance($symbol);
+$_TAG = $GLOBALS['_TAG'];
+
+// Turn on queue and diagnostics
 $_TAG->queue = new tgif_queue();
 register_shutdown_function(array($_TAG->queue,'publish'),'shutdown');
-// diagnostics {{{
+// diagnostics
 if (defined('DISABLE_DIAGNOSTICS') && DISABLE_DIAGNOSTICS) {
     // tgif_diagnostics starts up it's own buffer
     ob_start();
@@ -104,7 +94,6 @@ if (defined('DISABLE_DIAGNOSTICS') && DISABLE_DIAGNOSTICS) {
     $_TAG->diagnostics->setPageTimer($GLOBALS['_start_time']);
     unset($GLOBALS['_start_time']);
 }
-// }}}
-// }}}
+
 // Exceptions and error handling
 ?>
