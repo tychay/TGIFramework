@@ -88,19 +88,22 @@ class tgif_memcached_pool_memcached extends tgif_memcached_pool
     // {{{ + _makeObject($config,$servers,$name)
     private static function _makeObject($config, $servers, $name)
     {
+        global $_TAG;
+
         if ($config['persist']) {
             $m = new memcached($name);
         } else {
             $m = new memcached();
         }
-        // compression {{{
+
+        // compression
         $threshold = $config['compressThreshold'];
         if ( $threshold === false ) {
             // Memcached::OPT_COMPRESSION: default=true (100 bytes)
             $m->setOption(Memcached::OPT_COMPRESSION, false);
         }
-        // }}}
-        // serializer {{{
+
+        // serializer
         switch ($config['serializer']) {
             case 'igbinary': 
             // Memcached::OPT_SERIALIZER default=Memcached::SERIALIZER_PHP
@@ -114,11 +117,12 @@ class tgif_memcached_pool_memcached extends tgif_memcached_pool
             }
             break;
         }
-        // }}}
+
         // Auto prepend the symbol on all requests. This saves cpu and ensures
         // this cache is independent of other applications 
         $m->setOption(Memcached::OPT_PREFIX_KEY, $_TAG->symbol());
-        // hashing {{{
+
+        // hashing
         if ( $hash = $config['hashing'] ) {
             // Memcached::OPT_HASH default=Memcached::HASH_DEFAULT (Jenkins one-at-a-time)
             switch (strtolower($hash)) {
@@ -150,8 +154,8 @@ class tgif_memcached_pool_memcached extends tgif_memcached_pool
                 //default:
             }
         }
-        // }}}
-        // distribution {{{
+
+        // distribution
         switch ($config['distribution']) {
             // Memcached::OPT_DISTRIBUTION default=Memcached::DISTRIBUTION_MODULA (MAY CHANGE IN THE FUTURE)
             case 'modula': 
@@ -167,7 +171,7 @@ class tgif_memcached_pool_memcached extends tgif_memcached_pool
             default:
             $m->setOption(Memcached::OPT_DISTRIBUTION, Memcached::DISTRIBUTION_CONSISTENT);
         }
-        // }}}
+
         //Memcached::OPT_BUFFER_WRITES
         // Enable binary protocol:
         $m->setOption(Memcached::OPT_BINARY_PROTOCOL, true);;
@@ -183,8 +187,8 @@ class tgif_memcached_pool_memcached extends tgif_memcached_pool
             // Memcached::OPT_SEND_TIMEOUT: using non-blocking IO
             // Memcached::OPT_RECV_TIMEOUT: using non-blocking IO
         }
-        // }}}
-        // retryTimeout {{{
+
+        // retryTimeout
         $timeout == $config['retryTimeout'];
         if ( $timeout != 0 ) {
             // Memcached::OPT_RETRY_TIMEOUT: default=0 (no wait)
@@ -194,9 +198,11 @@ class tgif_memcached_pool_memcached extends tgif_memcached_pool
             $m->setOption(Memcached::OPT_POLL_TIMEOUT, (int) ($timeout*1000));
             $m->setOption(Memcached::OPT_SERVER_FAILURE_LIMIT, 3);
         }
-        // }}}
-        // enable caching of DNS lookups (for speed)
-        $m->setOption(Memcached::OPT_CACHE_LOOKUPS, true);;
+
+        // enable caching of DNS lookups (for speed). Note that DNS lookups are
+        // (since version 0.46) always cached until error occrs and this option
+        // is deprecated.
+        //$m->setOption(Memcached::OPT_CACHE_LOOKUPS, true);
 
         $m->addServers($servers);
         return $m;
@@ -231,4 +237,3 @@ class tgif_memcached_pool_memcached extends tgif_memcached_pool
     // }}}
 }
 // }}}
-?>
