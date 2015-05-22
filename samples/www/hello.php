@@ -14,4 +14,3 @@ $page = new tgif_page();
 $page->assign('title','Test');
 $page->assign('greeting','Hello world');
 $page->render('hello.php');
-?>
