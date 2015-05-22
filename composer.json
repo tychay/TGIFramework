@@ -1,0 +1,25 @@
+{
+	"name": "tychay/tgif",
+	"description": "TGIFramework is a performance-optimized PHP framework.",
+	"type": "library",
+	"homepage": "https://github.com/tychay/TGIFramework",
+	"license": "LGPL-2.1+",
+	"authors": [
+		{
+			"name": "terry chay",
+			"email": "tychay@php.net",
+			"homepage": "http://terrychay.com/"
+		}
+	],
+	"support": {
+		"issues": "https://github.com/tychay/TGIFramework/issues",
+		"source": "https://github.com/tychay/TGIFramework"
+	},
+	"autoload": {
+		"files": [ "framework/inc/preinclude.php" ]
+	},
+	"require": {
+		"firephp/firephp-core": "*",
+		"saltybeagle/savant3": "dev-master"
+	}
+}
