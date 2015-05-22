@@ -10,8 +10,8 @@
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
  */
-// {{{  __autoload($class_name)
-// comments {{{
+
+// __autoload($class_name)
 /**
  * See {@link http://php.net/autoload}
  *
@@ -63,10 +63,9 @@
  * @todo Make a switch to enable alternate "stub" class load
  * @todo Log what class forces a load of classmaps table (use inclued)
  */
-// }}}
 function __autoload($class_name)
 {
-    //global $_TAG; //runkit enabled superglobals
+    global $_TAG; //runkit enabled superglobals
     static $map_table;
     // No need to require_once since this will only be called when the
     // class doesn't exist.
@@ -118,8 +117,8 @@ function __autoload($class_name)
     }
     trigger_error(sprintf('Cannot find class: %s',$class_name));
 }
-// }}}
-// {{{ __autoload_maptable()
+
+// __autoload_maptable()
 /**
  * Callback handler for the "constructor" of the maptable autoloader.
  *
@@ -140,8 +139,8 @@ function __autoload_maptable()
     if (!file_exists($filename)) { return array(); }
     return include($filename);
 }
-// }}}
-// {{{ __autoload_xform($class_name[,$base_dird])
+
+// __autoload_xform($class_name[,$base_dird])
 /**
  * Does a simple load and return.
  *
@@ -170,5 +169,3 @@ function __autoload_xform($class_name ,$base_dird='')
     return false;
      */
 }
-// }}}
-?>
