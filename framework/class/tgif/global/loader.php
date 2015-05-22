@@ -498,7 +498,7 @@ class tgif_global_loader extends tgif_global_object
      */
     function dispatch($stopAt='')
     {
-        //global $_TAG;
+        global $_TAG;
 
         // we may be reloading object, so clear the "last" exception
         $this->__exception = null;
@@ -675,7 +675,7 @@ class tgif_global_loader extends tgif_global_object
      */
     public function setToCache($data, $deferSmem=false, $deferMemcache=false)
     {
-        //global $_TAG;
+        global $_TAG;
         // Throw object update notification {{{
         if (is_object($data) && $_TAG->queue) {
             $_TAG->queue->publish(array('object',get_class($data),'updateCache'), array('obj'=>$data));
@@ -732,7 +732,7 @@ class tgif_global_loader extends tgif_global_object
      */
     public function deleteFromCache($deferSmem=false,$deferMemcache=false)
     {
-        //global $_TAG;
+        global $_TAG;
         $result = true;
         // handle deleteAction {{{
         if ($this->_deleteAction) {
@@ -791,7 +791,7 @@ class tgif_global_loader extends tgif_global_object
      */
     public static function get_from_cache($params, $useSmem=false, $useMemcache=false)
     {
-        //global $_TAG;
+        global $_TAG;
         // read from smem {{{
         if ( $useSmem ) {
             $key = ( isset($params['smem_key']) )
@@ -848,7 +848,7 @@ class tgif_global_loader extends tgif_global_object
     public static function set_to_cache($params, $data, $useSmem=false, $useMemcache=false)
     {
         //var_dump(array('set_to_cache',$params,$data,$useSmem,$useMemcache));
-        //global $_TAG;
+        global $_TAG;
         $return = true;
         // write to smem {{{
         if ( $useSmem ) {

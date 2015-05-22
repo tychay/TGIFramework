@@ -51,14 +51,14 @@ class tgif_memcached_pool_proxy extends tgif_memcached_pool
      */
     function __call($function,$args)
     {
-        //global $_TAG;
+        global $_TAG;
         return call_user_func_array(array($this->_obj,$function),$args);
     }
     // }}}
     // {{{ - get($key[,$group])
     function get($key, $group='')
     {
-        //global $_TAG;
+        global $_TAG;
         $_TAG->diagnostics->startTimer('memcache', 'get', array(
             'key'   => $key,
             'group' => $group,
@@ -73,7 +73,7 @@ class tgif_memcached_pool_proxy extends tgif_memcached_pool
     // {{{ - set($key,$var,[,$group,$expire])
     function set($key, $var, $group='', $expire=-1)
     {
-        //global $_TAG;
+        global $_TAG;
         //$size = (is_string($var)) ? strlen($var) : strlen(serialize($var)); // not always accurate if using igbinary
         $_TAG->diagnostics->startTimer('memcache', 'set', array(
             'key'   => $key,

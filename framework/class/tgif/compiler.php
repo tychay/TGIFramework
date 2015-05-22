@@ -168,7 +168,7 @@ class tgif_compiler
      */
     protected function __construct($options)
     {
-        //global $_TAG;
+        global $_TAG;
         $this->_options = array_merge($this->_options, $options);
         foreach ($this->_options['libraries'] as $class_name=>$config_name) {
             $this->_libraries[$class_name] = new $class_name($_TAG->config($config_name, true));
@@ -795,7 +795,7 @@ class tgif_compiler
      */
     private function _catFiles(&$fileDatas)
     {
-        //global $_TAG;
+        global $_TAG;
         // No need to check for empty case because this will never be called
         //   for an empty list or a single file concatenation.
 

@@ -488,7 +488,7 @@ class tgif_global
      */
     function deleteFromCache($variableName, $params=array())
     {
-        //global $_TAG; //superglobal biatch!
+        global $_TAG; //superglobal biatch!
         if (isset($this->_globals[$variableName])) {
             // TODO: make this smarter by only clearing the one object specified by $params
             unset($this->_globals[$variableName]);

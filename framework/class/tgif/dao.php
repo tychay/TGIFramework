@@ -143,7 +143,7 @@ class tgif_dao
      */
     private function _get_cols()
     {
-        //global $_TAG;
+        global $_TAG;
         if ( !static::$_cols )  {
             static::$_cols = $_TAG->dbh->getResults( sprintf(self::_SQL_GET_COL, $this->_table_name), array(), 'ARRAY_N' );
         }
@@ -216,7 +216,7 @@ class tgif_dao
      */
     function _read($whereKeys=array())
     {
-        //global $_TAG;
+        global $_TAG;
         $wheres = array();
         if ( empty($whereKeys) ) {
             foreach ($this->_primaryKeys as $key) {
@@ -279,7 +279,7 @@ class tgif_dao
      */
     function insert($forceUpdate=false)
     {
-        //global $_TAG;
+        global $_TAG;
         $dbh = $_TAG->dbh;
         $success = $dbh->insert( $this->_table_name, $this->_data );
         if (!$success) {
@@ -311,7 +311,7 @@ class tgif_dao
      */
     function insertOrUpdate($whereKeys, $forceUpdate=false)
     {
-        //global $_TAG;
+        global $_TAG;
         $dbh    = $_TAG->dbh;
         $data   = $this->_data;
         $wheres = array();
@@ -423,7 +423,7 @@ class tgif_dao
      */
     public function save()
     {
-        //global $_TAG;
+        global $_TAG;
         // don't db call if nothing changed
         if (!$this->_isChanged) { return; }
         // weird error case: __destruct() function sometimes doesn't have superglobal

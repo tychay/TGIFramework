@@ -81,7 +81,7 @@ class tgif_memcached_pool
      */
     protected function _formatKeyAsArray(&$key, $group)
     {
-        //global $_TAG;
+        global $_TAG;
         if (!is_array($key)) {
             $key = array($key,$key);
         }

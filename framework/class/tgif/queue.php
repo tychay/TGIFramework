@@ -223,7 +223,7 @@ class tgif_queue
      */
     function _loadPrequeue($queueClasses)
     {
-        //global $_TAG; //runkit
+        global $_TAG; //runkit
         if (empty($_TAG)) { return; } //in some places, the global might be missing.
         $this_prequeue = '_q';
         $pos =& $this->_listeners;

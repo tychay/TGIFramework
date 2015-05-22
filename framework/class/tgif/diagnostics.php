@@ -141,7 +141,7 @@ class tgif_diagnostics
      */
     public function __construct()
     {
-        //global $_TAG; // runkit superglobal
+        global $_TAG; // runkit superglobal
         // read configuration and override defaults
         if ( is_array($config = $_TAG->config('diagnostics')) ) {
             $this->_config = array_merge( $this->_config, $config );
@@ -187,7 +187,7 @@ class tgif_diagnostics
     // {{{ - shutdown()
     public function shutdown()
     {
-        //global $_TAG; //runkit
+        global $_TAG; //runkit
         if (empty($_TAG)) { return; } //sometimes $_TAG is missing
         $datasize = strlen(ob_get_contents());
         $this->setPeakMemory();
@@ -316,7 +316,7 @@ class tgif_diagnostics
      */
     function startTimer($timer_name, $name='', $stuff=array())
     {
-        //global $_TAG; //runkit
+        global $_TAG; //runkit
         //if ($_TAG->config('firephp.diagnostics', true) && ($timer_name!='diagnostics')) { $_TAG->firephp->log(sprintf('started %s',$timer_name),'timer'); }
         // don't record if page already shut down
         if ((strcmp($timer_name,'page')!==0)  && !array_key_exists('page',$this->_timers)) { return; }
@@ -336,7 +336,7 @@ class tgif_diagnostics
      */
     function stopTimer($timer_name,$more_stuff=array())
     {
-        //global $_TAG; //runkit
+        global $_TAG; //runkit
         //if ($_TAG->config('firephp.diagnostics', true) && ($timer_name!='diagnostics')) { $_TAG->firephp->log(sprintf('stopped %s',$timer_name),'timer'); }
         // don't record if page already shut down
         if (!array_key_exists('page',$this->_timers)) { return; }
@@ -431,7 +431,7 @@ class tgif_diagnostics
      */
     function beginSnapshot($snapshotId, $params=array())
     {
-        //global $_TAG; //runkit
+        global $_TAG; //runkit
         $this->_diagStart();
         //if ($_TAG->config('firephp.diagnostics', true)) { $_TAG->firephp->log(sprintf('started %s',$snapshotId),'snap'); }
         // don't overwrite a snap!
@@ -452,7 +452,7 @@ class tgif_diagnostics
      */
     function setSnapshotParam($snapshotId, $key, $value)
     {
-        //global $_TAG; //runkit
+        global $_TAG; //runkit
         $this->_diagStart();
         // test for existence
         if (!array_key_exists($snapshotId, $this->_snaps)) {
@@ -476,7 +476,7 @@ class tgif_diagnostics
      */
     function endSnapshot($snapshotId)
     {
-        //global $_TAG; //runkit
+        global $_TAG; //runkit
         $this->_diagStart();
         //if ($_TAG->config('firephp.diagnostics', true)) { $_TAG->firephp->log(sprintf('stopped %s',$snapshotId),'snap'); }
         // test for existence

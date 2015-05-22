@@ -127,7 +127,7 @@ class tgif_memcached_pool_memcache extends tgif_memcached_pool
     // {{{ - get($key[,$group])
     function get($key, $group='')
     {
-        //global $_TAG;
+        global $_TAG;
         $this->_formatKeyAsArray($key, $group);
         var_dump($key);
 
@@ -139,7 +139,7 @@ class tgif_memcached_pool_memcache extends tgif_memcached_pool
     // {{{ - set($key,$var[,$group,$expire])
     function set($key, $var, $group='', $expire=-1)
     {
-        //global $_TAG;
+        global $_TAG;
         $this->_formatKeyAsArray($key, $group);
 
         if ($expire <= 0) {

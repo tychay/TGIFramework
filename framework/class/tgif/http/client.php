@@ -109,7 +109,7 @@ class tgif_http_client
      */
     private static function _diag_start($function, $data=array())
     {
-        //global $_TAG;
+        global $_TAG;
         if (!$isRunning = $_TAG->diagnostics->isRunning('curl')) {
             $_TAG->diagnostics->startTimer('curl', $function, $data);
         }
@@ -125,7 +125,7 @@ class tgif_http_client
      */
     private static function _diag_stop($isRunning, $data=array())
     {
-        //global $_TAG;
+        global $_TAG;
         if ( $isRunning ) { return; }
         $_TAG->diagnostics->stopTimer('curl', $data=array());
     }

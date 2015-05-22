@@ -251,7 +251,7 @@ class tgif_memcached implements ArrayAccess
      */
     function __construct()
     {
-        //global $_TAG;
+        global $_TAG;
         if ( $port = $_TAG->config('memcached.default_port',true) ) {
             $this->_defaultPort = $port;
         } elseif ( $port = ini_get('memcache.default_port') ) {
@@ -273,7 +273,7 @@ class tgif_memcached implements ArrayAccess
      */
     private function _loadDefaultConfig()
     {
-        //global $_TAG;
+        global $_TAG;
         $configs = $_TAG->config('memcached.config_default',true);
         if ( $configs ) {
             $this->_defaultConfig = array_merge($this->_defaultConfig, $configs);
@@ -569,7 +569,7 @@ class tgif_memcached implements ArrayAccess
      */
     private function _serverSetDisabled($serverId, $isDisabled, $retryTimeout=100)
     {
-        //global $_TAG;
+        global $_TAG;
         $key = 'memcache_server_'.$serverId; //slightly faster than sprintf()
         if ($isDisabled) {
             apc_store($key,time() + $retryTimeout);

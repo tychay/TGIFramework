@@ -43,7 +43,7 @@ class tgif_compiler_js extends tgif_compiler
      */
     function __construct($options)
     {
-        //global $_TAG;
+        global $_TAG;
         if ( !isset($options['bin_java']) ) {
             $options['bin_java'] = $_TAG->config('bin_java');
         }
@@ -114,7 +114,7 @@ class tgif_compiler_js extends tgif_compiler
      */
     protected function _compileFileExec($sourcePath, $destPath, $backgroundPath='')
     {
-        //global $_TAG;
+        global $_TAG;
         $cmd = sprintf('%s -jar %s --type js -o %s %s',
             $this->_options['bin_java'],
             $this->_options['yui_compressor'],
@@ -164,7 +164,7 @@ class tgif_compiler_js extends tgif_compiler
      */
     public static function compile_file_service($sourceFileData, $targetFilePath)
     {
-        //global $_TAG;
+        global $_TAG;
         $h = new tag_service_hessianClient(
             $_TAG->config('js_css_compiler_udp_host'),
             array('use_udp'  => true)

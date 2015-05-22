@@ -174,7 +174,7 @@ class tgif_file
      */
     private static function _diag_start($function, $data=array())
     {
-        //global $_TAG;
+        global $_TAG;
         if (!$isRunning = $_TAG->diagnostics->isRunning('file')) {
             $_TAG->diagnostics->startTimer('file', $function, $data);
         }
@@ -191,7 +191,7 @@ class tgif_file
      */
     private static function _diag_stop($isRunning, $data=array())
     {
-        //global $_TAG;
+        global $_TAG;
         if ( $isRunning ) { return; }
         $_TAG->diagnostics->stopTimer('file', $data=array());
     }
