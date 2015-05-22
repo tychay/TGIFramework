@@ -1,4 +1,6 @@
-<html><head><title>Some examples of framework features</title>
+<?php
+global $_TAG;
+?><html><head><title>Some examples of framework features</title>
 <body><?php
 // vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -37,6 +39,7 @@ trigger_error('Testing user error');
  */
 function test_runkit()
 {
+    global $_TAG;
 ?>
 <ul>
 <li>'_TAG->foo' is <?php var_dump($_TAG->foo); ?></li>
