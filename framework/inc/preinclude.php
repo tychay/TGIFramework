@@ -38,7 +38,7 @@ if (!defined('TGIF_DIR')) {
     /**
      * The directory where the framework code is stored
      */
-    define('TGIF_DIR',dirname(dirname(realpath(__FILE__))));
+    define('TGIF_DIR',dirname(realpath(__DIR__)));
 }
 // TGIF_FUNC_DIRD
 /**
@@ -62,6 +62,9 @@ if (!defined('TGIF_CONF_PATH')) {
      */
     define('TGIF_CONF_PATH','');
 }
+
+// composer autoload
+require_once dirname(TGIF_DIR).'/vendor/autoload.php';
 
 // bind autoload
 require_once TGIF_FUNC_DIRD.'__autoload.php';
