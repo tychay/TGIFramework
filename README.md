@@ -94,39 +94,41 @@ in TGIFramework. To create a different site, create a new project directory
 with a different name and model its tree structure after the sample site
 and update the `Vagrantfile` to build out that version.
 
-### How to build your own app using TGIFramework
---------------------------------------------
+### How to build your own app using TGIFramework ###
 
 If you already have infrastructure with the correct packages installed,
 then you can manually install it.
 
-1. [Download][download tgif] and uncompress TGIFramework or
-    ```shell
-    $ git clone git://github.com/tychay/TGIFramework.git tgif
-    ```
-2. Run composer on TGIFramework
-   ```shell
-   $ cd tgif
-   $ composer install
-   ```
-3. In your own project, be sure to load something that defines the application 
-   symbol and includes the Composer prepend script on any pages that use 
-   TGIFramework.
-   (Note to previous: runkit superglobals were removed because runkit is no
-   longer maintained; `auto_prepend_file` was removed to work better with
-   fastcgi pools; `unserialize_callback_function` is no longer needed since
-   the introduction of `spl_autoload`.)
-   ```php
-   <?php
-   // A symbol is used in order to allow multiple TGIFramework apps to run on
-   // the same machne and not overwrite each others shared memory caches.
-   // Either manually call it or define a PHP SYMBOL_FILE that returns it. 
-   // There is a shell script /bin/generate_global_version.php that can create 
-   // one for you.
-   $symbol = 'SYM';
-   require_once "/path/to/tgif/vendor/autoload.php";
-   ?>
-   ```
+[Download][download tgif] and uncompress TGIFramework or
+```shell
+$ git clone git://github.com/tychay/TGIFramework.git tgif
+```
+
+Run composer on TGIFramework
+```shell
+$ cd tgif
+$ composer install
+```
+
+In your own project, be sure to load something that defines the application 
+symbol and includes the Composer prepend script on any pages that use 
+TGIFramework.
+(Note to previous: runkit superglobals were removed because runkit is no
+longer maintained; `auto_prepend_file` was removed to work better with
+fastcgi pools; `unserialize_callback_function` is no longer needed since
+the introduction of `spl_autoload`.)
+
+```php
+<?php
+// A symbol is used in order to allow multiple TGIFramework apps to run on
+// the same machne and not overwrite each others shared memory caches.
+// Either manually call it or define a PHP SYMBOL_FILE that returns it. 
+// There is a shell script /bin/generate_global_version.php that can create 
+// one for you.
+$symbol = 'SYM';
+require_once "/path/to/tgif/vendor/autoload.php";
+?>
+```
 
 Licensing
 ---------
