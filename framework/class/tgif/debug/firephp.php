@@ -32,12 +32,6 @@ class tgif_debug_firephp
     {
         global $_TAG;
         if ($_TAG->config('firephp.enable',true)) {
-            // explicitly require because the naming convention doesn't obey
-            // PEAR's naming standards
-            /**
-             * When firephp_enable config is set, we need the FirePHPCore
-             */
-            require_once('FirePHPCore/FirePHP.class.php');
             // $_TAG->queue starts up an output buffer already
             //ob_start();
             return FirePHP::getInstance(true);
