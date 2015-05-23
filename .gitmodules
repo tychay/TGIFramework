@@ -1,4 +1,0 @@
-[submodule "samples/www/APC-Admin"]
-	path = samples/www/APC-Admin
-	url = https://github.com/jithinjose2/APC-Admin
-	fetchRecurseSubmodules = true
