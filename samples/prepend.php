@@ -24,7 +24,7 @@ $_start_time = microtime();
 /**
  * The directory where the code tree is stored
  */
-define('BASE_DIR', dirname(dirname(realpath(__FILE__))));
+define('BASE_DIR', dirname(realpath(__DIR__)));
 // }}}
 // TGIF_DIR {{{
 /**

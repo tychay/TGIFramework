@@ -14,7 +14,7 @@
 /**
  * Some weirdness involved with implements not being loaded
  */
-include_once(dirname(__FILE__).'/../library.php');
+include_once(__FILE__.'/../library.php');
 //include_once('../library.php');
 // }}}
 // {{{ tgif_compiler_library_yui
