@@ -144,3 +144,7 @@ If you want/need different licensing, tell me why and I'll probably give you a d
 
 [tagged]: http://www.tagged.com/
 [download tgif]: https://github.com/tychay/TGIFramework
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/tychay/tgiframework/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
