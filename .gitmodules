@@ -1,0 +1,2 @@
+[submodule "samples/www/APC-Admin"]
+	fetchRecurseSubmodules = true
