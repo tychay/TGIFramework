@@ -8,8 +8,6 @@
  * @copyright 2009 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  */
-// {{{ tgif_benchmark_timer
-// docs {{{
 /**
  * Similar to PEAR {@link Benchmark_Timer}, except without the userspace
  * profiling and the named laptiming facilities.
@@ -21,55 +19,41 @@
  * @subpackage debugging
  * @author terry chay <tychay@php.net> refactored from {@link tgif_diagnostics}
  */
-// }}}
 class tgif_benchmark_timer
 {
     // PRIVATE INTERNALS
-    // {{{ - $_trackRusage
     /**
      * If set to true, this will track resource usage via
      * {@link http://php.net/getrusage getrusage()}
      * @var boolean
      */
     private $_trackRusage;
-    // }}}
-    // {{{ - $_startTime
     /**
      * Stores the start time in microtime(false) format.
      * @var string
      */
     private $_startTime;
-    // }}}
-    // {{{ - $_stopTime
     /**
      * Stores the stop time in microtime(false) format.
      * @var string
      */
     private $_stopTime;
-    // }}}
-    // {{{ - $_startRusage
     /**
      * Stores the rusage stats at the start of the timer
      * @var array
      */
     private $_startRusage;
-    // }}}
-    // {{{ - $_stopRusage
     /**
      * Stores the rusage stats at the end of the timer
      * @var array
      */
     private $_stopRusage;
-    // }}}
-    // {{{ - $_summary
     /**
      * Stores the time differences and the like
      * @var array
      */
     private $_summary = array();
-    // }}}
     // RESERVED METHODS
-    // {{{- __construct($shouldStart[$trackRSuage])
     /**
      * Constructor for object.
      *
@@ -85,9 +69,7 @@ class tgif_benchmark_timer
         $this->_trackRusage = $trackRusage;
         if ($shouldStart) { $this->start(); }
     }
-    // }}}
     // TIMERS
-    // {{{ - start()
     /**
      * Start the timer.
      */
@@ -98,8 +80,6 @@ class tgif_benchmark_timer
             $this->_startRusage = getrusage();
         }
     }
-    // }}}
-    // {{{ - stop([$sumTotal])
     /**
      * Stops the timer.
      *
@@ -110,21 +90,21 @@ class tgif_benchmark_timer
      */
     function stop($sumTotal=false)
     {
-        // stop timers {{{
+        // stop timers
         if ($this->_trackRusage) {
             $this->_stopRusage = getrusage();
         }
         $this->_stopTime = microtime();
-        // }}}
-        // compute time taken {{{
+
+        // compute time taken
         $time = self::microtime_subtract($this->_stopTime, $this->_startTime);
         if ($this->_trackRusage) {
             $utime = self::microtime_subtract(self::rusage_to_microtime($this->_stopRusage,'ru_utime.tv'),self::rusage_to_microtime($this->_startRusage,'ru_utime.tv'));
             $stime = self::microtime_subtract(self::rusage_to_microtime($this->_stopRusage,'ru_stime.tv'),self::rusage_to_microtime($this->_startRusage,'ru_stime.tv'));
             $rtime = self::bc_add($utime,$stime);
         }
-        // }}}
-        // add to total {{{
+
+        // add to total
         if (!$sumTotal && !$this->_trackRusage) {
             $this->_summary = array('time' => $time);
         } elseif (!$sumTotal) { //rusage
@@ -135,7 +115,7 @@ class tgif_benchmark_timer
                 'rtime' => $rtime,
             );
         } else {
-            // zero out array {{{
+            // zero out array
             if (empty($this->_summary) && !$this->_trackRusage) {
                 $this->_summary = array('time' => '0.0');
             } else {
@@ -146,7 +126,7 @@ class tgif_benchmark_timer
                     'rtime' => '0.0',
                 );
             }
-            // }}}
+
             $this->_summary['time'] = self::bc_add($this->_summary['time'],$time);
             if ($this->_trackRusage) {
                 $this->_summary['utime'] = self::bc_add($this->_summary['utime'],$utime);
@@ -154,9 +134,7 @@ class tgif_benchmark_timer
                 $this->_summary['rtime'] = self::bc_add($this->_summary['rtime'],$rtime);
             }
         }
-        // }}}
     }
-    // }}}
     // ACCESSORS
     // {{{ - __get($name)
     /**
