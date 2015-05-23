@@ -1,6 +1,0 @@
-class	class libraries where the directory structure maps into
-	str_replace('_',DIR_SEP,$class_name).'.php';
-conf	configuration for sample website (no need for prod/whatever separator)
-res	data resources used elsewhere
-savant	where templates are stored
-www	web root for samples
