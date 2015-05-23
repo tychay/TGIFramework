@@ -71,6 +71,7 @@ require_once TGIF_FUNC_DIRD.'__autoload.php';
 spl_autoload_register('__autoload');
 
 // global config and variables
+global $symbol;
 if (empty($symbol)) {
     if (!defined('SYMBOL_FILE')) { die('Define a SYMBOL_FILE to point to a php file that returns a three letter code!'); }
     $symbol = @include(SYMBOL_FILE);

@@ -15,6 +15,9 @@
 		"issues": "https://github.com/tychay/TGIFramework/issues",
 		"source": "https://github.com/tychay/TGIFramework"
 	},
+	"autoload": {
+		"files": [ "framework/inc/preinclude.php" ]
+	},
 	"require": {
 		"firephp/firephp-core": "*",
 		"saltybeagle/savant3": "dev-master"
