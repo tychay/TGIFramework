@@ -10,14 +10,6 @@
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
  */
-// imports {{{
-/**
- * Some weirdness involved with implements not being loaded
- */
-include_once(__FILE__.'/../library.php');
-//include_once('../library.php');
-// }}}
-// {{{ tgif_compiler_library_yui
 /**
  * (abstract) class for compiling files using YUI Compressor with support for
  * YUI libraries.
@@ -25,7 +17,10 @@ include_once(__FILE__.'/../library.php');
  * @package tgiframework
  * @subpackage ui
  * @author terry chay <tychay@php.net>
- * @todo add support for verison YUI 3
+ * @deprecated This package was here because I wrote Tagged on YUI, I actually
+ * stopped using YUI in 2009. Good thing because as of late 2014, even YUI 3 is
+ * unsupported. I don't know if this works anymore (and it would require you
+ * to download scripts from http://yui.github.io/yui2/ anyway)
  */
 class tgif_compiler_library_yui implements tgif_compiler_library
 {
@@ -346,5 +341,3 @@ class tgif_compiler_library_yui implements tgif_compiler_library
     }
     // }}}
 }
-// }}}
-?>

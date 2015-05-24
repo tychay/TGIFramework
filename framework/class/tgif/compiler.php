@@ -113,7 +113,7 @@ class tgif_compiler
     // }}}
     // {{{ - $_libraries
     /**
-     * An array indexed by class name  of any external lirbaries for the
+     * An array indexed by class name of any external libraries for the
      * compiler
      *
      * @var array

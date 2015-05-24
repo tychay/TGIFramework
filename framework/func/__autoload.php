@@ -160,7 +160,7 @@ function __autoload_xform($class_name ,$base_dird='')
 {
     $filename = $base_dird.str_replace('_',DIRECTORY_SEPARATOR,$class_name).'.php';
     require($filename); //fatal error so not... @require($filename);
-    return (class_exists($class_name,false));
+    return ( class_exists($class_name,false) || interface_exists($class_name,false) );
     /* // fstat calls are slow
     if (file_exists($filename)) {
         require($filename);

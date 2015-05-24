@@ -10,13 +10,6 @@
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
  */
-// imports {{{
-/**
- * Some weirdness involved with implements not being loaded
- */
-include_once(__DIR__.'/../library.php');
-//include_once('../library.php');
-// }}}
 // {{{ tgif_compiler_library_ext
 /**
  * Includes to (javascript or css) files which grab external packages managed
