@@ -26,28 +26,6 @@ class tgif_compiler_css extends tgif_compiler
     const _regex_import = '!@import\s+url\(["\']([^ ]+)["\']\)!';
     // }}}
     // OVERRIDES
-    // {{{ __construct($options)
-    /**
-     * Same as parent, but allows presets 'bin_java' and 'yui_compressor'
-     * variables.
-     *
-     * To make life easier, overwrite 'use_compiler' if something goes wrong.
-     */
-    function __construct($options)
-    {
-        global $_TAG;
-        if ( !isset($options['bin_java']) ) {
-            $options['bin_java'] = $_TAG->config('bin_java');
-        }
-        if ( !isset($options['yui_compressor']) ) {
-            $options['yui_compressor'] = $_TAG->config('yui.compressor_jar', true);
-        }
-
-        parent::__construct($options);
-
-        $this->_options['use_compiler'] = $this->_options['use_compiler'] && file_exists($options['bin_java']) && file_exists($options['yui_compressor']);
-    }
-    // }}}
     // {{{ - _findDependencies($filePath)
     /**
      * Find all the embeded dependencies in the codebase.
@@ -140,39 +118,11 @@ class tgif_compiler_css extends tgif_compiler
     // }}}
     // {{{ - _compileFileExec($sourcePath, $destPath, $backgroundPath)
     /**
-     * Exec command to compile from one file to another
-     *
-     * This version uses YUI compressor and java to compile the file.
+     * Call compressor to compile one file to antoher
      */
     protected function _compileFileExec($sourcePath, $destPath, $backgroundPath='')
     {
-        global $_TAG;
-        $cmd = sprintf('%s -jar %s --type css -o %s %s',
-            $this->_options['bin_java'],
-            $this->_options['yui_compressor'],
-            ($backgroundPath) ? escapeshellarg($backgroundPath) : escapeshellarg($destPath),
-            escapeshellarg($sourcePath)
-        );
-        if ($backgroundPath) {
-            // chain command
-            $cmd = sprintf('%s;mv %s %s', $cmd, escapeshellarg($backgroundPath), escapeshellarg($destPath));
-            // background and nohub command chain
-            $cmd = sprintf('nohup sh -c %s &', escapeshellarg($cmd));
-        }
-        $_TAG->diagnostics->startTimer(
-            'exec',
-            get_class($this).'::_compileFileExec',
-            array( 'cmd' => $cmd )
-        );
-        exec($cmd,$output,$return_var);
-        $_TAG->diagnostics->stopTimer(
-            'exec',
-            array(
-                'output' => implode("\n", $output),
-                'return' => $return_var,
-            )
-        );
-        return ($backgroundPath) ? false : true;
+        return call_user_func(array($this->_options['compressor'],'compress'), 'css', $sourcePath, $destPath, $backgroundPath);
     }
     // }}}
     // DEPRECATED

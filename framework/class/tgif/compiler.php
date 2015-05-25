@@ -46,6 +46,7 @@ class tgif_compiler
      *   files?
      * - use_compiler (boolean): Should we try to use the compiler whenever
      *   possible? Was $_useCompiler
+     * - compressor (boolean|string): the compressor to use (or false if no compressor)
      * - use_service (boolean): Are we calling externals service to perform a
      *   compile? (or, if no service, then turn on uncompiler caching).
      * - service_callback (mixed): call user func of the service that can
@@ -91,7 +92,8 @@ class tgif_compiler
 
         'use_cat'           => false,
         'cat_add_separator' => true,
-        'use_compiler'      => false,
+        //'use_compiler'      => false,
+        'compressor'        => false,
         'use_service'       => false,
         'service_callback'  => '',
 
@@ -162,17 +164,33 @@ class tgif_compiler
     // RESERVED FUNCTIONS
     // {{{ __construct($options)
     /**
-     * This is protected because this class is actually abstract
-     *
+     * Constructor
+     * 
+     * To make life easier, this replaces the compiler option with a pointer to the actual compiler class.
+     * 
      * @param $options array A bunch of options to override {@link $_options}
      */
-    protected function __construct($options)
+    public function __construct($options)
     {
         global $_TAG;
         $this->_options = array_merge($this->_options, $options);
+
+        // replace compiler with pointer to the compressor that will compile 
+        if ($this->_options['compressor']) {
+            $compress_class_name = 'tgif_compiler_compressor_'.$this->_options['compressor'];
+            if ( call_user_func(array($compress_class_name, 'works')) ) {
+                $this->_options['compressor'] = $compress_class_name;
+            } else {
+                $this->_options['compressor'] = false;
+            }
+        }
+        //$this->_options['use_compiler'] = $this->_options['use_compiler'] && file_exists($options['bin_java']) && file_exists($options['yui_compressor']);
+
+        // load libraries
         foreach ($this->_options['libraries'] as $class_name=>$config_name) {
             $this->_libraries[$class_name] = new $class_name($_TAG->config($config_name, true));
         }
+
     }
     // }}}
     // {{{ __sleep()
@@ -313,7 +331,7 @@ class tgif_compiler
         // }}}
         if ( empty($file_list_data) ) { return array('data',''); }
 
-        if ( $this->_options['use_compiler'] ) {
+        if ( $this->_options['compressor'] ) {
             $file_list_data = $this->_compileFiles($file_list_data);
         }
         if ( empty($file_list_data) ) { return array('data',''); }
@@ -592,7 +610,7 @@ class tgif_compiler
     {
         //var_dump(array('_buildUrls',$fileDatas));
         // compilation step
-        if ( $this->_options['use_compiler'] ) {
+        if ( $this->_options['compressor'] ) {
             $fileDatas = $this->_compileFiles($fileDatas);
         }
         //var_dump(array('_buildUrls::post_compile',$fileDatas));
@@ -619,7 +637,7 @@ class tgif_compiler
     /**
      * This takes each file and generates the compiled file of each of them.
      *
-     * Only call this if use_compiler flag is already set in {@link $_options}.
+     * Only call this if compressor flag is already set in {@link $_options}.
      * This also handles caching the success.
      *
      * This used to be _buildFiles($fileDatas,$forceCat) and the old

@@ -21,6 +21,7 @@ return array(
             'target_dir'        => '{{{dir_static}}}/dyn/css',
             'resource_url'      => '{{{url_static}}}/res/css',
             'target_url'        => '{{{url_static}}}/dyn/css',
+            'compressor'        => 'yuicompress',
             /* // extend functionality
             'libraries'         => array(
                 'tgif_compiler_library_ext'     => 'css_ext',
@@ -40,6 +41,7 @@ return array(
             'target_dir'        => '{{{dir_static}}}/dyn/js',
             'resource_url'      => '{{{url_static}}}/res/js',
             'target_url'        => '{{{url_static}}}/dyn/js',
+            'compressor'        => 'yuicompress',
             /* // extend functionality
             'libraries'         => array(
                 'tgif_compiler_library_ext'     => 'js_ext',
@@ -52,12 +54,10 @@ return array(
     // }}}
     // {{{ - yui
     'yui' => array(
-        // http://developer.yahoo.com/yui/compressor/
-        'compressor_jar'    => TGIF_RES_DIR.'/yuicompressor-2.4.2.jar',
+        //'compressor_jar'    => TGIF_RES_DIR.'/yuicompressor-2.4.2.jar',
         //defaults
         'js'                => array(
             'version'       => '2.9.0',
-            //'version'     => '2.5.2',
             'use_cdn'       => 'yahoo', //If you make your own repository,
                                         // this is the base url
             'use_combine'   => true,    //yahoo must be cdn, or make own combo
@@ -66,28 +66,28 @@ return array(
         'css'               => array(
             'version'       => '2.9.0',
             'use_cdn'       => 'yahoo',
-            'use_combine'   => true, //can only work when yahoo is use_cdn
+            'use_combine'   => true,    //can only work when yahoo is use_cdn
         ),
         /* */
     ),
     // }}}
-    // {{{ - jquery
     'jquery' => array( /* // defaults
         'version'           => '1.4.4',
         'ui_version'        => '1.8.6',
     /* */
     ),
-    // }}}
-    // {{{ - css_ext
     'css_ext' => array(
     ),
-    // }}}
-    // {{{ - js_ext
     'js_ext' => array(
     ),
-    // }}}
+
+    'compressors' => array(
+        // http://developer.yahoo.com/yui/compressor/ (no longer maintained)
+        //'yui_compressor' => '/usr/bin/java -jar '.TGIF_RES_DIR.'/yuicompressor-2.4.2.jar',
+        'yui_compressor' => '/usr/bin/yui-compressor',
+    ),
     
-    'bin_java'              => '/usr/bin/java',
+    //'bin_java'              => '/usr/bin/java',
     'dir_static'            => '.',
     'url_static'            => '',
 );
