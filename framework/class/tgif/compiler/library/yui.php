@@ -148,17 +148,46 @@ class tgif_compiler_library_yui implements tgif_compiler_library
      */
     protected function _extractYui2Module($libName, $type='')
     {
-        // no such module? {{{
+        // no such module?
         if ( !array_key_exists($libName, $this->_moduleInfo)) {
             return array();
         }
         $module_info = $this->_moduleInfo[$libName];
-        // }}}
-        // only support a certain file type {{{
+        // only support a certain file type
         if ( $type && strcmp($type,$module_info['type'])!==0 ) {
             return array();
         }
-        // }}}
+
+        // HACK: first things first, make sure the resource exists, if not,
+        // download and put it where it needs to go
+        $version = $this->_options['version'];
+        $base_dir = $this->_options['base_dir'];
+        $exists_dir = sprintf('%s/%s', $base_dir, $version);
+        if ( !file_exists($exists_dir) ) {
+            $zip_file_path = sprintf('%s/yui_%s.zip', $base_dir, $version);
+            // download YUI 2 archive
+            if ( !file_exists($zip_file_path) ) {
+                $download_url = sprintf('http://yui.github.io/yui2/archives/yui_%s.zip', $version);
+                if ( !$result = tgif_http_client::fetch_into($download_url, $zip_file_path) ) {
+                    return array();
+                }
+            }
+            $unziped_dir = sprintf('%s/yui',$base_dir);
+            if ( !file_exists($unziped_dir) ) {
+                // uncompress the archive
+                $zip = new ZipArchive();
+                if ( !$zip->open( $zip_file_path) ) {
+                    // fail!
+                    return array();
+                }
+                $zip->extractTo($base_dir);
+                $zip->close();
+            }
+            // rename (tgif is not a perfect rename when it's directories)
+            rename($unziped_dir, $exists_dir);
+        }
+
+
         // figure dependencies {{{
         $dependencies = array();
         if ( array_key_exists('requires',$module_info) ) {

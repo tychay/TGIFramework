@@ -487,7 +487,7 @@ class tgif_compiler
      * over to library interface.
      *
      * Thus the old stuff in _generateFilePath() is now contained here, however
-     * we have wiped out the old crap related to _useReleasteName which was
+     * we have wiped out the old crap related to _useReleaseName which was
      * confusing as hell.
      *
      * @return false|array if false there is no file data, else it
