@@ -4,7 +4,7 @@
  *
  * @package tgiframework
  * @subpackage global
- * @copyright 2014 terry chay
+ * @copyright 2015 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
  */
