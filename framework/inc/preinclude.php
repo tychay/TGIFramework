@@ -67,8 +67,8 @@ if (!defined('TGIF_CONF_PATH')) {
 require_once dirname(TGIF_DIR).'/vendor/autoload.php';
 
 // bind autoload
-require_once TGIF_FUNC_DIRD.'__autoload.php';
-spl_autoload_register('__autoload');
+require_once TGIF_FUNC_DIRD.'autoload.php';
+spl_autoload_register('tgif_autoload');
 
 // global config and variables
 global $symbol;
