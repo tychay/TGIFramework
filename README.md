@@ -8,7 +8,7 @@ TGIFramework
 - Terry's Generic Internet Framework: Because I have an ego?
 - Thank God It’s a Framework: Because that's what the world needs, another architectural framework! ;-)
 
-Originally, it was the parts of the [Tagged website][tagged] that were generic
+Originally, it was the parts of the [Tagged website](http://www.tagged.com/ "Tagged") that were generic
 enough to be used by any project requiring scalability where the operational
 control of the servers is under the application builder.
 
@@ -99,7 +99,7 @@ and update the `Vagrantfile` to build out that version.
 If you already have infrastructure with the correct packages installed,
 then you can manually install it.
 
-[Download][download tgif] and uncompress TGIFramework or
+[Download](https://github.com/tychay/TGIFramework/archive/master.zip "download archive of TGIFramework") and uncompress TGIFramework or
 ```shell
 $ git clone git://github.com/tychay/TGIFramework.git tgif
 ```
@@ -143,8 +143,60 @@ to (maybe someday Tagged will do the same, but I doubt it).
 
 If you want/need different licensing, tell me why and I'll probably give you a different license if the reason is good. I just figured LGPL is the best quid pro quo for anyone wanting to build anything commercial on this codebase.
 
-[tagged]: http://www.tagged.com/
-[download tgif]: https://github.com/tychay/TGIFramework
+Programming Notes
+-----------------
+
+### [PHP Framework Interoperability](http://www.php-fig.org/) ###
+
+TGIFramework was written before this existed (in it's earliest incarnations it
+was written before PHP 5 was released). Because of that, support for PSR is a
+work in progress.
+
+Here is the status:
+
+#### [PSR-0](http://www.php-fig.org/psr/psr-0/ "Autoloading Standard") ####
+
+While it is deprecated, the current iteration of TGIFramework is compliant
+with PSR-0 with the vendor name of `tgif`. Currently it creates its own
+`spl_autoload` function. (This is likely to change later.)
+
+#### [PSR-1](http://www.php-fig.org/psr/psr-1/ "Basic Coding Standard") ####
+
+Compliant with the following exceptions:
+
+- Free energy scripts can theortically violate "side effects" _by design_.
+- Class names are (currently) all lower case instead of `StudlyCaps` because of
+  beta PHP5 compatibility with object instantiation. (This will be fixed later.)
+- Class method names use underscores instead of `camelCase` due to the old way
+  of using them as a form of function namespacing. This will not change due to 
+  non-English-speaking readability/similarity to php built-in functions.
+
+#### [PSR-2](http://www.php-fig.org/psr/psr-2/ "Coding Style Guide") ####
+
+- Not all pure-PHP files have the closing `?>` tag omitted. This is in the
+  process of being fixed.
+- Method names _SHOULD NOT_ be prefixed is ignored because it's a dumb-ass
+  recommendation. That's probably why it's not a _MUST_.
+- Not all method names have been autdited for visibility declaration or
+  ordering (`abstract`/`final` _access_ `static`)
+- Some expressions that evaluate to a truth condition violate the standard of
+  spaces around parenthesis. I'm keeping it because it's 100x more readable.
+- For look truth conditions do not always have spaces where they should. This
+  is in the process of being fixed.
+
+#### [PSR-3](http://www.php-fig.org/psr/psr-3/ "Logger Interface") ####
+
+Currently this is not supported. I'll have to look at it and add support.
+
+#### [PSR-4](http://www.php-fig.org/psr/psr-2/ "Autoloader") ####
+
+Namespacing did not exist when Tagged was written or when TGIFramework was
+first open-sourced. When I migrate to using it, PSR-0 will shift to PSR-4
+since [the latter is better](http://www.sitepoint.com/battle-autoloaders-psr-0-vs-psr-4/ "Battle of the Autoloaders: PSR-0 vs. PSR-4—Sitepoint").
+
+#### [PSR-7](http://www.php-fig.org/psr/psr-7/ "HTTP Message Interfaces") ####
+
+This shit is opaque to me. I'll support it when I hit it in the real-world.
 
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/tychay/tgiframework/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
