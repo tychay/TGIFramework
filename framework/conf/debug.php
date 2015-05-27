@@ -1,6 +1,4 @@
 <?php
-// vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
-//345678901234567890123456789012345678901234567890123456789012345678901234567890
 /**
  * Configuration for debugging related stuff
  *
@@ -41,4 +39,3 @@ return array(
 ),
 // }}}
 );
-?>

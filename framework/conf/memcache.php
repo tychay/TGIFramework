@@ -1,6 +1,4 @@
 <?php
-// vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
-//345678901234567890123456789012345678901234567890123456789012345678901234567890
 /**
  * Configuration for memcached related stuff
  *
@@ -9,7 +7,6 @@
  *
  * This configures the following global variables:
  * - $_TAG->memcached: singleton for the object that manages memcached access
- *
  *
  * @package tgiframework
  * @subpackage global
@@ -44,4 +41,3 @@ return array(
     ),
     // }}}
 );
-?>

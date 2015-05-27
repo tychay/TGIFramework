@@ -1,5 +1,4 @@
 <?php
-// vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
 /**
  * Framework to include on every page
  *
@@ -67,8 +66,8 @@ if (!defined('TGIF_CONF_PATH')) {
 require_once dirname(TGIF_DIR).'/vendor/autoload.php';
 
 // bind autoload
-require_once TGIF_FUNC_DIRD.'__autoload.php';
-spl_autoload_register('__autoload');
+require_once TGIF_FUNC_DIRD.'autoload.php';
+spl_autoload_register('tgif_autoload');
 
 // global config and variables
 global $symbol;
