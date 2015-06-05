@@ -1,17 +1,14 @@
 <?php
-// vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
-//345678901234567890123456789012345678901234567890123456789012345678901234567890
 /**
  * Holder of {@link tgif_compiler_css}
  *
  * @package tgiframework
  * @subpackage ui
- * @copyright 2008-2009 Tagged, Inc, 2009-2010 terry chay
+ * @copyright 2008-2009 Tagged, Inc, 2009-2015 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  */
-// {{{ tgif_compiler_css
 /**
- * Compiling CSS files using YUI Compressor.
+ * Rendering css files (compressed using external compressor)
  *
  * @package tgiframework
  * @subpackage ui
@@ -19,14 +16,14 @@
  */
 class tgif_compiler_css extends tgif_compiler
 {
-    // {{{ - _regex_import
+    // - _regex_import
     /**
      * Regular expression for extracting css files
      */
     const _regex_import = '!@import\s+url\(["\']([^ ]+)["\']\)!';
-    // }}}
+
     // OVERRIDES
-    // {{{ - _findDependencies($filePath)
+    // - _findDependencies($filePath)
     /**
      * Find all the embeded dependencies in the codebase.
      *
@@ -65,8 +62,8 @@ class tgif_compiler_css extends tgif_compiler
         }
         return $matches[1];
     }
-    // }}}
-    // {{{ - _generateTargetFileName($fileDatas)
+
+    //  _generateTargetFileName($fileDatas)
     /**
      * Adds .css to the target name, and put it in a subdirectory.
      */
@@ -75,11 +72,18 @@ class tgif_compiler_css extends tgif_compiler
         $signature = parent::_generateTargetFileName($fileDatas);
         return sprintf('%s/%s.css', substr($signature,0,1), substr($signature,1,10));
     }
-    // }}}
-    // {{{ - _generateHtmls($urls,$properties,$queue)
+
+    // - _generateHtmls($urls,$properties,$queue)
     /**
-     * Make a css style tag using @import instead of href
+     * Make a sequence of link tags.
+     *
+     * This is the old version that generated css style tag as a sequence of
+     * @imports. Due to performance issues in some browsers, it is better to do a
+     * sequence of link tags so let's use the default behavior
+     *
+     * @deprecated
      */
+    /*
     protected function _generateHtmls($urls, $properties, $queue)
     {
         $attributes = '';
@@ -89,6 +93,7 @@ class tgif_compiler_css extends tgif_compiler
         foreach ($properties as $key=>$value) {
             $attributes .= sprintf(' %s="%s"', $key, htmlentities($value));
         }
+
         $html = '<style type="text/css"'.$attributes.'>';
         foreach($urls as $url) {
             $html .= sprintf('@import url(%s);', escapeshellarg($url));
@@ -96,27 +101,46 @@ class tgif_compiler_css extends tgif_compiler
         $html .= '</style>';
         return array($html);
     }
-    // }}}
-    // {{{ - _generateHtml($url,$properties)
+    /* */
+
+    // - _generateHtml($url,$properties)
     /**
      * Make a css style tag include
+     *
+     * Other attributes:
+     * - crossorigin (html5): how to handle cross-origin requests
+     * - hreflang: language code for linked document
+     * - media: device linked document will be displayed
+     * - sizes (html5): size of linked resource (for rel=icon)
      */
     protected function _generateHtml($url, $properties)
     {
         $attributes = '';
+        // patch the id to prepend css-
+        if ( array_key_exists('id', $properties) ) {
+            $properties['id'] = 'css-'.$properties['id'];
+        }
+        // set default properties rel=stylesheet, type=text/css
+        $properties = array_merge(
+            array(
+                'rel' => 'stylesheet',
+                'type' => 'text/css',
+            ),
+            $properties
+        );
+        // always override href
+        $properties['href'] = $url;
+
         foreach ($properties as $key=>$value) {
-            if ( $key == 'id' ) {
-                $value = 'css'.$value;
-            }
             $attributes .= sprintf(' %s="%s"', $key, htmlentities($value));
         }
-        return sprintf('<link rel="stylesheet" type="text/css" href="%s"%s />',
-            htmlentities($url),
+
+        return sprintf('<link%s />',
             $attributes
         );
     }
-    // }}}
-    // {{{ - _compileFileExec($sourcePath, $destPath, $backgroundPath)
+
+    // - _compileFileExec($sourcePath, $destPath, $backgroundPath)
     /**
      * Call compressor to compile one file to antoher
      */
@@ -124,9 +148,9 @@ class tgif_compiler_css extends tgif_compiler
     {
         return call_user_func(array($this->_options['compressor'],'compress'), 'css', $sourcePath, $destPath, $backgroundPath);
     }
-    // }}}
+
     // DEPRECATED
-    // {{{ + compile_file_service(&$sourceFileData, $targetFilePath)
+    // + compile_file_service(&$sourceFileData, $targetFilePath)
     /**
      * Service command to compile a file list.
      *
@@ -161,7 +185,4 @@ class tgif_compiler_css extends tgif_compiler
         // cached a workaround is to always return failure mode.
         return false;
     }
-    // }}}
 }
-// }}}
-?>
