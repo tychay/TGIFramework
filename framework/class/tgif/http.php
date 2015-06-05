@@ -253,20 +253,12 @@ class tgif_http
 
         if (is_null($secure_page)) {
             $secure_page = false;
-            /*
-            // if we're on an import page but not import_start
-            if( 
-            isset($_SERVER['REQUEST_URI']) &&
-            ( strpos($_SERVER['REQUEST_URI'],'import_') !== FALSE ||
-              strpos($_SERVER['REQUEST_URI'],'secure_login') !== FALSE ) )
-            {
-                $secure_page = true;
-                return $secure_page;
-            }
-            */
-            if(defined('SSL_REQUEST') && SSL_REQUEST){
-                $secure_page = true;
-                return $secure_page;
+            if ( isset($_SERVER['HTTPS']) ) {
+                // ISAPI uses 'off'
+                if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') {
+                    // SSL connection
+                    $secure_page = true;
+                }
             }
         }
 
