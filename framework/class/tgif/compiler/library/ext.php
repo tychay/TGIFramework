@@ -1,19 +1,17 @@
 <?php
-// vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
-//345678901234567890123456789012345678901234567890123456789012345678901234567890
 /**
  * Holder of {@link tag_compiler_library_ext}
  *
  * @package tgiframework
  * @subpackage ui
- * @copyright 2010 terry chay
+ * @copyright 2010-2015 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @author terry chay <tychay@php.net>
  */
-// {{{ tgif_compiler_library_ext
+// tgif_compiler_library_ext
 /**
  * Includes to (javascript or css) files which grab external packages managed
- * as local files.
+ * (optionally) as local files.
  *
  * @package tgiframework
  * @subpackage ui
@@ -22,7 +20,7 @@
 class tgif_compiler_library_ext implements tgif_compiler_library
 {
     // PROPERTIES
-    // {{{ - $_options
+    // - $_options
     /**
      * Settings for the system
      *
@@ -31,7 +29,14 @@ class tgif_compiler_library_ext implements tgif_compiler_library
      * - base_path (string): Path to the directory to download the missing
      *   files to
      * - base_url (string): Path to the directory as seen from a web browser
-     *   This will be ignored if url_callback is set.
+     *   This will be ignored if url_callback is set. This can optionally have
+     *   three parameters: 1) https, 2) .min 3) version
+     * - use_cdn (boolean): Whether or not to remote link the file
+     * - use_compiler (boolean): Should we use the compiled version of the file
+     *   (when using cdn)
+     * - version (string): version number of file (parameter 3)
+     * - compile_expansion (string): the extension to use for remote linking
+     *   a compiled version (parameter 2)
      * - url_callback (mixed): If set, it's a call to a callback function
      *   for generating the url
      * - chmod (integer); the permissions set for the file
@@ -41,6 +46,9 @@ class tgif_compiler_library_ext implements tgif_compiler_library
     protected $_options = array(
         'base_path'         => '',
         'base_url'          => '/',
+        'use_cdn'           => false,
+        'use_compiler'      => false,
+        'compile_expansion' => '.min',
         'url_callback'      => false,
         'chmod'             => 0666,
         'default_filedata'  => array(
@@ -54,22 +62,24 @@ class tgif_compiler_library_ext implements tgif_compiler_library
             //'url'           => sprintf('http://ajax.googleapis.com/ajax/libs/jquery/%s/jquery.js', $this->_options['version']),
         ), 
     );
-    // }}}
-    // {{{ - $_moduleInfo
+    // - $_moduleInfo
     /**
      * Libraries that it knows about, indexed by file reference. This is stored
      * in the config options passed in uner the setting "modules"
      *
      * - name (string): the local path to the file (computed from base_dir)
      * - url (string): Where to grab the file
+     * - url_map(string): Where to grab the file (support https, use_cdn_ compile_expansion)
      * - requires (array optional):
      * - provides (array optional):
+     * - use_cdn (boolean): per-module override
+     * - compile_expansion (string): per-module override (param 2)
+     * - version: version string (param 3)
      * @var array
      */
     protected $_moduleInfo = array();
-    // }}}
+
     // CONSTRUCT
-    // {{{ __construct($options)
     /**
      * Save the options and load the $_moduleInfo.
      */
@@ -85,9 +95,9 @@ class tgif_compiler_library_ext implements tgif_compiler_library
             $this->_options['default_filedata']['library'] = get_class($this);
         }
     }
-    // }}}
+
     // SIGNATURE METHODS:
-    // {{{ - generateSignature($fileName,$compileObj)
+    // - generateSignature($fileName,$compileObj)
     /**
      * Use the default file-based signature system to sign the data
      *
@@ -102,8 +112,8 @@ class tgif_compiler_library_ext implements tgif_compiler_library
         ); 
         return $compileObj->signature($sign_this);
     }
-    // }}}
-    // {{{ - generateFileData($fileName,$compileObj)
+
+    // - generateFileData($fileName,$compileObj)
     /**
      * Intercept anything matching the keys in the loaded $_moduleInfo
      *
@@ -119,46 +129,63 @@ class tgif_compiler_library_ext implements tgif_compiler_library
         //if ( !array_key_exists($fileName,$this->_moduleInfo) ) { return array(); }
 
         $return = array_merge( $this->_options['default_filedata'], $this->_moduleInfo[$fileName] );
-        if ( !$return['name'] ) { $return['name'] = $fileName;  }
-        $return['file_path'] = $this->_options['base_path'] . $return['name'];
+        // add library defaults in
+        if ( !array_key_exists('use_cdn', $return) ) {
+            $return['use_cdn'] = $this->_options['use_cdn'];
+        }
+        if ( !array_key_exists('compile_expansion', $return) ) {
+            $return['compile_expansion'] = $this->_options['compile_expansion'];
+        }
+        if ( !array_key_exists('version', $return) ) {
+            $return['version'] = '';
+        }
+        if ( !$return['name'] ) {
+            $return['name'] = $fileName;
+        }
 
-        if ( !file_exists($return['file_path']) ) {
-            if ( !$result = tgif_http_client::fetch_into($return['url'], $return['file_path'], $this->_options['chmod']) ) {
-                // unpredicatable things happen at this point!
-                return $return;
+        if ( !$return['use_cdn'] ) {
+            $return['file_path'] = $this->_options['base_path'] . $return['name'];
+            if ( !file_exists($return['file_path']) ) {
+                // find the URL to grab, remember no need for ssl or compression
+                $url = ( empty($return['url']) )
+                    ? sprintf($return['url_map'], '', '', $return['version'])
+                    : $return['url'];
+                if ( !$result = tgif_http_client::fetch_into($url, $return['file_path'], $this->_options['chmod']) ) {
+                    // unpredicatable things happen at this point!
+                    return $return;
+                }
             }
-        }
 
-        // Update the signature
-        $return['signature'] = $this->generateSignature($return, $compileObj);
+            // Update the signature (which is just the version of the file)
+            //$return['signature'] = $this->generateSignature($return, $compileObj);
+            $return['signature'] = $return['version'];
 
-        // Update the url link
-        if ( $callback = $this->_options['url_callback'] ) {
-            $return['url'] = call_user_func($callback, $return);
-        } elseif ( $base_url = $this->_options['base_url'] ) {
-            $return['url'] = $base_url . '/'. $return['name'];
+            // Update the url link
+            if ( $callback = $this->_options['url_callback'] ) {
+                $return['url'] = call_user_func($callback, $return);
+            } elseif ( $base_url = $this->_options['base_url'] ) {
+                $return['url'] = $base_url . '/'. $return['name'];
+            }
+            // Remove the library parameter (to make the system handle it as an
+            // internal file going forward)
+            $return['library'] = '';
         }
-        // Remove the library parameter (to make the intenal system handle the
-        // file going forward
-        $return['library'] = '';
         return $return;
     }
-    // }}}
-    // {{{ - compileFile($sourceFileData,$targetFileName,$targetFilePath,$compilerObj)
+    // - compileFile($sourceFileData,$targetFileName,$targetFilePath,$compilerObj)
     /**
-     * This is never called, because the built in filesystem has taken over.
+     * This is never called, because the built in filesystem has taken over or
+     * the generate url has handled it.
      */
     public function compileFile(&$sourceFileData, $targetFileName, $targetFilePath, $compilerObj)
     { }
-    // }}}
-    // {{{ - compileFileService($sourceFileData,$targetFileName,$targetFilePath,$compilerObj)
+    // - compileFileService($sourceFileData,$targetFileName,$targetFilePath,$compilerObj)
     /**
      * This is never called because the built in file system has taken over.
      */
     public function compileFileService(&$sourceFileData, $targetFileName, $targetFilePath, $compilerObj)
     { }
-    // }}}
-    // {{{ - catFiles(&$fileDatas,$compilerObj)
+    // - catFiles(&$fileDatas,$compilerObj)
     /**
      * This is never called because the built in file system has taken over.
      * Just in case, forward the file through.
@@ -183,18 +210,22 @@ class tgif_compiler_library_ext implements tgif_compiler_library
         }
         return $returns;
     }
-    // }}}
-    // {{{ - generateUrl($fileData)
+    // - generateUrl($fileData)
     /**
-     * This should never be called since the url is always embeded.
+     * This is called when using cdn or when it fails to download
      *
      * @param string $fileData The data to extract the URL for
      * @return string the url
      */
     public function generateUrl($fileData) {
-        return $fileData['url'];
+        if ( !empty($fileData['url']) ) {
+            return $fileData['url'];
+        }
+        return sprintf(
+            $fileData['url_map'],
+            ( tgif_http::is_secure_request() ) ? 's' : '',
+            ( $this->_options['use_compiler'] ) ? $fileData['compile_expansion'] : '',
+            $fileData['version']
+        );
     }
-    // }}}
 }
-// }}}
-?>

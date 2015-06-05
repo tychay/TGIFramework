@@ -9,7 +9,7 @@
  * @author terry chay <tychay@php.net>
  */
 return array(
-    // {{{ $_TAG->css : css compiler
+    // $_TAG->css : css compiler
     'gld_css' => array(
         'construct'         => array('tgif_compiler_css'),
         'isSmemable'        => true, //recommended cache configuration
@@ -28,8 +28,8 @@ return array(
             /* */
         ),
     ),
-    // }}}
-    // {{{ $_TAG->js : js compiler
+
+    // $_TAG->js : js compiler
     'gld_js' => array(
         'construct'         => array('tgif_compiler_js'),
         'isSmemable'        => true, //recommended cache configuration
@@ -40,17 +40,16 @@ return array(
             'resource_url'      => '{{{url_static}}}/res/js',
             'target_url'        => '{{{url_static}}}/dyn/js',
             'compressor'        => 'yuicompress',
-            /* // extend functionality
+            // extend functionality
             'libraries'         => array(
                 'tgif_compiler_library_ext'     => 'js_ext',
-                'tgif_compiler_library_yuijs'   => 'yui.js',
-                'tgif_compiler_library_jquery'  => 'jquery',
+                //'tgif_compiler_library_yuijs'   => 'yui.js',
+                //'tgif_compiler_library_jquery'  => 'jquery',
             ),
-            /* */
         ),
     ),
-    // }}}
-    // {{{ - yui
+
+    // - yui
     'yui' => array(
         //'compressor_jar'    => TGIF_RES_DIR.'/yuicompressor-2.4.2.jar',
         //defaults
@@ -68,15 +67,40 @@ return array(
         ),
         /* */
     ),
-    // }}}
+
     'jquery' => array( /* // defaults
         'version'           => '1.4.4',
         'ui_version'        => '1.8.6',
     /* */
     ),
+
     'css_ext' => array(
     ),
+
     'js_ext' => array(
+        'base_path'         => '{{{dir_static}}}/ext/',
+        'base_url'          => '{{{url_static}}}/ext',
+        'use_cdn'           => true,
+        'use_compiler'      => true,
+        'compile_expansion' => '.min',
+        //'url_callback'  => false,
+        'modules'   => array(
+            'ext/jquery.js'    => array(
+                'name'          => 'jquery-1.11.3.js',
+                'version'       => '1.11.3',
+                'url_map'       => 'http%1$s://code.jquery.com/jquery-%3$s%2$s.js',
+                'dependencies'  => array(
+                ),
+                'provides'      => array(
+                    'jquery',
+                    'jquery-1.11.3',
+                    'jquery-1',
+                    'ext/jquery.js',
+                    'ext/jquery-1.11.3',
+                    'ext/jquery-1',
+                ),
+            ),
+        ),
     ),
 
     'compressors' => array(

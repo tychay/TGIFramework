@@ -4,7 +4,7 @@
  *
  * @package tgiframework
  * @subpackage ui
- * @copyright 2008-2009 Tagged, Inc., c.2009-2010 terry chay
+ * @copyright 2008-2009 Tagged, Inc., 2009-2015 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  */
 // {{{ tgif_compiler
@@ -498,7 +498,7 @@ class tgif_compiler
     /**
      * Generate file data.
      *
-     * The old verison would add an 'is_file' and need to be overridden,
+     * The old version would add an 'is_file' and need to be overridden,
      * the new version knows how to handle standard files and can pass stuff
      * over to library interface.
      *
