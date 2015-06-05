@@ -1,6 +1,4 @@
 <?php
-// vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
-//345678901234567890123456789012345678901234567890123456789012345678901234567890
 /**
  * Holder of {@link tag_compiler_js}
  *
