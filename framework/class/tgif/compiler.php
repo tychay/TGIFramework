@@ -585,7 +585,7 @@ class tgif_compiler
      */
     protected function _buildUrls($fileDatas)
     {
-        //var_dump(array('_buildUrls',$fileDatas));
+        //var_dump(array(get_class($this).'_buildUrls',$fileDatas));
         // compilation step
         if ( $this->_options['compressor'] ) {
             $fileDatas = $this->_compileFiles($fileDatas);
@@ -681,6 +681,7 @@ class tgif_compiler
     private function _compileFile(&$fileData, $targetFileName, &$cacheKey)
     {
         $target_file_path = $this->_generateTargetFilePath($targetFileName);
+        //var_dump(array(get_class($this).'::_compileFile', 'fileData'=>$fileData, 'targetFileName'=>$targetFileName, 'target_file_path'=>$target_file_path));
 
         // it's already been compiled earlier, but not in cache
         if ( file_exists($target_file_path) ) {
@@ -688,6 +689,8 @@ class tgif_compiler
             $fileData['is_resource']= false;
             $fileData['library']    = '';
             $fileData['file_path']  = $target_file_path;
+            // it's in the local filesystem, make sure to delete the url
+            unset( $fileData['url'] );
             return true;
         }
 
