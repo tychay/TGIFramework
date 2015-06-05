@@ -1,6 +1,4 @@
 <?php
-// vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
-//345678901234567890123456789012345678901234567890123456789012345678901234567890
 /**
  * Holder of {@link tgif_compiler}
  *
@@ -735,8 +733,8 @@ class tgif_compiler
         if ( !$success ) {
             // temporarily store the uncompiled file into cache for parallel
             // requests to give the compiler service time to complete.
-            $cacheKey['smem_lifetime']      = $this->_options['cache_file_not_foud_ttl'];
-            $cacheKey['memcache_lifetime']  = $this->_options['cache_file_not_foud_ttl'];
+            $cacheKey['smem_lifetime']      = $this->_options['file_not_found_ttl'];
+            $cacheKey['memcache_lifetime']  = $this->_options['file_not_found_ttl'];
         }
     }
     // }}}
