@@ -1,6 +1,4 @@
 <?php
-// vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
-//345678901234567890123456789012345678901234567890123456789012345678901234567890
 /**
  * Holder of {@link tgif_compiler_library}
  *
@@ -22,7 +20,7 @@
 interface tgif_compiler_library
 {
     // SIGNATURE METHODS:
-    // {{{ - generateSignature($fileName,$compileObj)
+    // - generateSignature($fileName,$compileObj)
     /**
      * Figure a way of making a signature unique
      *
@@ -32,8 +30,8 @@ interface tgif_compiler_library
      * @return string the signature
      */
     public function generateSignature($fileName, $compileObj);
-    // }}}
-    // {{{ - generateFileData($fileName,$compileObj)
+
+    // - generateFileData($fileName,$compileObj)
     /**
      * Turn a file name into file data
      *
@@ -43,8 +41,8 @@ interface tgif_compiler_library
      * @return array The library file's filedata, empty if no match
      */
     public function generateFileData($fileName,$compileObj);
-    // }}}
-    // {{{ - compileFile($sourceFileData,$targetFileName,$targetFilePath,$compilerObj)
+
+    // - compileFile($sourceFileData,$targetFileName,$targetFilePath,$compilerObj)
     /**
      * Turn a file name into file data
      *
@@ -60,8 +58,8 @@ interface tgif_compiler_library
      * @return boolean success or failure
      */
     public function compileFile(&$sourceFileData, $targetFileName, $targetFilePath, $compilerObj);
-    // }}}
-    // {{{ - compileFileService($sourceFileData,$targetFileName,$targetFilePath,$compilerObj)
+
+    // - compileFileService($sourceFileData,$targetFileName,$targetFilePath,$compilerObj)
     /**
      * Turn a file name into file data via a "service" (delayed call).
      *
@@ -77,8 +75,8 @@ interface tgif_compiler_library
      * @return boolean success or failure
      */
     public function compileFileService(&$sourceFileData, $targetFileName, $targetFilePath, $compilerObj);
-    // }}}
-    // {{{ - catFiles(&$fileDatas,$compilerObj)
+
+    // - catFiles(&$fileDatas,$compilerObj)
     /**
      * Allow you to catenate files at the front (or in place).
      *
@@ -92,8 +90,8 @@ interface tgif_compiler_library
      * catenation.
      */
     public function catFiles(&$fileDatas, $compilerObj);
-    // }}}
-    // {{{ - generateUrl($fileData)
+
+    // - generateUrl($fileData)
     /**
      * Turn a file data into a full URL.
      *
@@ -105,7 +103,4 @@ interface tgif_compiler_library
      * @return string the url
      */
     public function generateUrl($fileData);
-    // }}}
 }
-// }}}
-?>
