@@ -131,12 +131,12 @@ if (!function_exists('apc_fetch')) {
 // }}}
 class tgif_global
 {
-    // {{{ + _READ_CONFIG
+    // + _READ_CONFIG
     /**
      * The name of the READ CONFIG variable
      */
     const _READ_CONFIG = '_readConfig';
-    // }}}
+
     // {{{ - $_prefix
     /**
      * Three letter prefix for config variables.
@@ -652,24 +652,24 @@ class tgif_global
         if ( isset($this->_configs[$name]) ) {
             return $this->_configs[$name];
         }
-        // check shared memory cache {{{
+
+        // check shared memory cache
         $return = apc_fetch(' '.$this->_prefix.$name, $success);
         if ( $success ) {
             $this->_configs[$name] = $return;
             return $return;
         }
-        // }}}
 
         // If this far, it is not be in cache.
-        // Case: _readConfig set {{{
-        // Remember: if $name = readConfig. this is already stored in $_configs
-        // during object construction.
+        // Case: _readConfig set 
+        //   Remember: if $name = readConfig. this is already stored in $_configs
+        //   during object construction.
         if ( $this->_configs[self::_READ_CONFIG] ) {
             // no config exists, return false
             $this->_configs[$name] = false;
             return false;
         }
-        // }}}
+
         //trigger_error(sprintf('%s::_getConfig: %s forced loading of config files',get_class($this), $name), E_USER_NOTICE);
         $this->_loadConfigs();
         if (isset($this->_configs[$name])) {
@@ -681,7 +681,8 @@ class tgif_global
         return $return;
     }
     // }}}
-    // {{{ - _loadConfigs()
+    
+    // - _loadConfigs()
     /**
      * Read all the configuration files, parse them, and save them into the
      * local configuration and into shared memory.
@@ -732,27 +733,26 @@ class tgif_global
             $this->_loadConfigDir(TGIF_TEST_GLOBAL_DIR, $configs, $filelist); // testing
         }
         
-        // After everything has been loaded, expand the macros {{{
+        // After everything has been loaded, expand the macros
         //temporary variable to store unprocessed config
         do {
             $num_expansions = $this->_expandMacros($configs,$configs);
         } while ( $num_expansions !== 0 );
-        // }}}
 
         // set "configFiles" configuration variable
         $configs['configFiles'] = $filelist;
 
-        // store configs in and in global space (and smem) {{{
+        // store configs in and in global space (and smem)
         foreach ($configs as $key=>$value) {
             $this->_configs[$key] = $value;
             apc_store(' '.$this->_prefix.$key, $value, 0);
         }
-        // }}}
+
         // add "_readConfig" in the local cache after storing so that we don't
         // _loadConfigs() (reparase) on every missing configuration variable.
         $this->_configs[self::_READ_CONFIG] = true;
     }
-    // }}}
+
     // {{{ - _expandMacros(&$configs, &$current)
     /**
      * Handle a single pass of macro expansion.

@@ -19,16 +19,16 @@
  * @author terry chay <tychay@php.net>
  */
 return array(
-// {{{ _readConfig
+// _readConfig
 '_readConfig'    => false,
-// }}}
-// firephp {{{
+
+// firephp
 'firephp'   => array(
     'enable'        => false,
     'diagnostics'   => false,
 ),
-// }}}
-// {{{ $_TAG->firephp
+
+// $_TAG->firephp
 'gld_firephp' => array(
     'params'            => 0,
     'construct'         => array('tgif_debug_firephp','_X_create_object'),
@@ -37,5 +37,5 @@ return array(
     'isSmemable'        => false,
     'isMemcacheable'    => false,
 ),
-// }}}
+
 );
