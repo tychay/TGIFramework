@@ -95,6 +95,21 @@ return array(
                     'ext/bootstrap-3.3.4.css',
                 ),
             ),
+            'font-awesome' => array(
+                'name'         => 'font-awesome/4.3.0/font-awesome.css',
+                'version'      => '4.3.0',
+                'url_map'      => 'http%1$s://maxcdn.bootstrapcdn.com/font-awesome/%3$s/css/font-awesome%2$s.css',
+                'dependencies' => array(
+                ),
+                'provides'     => array(
+                    'fontawesome',
+                    'font-awesome',
+                    'font-awesome.css',
+                    'font-awesome-4.3.0',
+                    'ext/font-awesome.css',
+                    'ext/font-awesome-4.3.0.css',
+                ),
+            ),
         ),
     ),
 
