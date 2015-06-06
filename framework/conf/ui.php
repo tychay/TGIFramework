@@ -153,6 +153,50 @@ return array(
                     'ext/bootstrap-3.3.4.js',
                 ),
             ),
+            'angularjs' => array(
+                'name'         => 'angularjs/1.3.16/angular.js',
+                'version'      => '1.3.16',
+                'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angularjs/%3$s/angular%2$s.js',
+                'dependencies' => array(
+                ),
+                'provides'     => array(
+                    'angular',
+                    'angularjs',
+                    'angularjs-1.3.16',
+                    'ext/angular.js',
+                    'ext/angular-1.3.16.js',
+                ),
+            ),
+            'angular-strap' => array(
+                'name'         => 'angular-strap/1.3.16/angular-strap.js',
+                'version'      => '2.1.2',
+                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/angular-strap/%3$s/angular-strap%2$s.js',
+                'dependencies' => array(
+                    'angularjs'
+                ),
+                'provides'     => array(
+                    'angularstrap',
+                    'angular-strap',
+                    'angular-strap-2.1.2',
+                    'ext/angular-strap.js',
+                    'ext/angular-strap-2.1.2.js',
+                ),
+            ),
+            'angular-strap-tpl' => array(
+                'name'         => 'angular-strap/1.3.16/angular-strap.tpl.js',
+                'version'      => '2.1.2',
+                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/angular-strap/%3$s/angular-strap.tpl%2$s.js',
+                'dependencies' => array(
+                    'angular-strap'
+                ),
+                'provides'     => array(
+                    'angularstrap.tpl',
+                    'angular-strap-tpl',
+                    'angular-strap-tpl.2.1.2',
+                    'ext/angular-strap.tpl.js',
+                    'ext/angular-strap.tpl-2.1.2.js',
+                ),
+            ),
         ),
     ),
 
