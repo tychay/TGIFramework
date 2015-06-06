@@ -32,11 +32,11 @@ class tgif_compiler_library_ext implements tgif_compiler_library
      *   This will be ignored if url_callback is set. This can optionally have
      *   three parameters: 1) https, 2) .min 3) version
      * - use_cdn (boolean): Whether or not to remote link the file
-     * - use_compiler (boolean): Should we use the compiled version of the file
-     *   (when using cdn)
+     * - use_compressor (boolean): Should we use the compiled version of the
+     *    file (when using cdn)
      * - version (string): version number of file (parameter 3)
-     * - compile_expansion (string): the extension to use for remote linking
-     *   a compiled version (parameter 2)
+     * - compress_ext (string): the extension to use for remote linking a
+     *   minified version (parameter 2)
      * - url_callback (mixed): If set, it's a call to a callback function
      *   for generating the url
      * - chmod (integer); the permissions set for the file
@@ -44,20 +44,20 @@ class tgif_compiler_library_ext implements tgif_compiler_library
      * @var array
      */
     protected $_options = array(
-        'base_path'         => '',
-        'base_url'          => '/',
-        'use_cdn'           => false,
-        'use_compiler'      => false,
-        'compile_expansion' => '.min',
-        'url_callback'      => false,
-        'chmod'             => 0666,
-        'default_filedata'  => array(
-            'name'          => '', //specified in moduleInfo, or set same as key
-            'is_resource'   => true,
-            'library'       => '', //specified in constructor
-            'dependencies'  => array(),
-            'signature'     => '', //bound late
-            'file_path'     => '', //bound late
+        'base_path'        => '',
+        'base_url'         => '/',
+        'use_cdn'          => false,
+        'use_compressor'   => false,
+        'compress_ext'     => '.min',
+        'url_callback'     => false,
+        'chmod'            => 0666,
+        'default_filedata' => array(
+            'name'         => '', //specified in moduleInfo, or set same as key
+            'is_resource'  => true,
+            'library'      => '', //specified in constructor
+            'dependencies' => array(),
+            'signature'    => '', //bound late
+            'file_path'    => '', //bound late
             //'provides'      => array(),
             //'url'           => sprintf('http://ajax.googleapis.com/ajax/libs/jquery/%s/jquery.js', $this->_options['version']),
         ), 
@@ -73,7 +73,7 @@ class tgif_compiler_library_ext implements tgif_compiler_library
      * - requires (array optional):
      * - provides (array optional):
      * - use_cdn (boolean): per-module override
-     * - compile_expansion (string): per-module override (param 2)
+     * - compress_ext (string): per-module override (param 2)
      * - version: version string (param 3)
      * @var array
      */
@@ -133,8 +133,8 @@ class tgif_compiler_library_ext implements tgif_compiler_library
         if ( !array_key_exists('use_cdn', $return) ) {
             $return['use_cdn'] = $this->_options['use_cdn'];
         }
-        if ( !array_key_exists('compile_expansion', $return) ) {
-            $return['compile_expansion'] = $this->_options['compile_expansion'];
+        if ( !array_key_exists('compress_ext', $return) ) {
+            $return['compress_ext'] = $this->_options['compress_ext'];
         }
         if ( !array_key_exists('version', $return) ) {
             $return['version'] = '';
@@ -224,7 +224,7 @@ class tgif_compiler_library_ext implements tgif_compiler_library
         return sprintf(
             $fileData['url_map'],
             ( tgif_http::is_secure_request() ) ? 's' : '',
-            ( $this->_options['use_compiler'] ) ? $fileData['compile_expansion'] : '',
+            ( $this->_options['use_compressor'] ) ? $fileData['compress_ext'] : '',
             $fileData['version']
         );
     }

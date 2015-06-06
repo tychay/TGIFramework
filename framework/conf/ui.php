@@ -78,26 +78,43 @@ return array(
     ),
 
     'js_ext' => array(
-        'base_path'         => '{{{dir_static}}}/ext/',
-        'base_url'          => '{{{url_static}}}/ext',
-        'use_cdn'           => true,
-        'use_compiler'      => true,
-        'compile_expansion' => '.min',
+        'base_path'      => '{{{dir_static}}}/ext/',
+        'base_url'       => '{{{url_static}}}/ext',
+        'use_cdn'        => true,
+        'use_compressor' => true,
+        'compress_ext'   => '.min',
         //'url_callback'  => false,
-        'modules'   => array(
-            'ext/jquery.js'    => array(
-                'name'          => 'jquery-1.11.3.js',
-                'version'       => '1.11.3',
-                'url_map'       => 'http%1$s://code.jquery.com/jquery-%3$s%2$s.js',
-                'dependencies'  => array(
+        'modules'        => array(
+            'jquery' => array(
+                'name'         => 'jquery-1.11.3.js',
+                'version'      => '1.11.3',
+                //'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/jquery/%3$s/jquery%2$s.js',
+                'url_map'      => 'http%1$s://code.jquery.com/jquery-%3$s%2$s.js',
+                'dependencies' => array(
                 ),
-                'provides'      => array(
+                'provides'     => array(
                     'jquery',
+                    'jquery1',
                     'jquery-1.11.3',
-                    'jquery-1',
                     'ext/jquery.js',
+                    'ext/jquery1',
                     'ext/jquery-1.11.3',
-                    'ext/jquery-1',
+                ),
+            ),
+            'bootstrapjs' => array(
+                'name'         => 'bootstrap-3.3.4.js',
+                'version'      => '3.3.4',
+                'url_map'      => 'http%1$s://maxcdn.bootstrapcdn.com/bootstrap/%3$s/js/bootstrap%2$s.js',
+                'dependencies' => array(
+                    'jquery',
+                ),
+                'provides'     => array(
+                    'bootstrap',
+                    'bootstrapjs',
+                    'bootstrap3',
+                    'bootstrap-3.3.4',
+                    'ext/bootstrap.js',
+                    'ext/bootstrap-3.3.4.js',
                 ),
             ),
         ),
