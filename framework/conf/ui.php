@@ -110,6 +110,37 @@ return array(
                     'ext/font-awesome-4.3.0.css',
                 ),
             ),
+            'angular-motion' => array(
+                'name'         => 'angular-motion/0.4.2/angular-motion.css',
+                'version'      => '0.4.2',
+                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/angular-motion/%3$s/angular-motion%2$s.css',
+                'dependencies' => array(
+                ),
+                'provides'     => array(
+                    'angularmotion',
+                    'angular-motion',
+                    'angular-motion.css',
+                    'angular-motion-0.4.2',
+                    'ext/angular-motion.css',
+                    'ext/angular-motion-0.4.2.css',
+                ),
+            ),
+            'bootstrap-additions' => array(
+                'name'         => 'bootstrap-additions/0.3.1/bootstrap-additions.css',
+                'version'      => '0.3.1',
+                'url_map'      => 'https://raw.githubusercontent.com/mgcrea/bootstrap-additions/master/dist/bootstrap-additions%2$s.css',
+                'use_cdn'      => false, //grabbbing from github, not good for mojo
+                'dependencies' => array(
+                    'bootstrap',
+                ),
+                'provides'     => array(
+                    'bootstrap-additions',
+                    'bootstrap-additions.css',
+                    'bootstrap-additions-0.3.1',
+                    'ext/bootstrap-additions.css',
+                    'ext/bootstrap-additions-0.3.1.css',
+                ),
+            ),
         ),
     ),
 
@@ -167,12 +198,27 @@ return array(
                     'ext/angular-1.3.16.js',
                 ),
             ),
+            'angular-animate' => array(
+                'name'         => 'angularjs/1.3.16/angular-animate.js',
+                'version'      => '1.3.16',
+                'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angularjs/%3$s/angular-animate%2$s.js',
+                'dependencies' => array(
+                    'angularjs',
+                ),
+                'provides'     => array(
+                    'ngAnimate',
+                    'angular-animate',
+                    'angular-animate-1.3.16',
+                    'ext/angular-animate.js',
+                    'ext/angular-animate-1.3.16.js',
+                ),
+            ),
             'angular-strap' => array(
                 'name'         => 'angular-strap/1.3.16/angular-strap.js',
                 'version'      => '2.1.2',
                 'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/angular-strap/%3$s/angular-strap%2$s.js',
                 'dependencies' => array(
-                    'angularjs'
+                    'angularjs',
                 ),
                 'provides'     => array(
                     'angularstrap',
