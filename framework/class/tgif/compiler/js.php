@@ -66,20 +66,35 @@ class tgif_compiler_js extends tgif_compiler
     // {{{ - _generateHtml($url,$properties)
     /**
      * Make a js style tag
+     *
+     * Other attributes:
+     * - async (html5): Allow external script to be executed asynchronously
+     * - charset: character encoding for external script
+     * - defer: external script executes after page parses
      */
     protected function _generateHtml($url, $properties)
     {
+        // patch the id to prepend js-
+        if ( array_key_exists('id', $properties) ) {
+            $properties['id'] = 'js-'.$properties['id'];
+        }
+        // set default properties type=text/javascript src=?
+        $properties = array_merge(
+            array(
+                'src' => '',
+                'type' => 'text/javascript',
+            ),
+            $properties
+        );
+        // always override src
+        $properties['src'] = $url;
+
         $attributes = '';
         foreach ($properties as $key=>$value) {
-            if ( $key == 'id' ) {
-                $value = 'js'.$value;
-            }
             $attributes .= sprintf(' %s="%s"', $key, htmlentities($value));
         }
-        return sprintf('<script type="text/javascript" src="%s"%s></script>',
-            htmlentities($url),
-            $attributes
-        );
+        return sprintf('<script%s></script>', $attributes);
+
     }
     // }}}
      

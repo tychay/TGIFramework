@@ -115,7 +115,6 @@ class tgif_compiler_css extends tgif_compiler
      */
     protected function _generateHtml($url, $properties)
     {
-        $attributes = '';
         // patch the id to prepend css-
         if ( array_key_exists('id', $properties) ) {
             $properties['id'] = 'css-'.$properties['id'];
@@ -123,7 +122,8 @@ class tgif_compiler_css extends tgif_compiler
         // set default properties rel=stylesheet, type=text/css
         $properties = array_merge(
             array(
-                'rel' => 'stylesheet',
+                'rel'  => 'stylesheet',
+                'href' => '',
                 'type' => 'text/css',
             ),
             $properties
@@ -131,13 +131,12 @@ class tgif_compiler_css extends tgif_compiler
         // always override href
         $properties['href'] = $url;
 
+        $attributes = '';
         foreach ($properties as $key=>$value) {
             $attributes .= sprintf(' %s="%s"', $key, htmlentities($value));
         }
 
-        return sprintf('<link%s />',
-            $attributes
-        );
+        return sprintf('<link%s />', $attributes);
     }
 
     // - _compileFileExec($sourcePath, $destPath, $backgroundPath)
