@@ -20,10 +20,10 @@ return array(
             'resource_url'      => '{{{url_static}}}/res/css',
             'target_url'        => '{{{url_static}}}/dyn/css',
             'compressor'        => 'yuicompress',
-            /* // extend functionality
+            // extend functionality
             'libraries'         => array(
                 'tgif_compiler_library_ext'     => 'css_ext',
-                'tgif_compiler_library_yuicss'  => 'yui.css',
+                //'tgif_compiler_library_yuicss'  => 'yui.css',
             ),
             /* */
         ),
@@ -75,6 +75,27 @@ return array(
     ),
 
     'css_ext' => array(
+        'base_path'      => '{{{dir_static}}}/ext/',
+        'base_url'       => '{{{url_static}}}/ext',
+        'use_cdn'        => true,
+        'use_compressor' => true,
+        'compress_ext'   => '.min',
+        'modules'        => array(
+            'bootstrap' => array(
+                'name'         => 'bootstrap/3.3.4/bootstrap.css',
+                'version'      => '3.3.4',
+                'url_map'      => 'http%1$s://maxcdn.bootstrapcdn.com/bootstrap/%3$s/css/bootstrap%2$s.css',
+                'dependencies' => array(
+                ),
+                'provides'     => array(
+                    'bootstrap',
+                    'bootstrap3',
+                    'bootstrap-3.3.4',
+                    'ext/bootstrap.css',
+                    'ext/bootstrap-3.3.4.css',
+                ),
+            ),
+        ),
     ),
 
     'js_ext' => array(
@@ -85,8 +106,8 @@ return array(
         'compress_ext'   => '.min',
         //'url_callback'  => false,
         'modules'        => array(
-            'jquery' => array(
-                'name'         => 'jquery-1.11.3.js',
+            'jquery'      => array(
+                'name'         => 'jquery/1.11.3/jquery.js',
                 'version'      => '1.11.3',
                 //'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/jquery/%3$s/jquery%2$s.js',
                 'url_map'      => 'http%1$s://code.jquery.com/jquery-%3$s%2$s.js',
@@ -102,7 +123,7 @@ return array(
                 ),
             ),
             'bootstrapjs' => array(
-                'name'         => 'bootstrap-3.3.4.js',
+                'name'         => 'bootstrap/3.3.4/bootstrap.js',
                 'version'      => '3.3.4',
                 'url_map'      => 'http%1$s://maxcdn.bootstrapcdn.com/bootstrap/%3$s/js/bootstrap%2$s.js',
                 'dependencies' => array(
