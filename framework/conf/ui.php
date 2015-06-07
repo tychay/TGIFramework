@@ -110,6 +110,21 @@ return array(
                     'ext/font-awesome-4.3.0.css',
                 ),
             ),
+            'bootstrap-material-design' => array(
+                'name'         => 'bootstrap-material-design/0.3.0/material.css',
+                'version'      => '0.3.0',
+                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/%3$s/css/material%2$s.css',
+                'dependencies' => array(
+                    'bootstrap',
+                ),
+                'provides'     => array(
+                    'bootstrap-material-design',
+                    'bootstrap-material-design.css',
+                    'bootstrap-material-design-0.3.0',
+                    'ext/material.css',
+                    'ext/material-0.3.0.css',
+                ),
+            ),
             'angular-motion' => array(
                 'name'         => 'angular-motion/0.4.2/angular-motion.css',
                 'version'      => '0.4.2',
@@ -182,6 +197,21 @@ return array(
                     'bootstrap-3.3.4',
                     'ext/bootstrap.js',
                     'ext/bootstrap-3.3.4.js',
+                ),
+            ),
+            'bootstrap-material-design' => array(
+                'name'         => 'bootstrap-material-design/0.3.0/material.js',
+                'version'      => '0.3.0',
+                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/%3$s/js/material%2$s.js',
+                'dependencies' => array(
+                    'bootstrapjs',
+                ),
+                'provides'     => array(
+                    'bootstrap-material-design',
+                    'bootstrap-material-design.js',
+                    'bootstrap-material-design-0.3.0',
+                    'ext/material.js',
+                    'ext/material-0.3.0.js',
                 ),
             ),
             'angularjs' => array(
