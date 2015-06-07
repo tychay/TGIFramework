@@ -1,36 +1,36 @@
 <?php
-// vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
 /**
  * Container for {@link tgif_db}
  *
  * @package tgiframework
  * @subpackage database
- * @copyright 2010 terry chay
+ * @copyright 2010-2015 terry chay
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  * @todo is there backquoting in PDO? If so, update queries
  * @todo add arbitrary query support (and log)
  * @todo add delete function
  */
-// {{{ tgif_db_pdo
-// docs {{{
 /**
  * Class adds some useful functions (a la {@link http://codex.wordpress.org/Function_Reference/wpdb_Class WordPress wpdb}) to PDO
+ *
+ * Queries are accessed for returns a la WordPress using OBJECT, ARRAY_A, and
+ * ARRAY_N, though unlike WordPress, there is no support for OBJECT_K, defining
+ * the constants, and the default is ARRAY_A isntead of OBJECT.
  *
  * @package tgiframework
  * @subpackage database
  * @author terry chay <tychay@php.net>
  */
-// }}}
 class tgif_db_pdo extends pdo
 {
-    // {{{ - $insertId
+    // - $insertId
     /**
      * The last ID inserted
      * @var integer
      */
     public $insertId = -1;
-    // }}}
-    // {{{ __construct(…)
+
+    // CONSTRUCTORS
     /**
      * Calls PDO constructor using a single paramter array
      *
@@ -53,17 +53,16 @@ class tgif_db_pdo extends pdo
             break;
         }
     }
-    // }}}
+
     // CREATE, UPDATE, DELETE
-    // {{{ - query($sql)
+    // - query($sql)
     function query($sql)
     {
         $sth = $this->prepare($sql);
         $result = $sth->execute();
         return $result;
     }
-    // }}}
-    // {{{ - insert($table,$data)
+    // - insert($table,$data)
     /**
      * Insert a row into a table
      *
@@ -76,7 +75,8 @@ class tgif_db_pdo extends pdo
     function insert($table, $data)
     {
         $_TAG->diagnostics->startTimer('db', sprintf('%s::insert()',get_class($this)), array( 'data'=>$data ));
-        // format query {{{
+
+        // format query
         $keys = array_keys($data);
         $values = array();
         for ($i=0,$max=count($keys); $i<$max; ++$i) {
@@ -91,7 +91,7 @@ class tgif_db_pdo extends pdo
             implode(',',$keys),
             implode(',',$values)
         );
-        // }}}
+
         //$sth = $this->_prepareQuery($query,$data);
         $sth = $this->prepare($query);
         $result = $sth->execute($data);
@@ -100,8 +100,7 @@ class tgif_db_pdo extends pdo
         $_TAG->diagnostics->stopTimer('db', array( 'query' => $query ) );
         return ($result) ? true : false;
     }
-    // }}}
-    // {{{ - update($table,$data,$where)
+    // - update($table,$data,$where)
     /**
      * Update a row into a table
      *
@@ -115,7 +114,8 @@ class tgif_db_pdo extends pdo
     function update($table, $data, $where)
     {
         $_TAG->diagnostics->startTimer('db', sprintf('%s::update()',get_class($this)), array( 'data'=>array_merge($data,$where) ));
-        // format query {{{
+
+        // format query
         $sets = array();
         $wheres = array();
         foreach ($data as $key=>$value) {
@@ -132,7 +132,7 @@ class tgif_db_pdo extends pdo
             implode(',',$sets),
             implode(' AND ',$wheres)
         );
-        // }}}
+
         //$sth = $this->_prepareQuery($query,$data);
         $sth = $this->prepare($query);
         $result = $sth->execute($data);
@@ -141,8 +141,7 @@ class tgif_db_pdo extends pdo
         $_TAG->diagnostics->stopTimer('db', array( 'query' => $query ) );
         return ($result) ? true : false;
     }
-    // }}}
-    // {{{ - delete($table,$where)
+    // - delete($table,$where)
     /**
      * Delete a row (or rows) from a table
      *
@@ -153,7 +152,8 @@ class tgif_db_pdo extends pdo
     function delete($table, $where)
     {
         $_TAG->diagnostics->startTimer('db', sprintf('%s::delete()',get_class($this)), array( 'data'=>$where ));
-        // format query {{{
+
+        // format query
         $wheres = array();
         $data = array();
         foreach ($where as $key=>$value) {
@@ -164,7 +164,7 @@ class tgif_db_pdo extends pdo
             $table,
             implode(' AND ',$wheres)
         );
-        // }}}
+
         //$sth = $this->_prepareQuery($query,$data);
         //$result = $sth->execute();
         $sth = $this->prepare($query);
@@ -172,8 +172,7 @@ class tgif_db_pdo extends pdo
         $_TAG->diagnostics->stopTimer('db', array( 'query' => $query, 'row_count'=>$result ) );
         return $result;
     }
-    // }}}
-    // {{{ - insertOrUpdate($table,$data,$where[,$autoIncrement])
+    // - insertOrUpdate($table,$data,$where[,$autoIncrement])
     /**
      * Inserts a row, if it exists update a row into a table
      *
@@ -190,7 +189,8 @@ class tgif_db_pdo extends pdo
     function insertOrUpdate($table, $data, $where, $autoIncrement='')
     {
         $_TAG->diagnostics->startTimer('db', sprintf('%s::insertOrUpdate()',get_class($this)), array( 'data'=>array_merge($data,$where) ));
-        // format query {{{
+
+        // format query
         $keys = array_keys($data);
         $values = array();
         $sets = array();
@@ -223,7 +223,7 @@ class tgif_db_pdo extends pdo
         if ( empty($sets) ) {
             $query = substr($query,0,-1);
         }
-        // }}}
+
         //$sth = $this->_prepareQuery($query,$data);
         $sth = $this->prepare($query);
         $result = $sth->execute($data);
@@ -231,16 +231,17 @@ class tgif_db_pdo extends pdo
         $_TAG->diagnostics->stopTimer('db', array( 'query' => $query ) );
         return ($result) ? true : false;
     }
-    // }}}
+
     // READ
-    // {{{ - getResults($query[,$bindings,$output_type])
+    // - getResults($query[,$bindings,$output_type])
     /**
-     * Select an entire row from a database.
+     * Return results rows from a database.
      *
      * @param string $query SQL query to execute
      * @param array $binding bind variables
      * @param string $output_type OBJECT, ARRAY_A, or ARRAY_N. Unlike the
-     * WordPress db, this will default to ARRAY_A
+     * WordPress db, this will default to ARRAY_A. Also unlike WordPress, this
+     * is a string
      * @return mixed the rows from the database. If no result found then null
      * @todo support CLASS, BOUND, INTO, LAZY fetch types?
      */
@@ -253,8 +254,7 @@ class tgif_db_pdo extends pdo
         $_TAG->diagnostics->stopTimer('db', array( 'query' => $query ) );
         return $sth->fetchAll($this->_guessStyle($output_type));
     }
-    // }}}
-    // {{{ - getRow($query[,$bindings,$output_type,$row_offset])
+    // - getRow($query[,$bindings,$output_type,$row_offset])
     /**
      * Select an entire row from a database.
      *
@@ -282,8 +282,7 @@ class tgif_db_pdo extends pdo
         $_TAG->diagnostics->stopTimer('db', array( 'query' => $query ) );
         return $result;
     }
-    // }}}
-    // {{{ - getVar($query[,$bindings,$column_offset,$row_offset])
+    // - getVar($query[,$bindings,$column_offset,$row_offset])
     /**
      * Select a single variable from a database.
      *
@@ -309,9 +308,9 @@ class tgif_db_pdo extends pdo
         $_TAG->diagnostics->stopTimer('db', array( 'query' => $query ) );
         return $sth->fetchColumn($column_offset);
     }
-    // }}}
+
     // PRIVATE METHODS
-    // {{{ - _guessStyle($output_type)
+    // - _guessStyle($output_type)
     /**
      * Return the PDO fetch style.
      *
@@ -328,8 +327,7 @@ class tgif_db_pdo extends pdo
         }
         return PDO::FETCH_BOTH;
     }
-    // }}}
-    // {{{ - _prepareQuery($query[,$bindings])
+    // - _prepareQuery($query[,$bindings])
     /**
      * Prepares a query
      *
@@ -357,7 +355,4 @@ class tgif_db_pdo extends pdo
         }
         return $return_obj;
     }
-    // }}}
 }
-// }}}
-?>
