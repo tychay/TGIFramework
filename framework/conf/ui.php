@@ -114,6 +114,7 @@ return array(
                 'name'         => 'bootstrap-material-design/0.3.0/material.css',
                 'version'      => '0.3.0',
                 'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/%3$s/css/material%2$s.css',
+                'use_cdn'      => true, // because of relative path references to icon font
                 'dependencies' => array(
                     'bootstrap',
                 ),
@@ -123,6 +124,21 @@ return array(
                     'bootstrap-material-design-0.3.0',
                     'ext/material.css',
                     'ext/material-0.3.0.css',
+                ),
+            ),
+            'bootstrap-material-design-ripples' => array(
+                'name'         => 'bootstrap-material-design/0.3.0/ripples.css',
+                'version'      => '0.3.0',
+                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/%3$s/css/ripples%2$s.css',
+                'dependencies' => array(
+                    'bootstrap-material-design',
+                ),
+                'provides'     => array(
+                    'bootstrap-material-design-ripples',
+                    'bootstrap-material-design-ripples.css',
+                    'bootstrap-material-design-ripples-0.3.0',
+                    'ext/material-ripples.css',
+                    'ext/material-ripples.0.3.0.css',
                 ),
             ),
             'angular-motion' => array(
@@ -212,6 +228,21 @@ return array(
                     'bootstrap-material-design-0.3.0',
                     'ext/material.js',
                     'ext/material-0.3.0.js',
+                ),
+            ),
+            'bootstrap-material-design-ripples' => array(
+                'name'         => 'bootstrap-material-design/0.3.0/ripples.js',
+                'version'      => '0.3.0',
+                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/%3$s/js/ripples%2$s.js',
+                'dependencies' => array(
+                    'bootstrap-material-design',
+                ),
+                'provides'     => array(
+                    'bootstrap-material-design-ripples',
+                    'bootstrap-material-design-ripples.js',
+                    'bootstrap-material-design-ripples-0.3.0',
+                    'ext/material-ripples.js',
+                    'ext/material-ripples.0.3.0.js',
                 ),
             ),
             'angularjs' => array(
