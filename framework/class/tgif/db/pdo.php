@@ -74,6 +74,8 @@ class tgif_db_pdo extends pdo
      */
     function insert($table, $data)
     {
+        global $_TAG;
+
         $_TAG->diagnostics->startTimer('db', sprintf('%s::insert()',get_class($this)), array( 'data'=>$data ));
 
         // format query
@@ -113,6 +115,8 @@ class tgif_db_pdo extends pdo
      */
     function update($table, $data, $where)
     {
+        global $_TAG;
+
         $_TAG->diagnostics->startTimer('db', sprintf('%s::update()',get_class($this)), array( 'data'=>array_merge($data,$where) ));
 
         // format query
@@ -151,6 +155,8 @@ class tgif_db_pdo extends pdo
      */
     function delete($table, $where)
     {
+        global $_TAG;
+
         $_TAG->diagnostics->startTimer('db', sprintf('%s::delete()',get_class($this)), array( 'data'=>$where ));
 
         // format query
@@ -188,6 +194,8 @@ class tgif_db_pdo extends pdo
      */
     function insertOrUpdate($table, $data, $where, $autoIncrement='')
     {
+        global $_TAG;
+
         $_TAG->diagnostics->startTimer('db', sprintf('%s::insertOrUpdate()',get_class($this)), array( 'data'=>array_merge($data,$where) ));
 
         // format query
@@ -247,6 +255,8 @@ class tgif_db_pdo extends pdo
      */
     function getResults($query, $bindings=array(), $output_type='ARRAY_A')
     {
+        global $_TAG;
+
         $_TAG->diagnostics->startTimer('db', sprintf('%s::getResults()',get_class($this)), array( 'bindings'=>$bindings ));
         $sth = $this->_prepareQuery($query,$bindings);
         $sth->execute();
@@ -256,7 +266,7 @@ class tgif_db_pdo extends pdo
     }
     // - getRow($query[,$bindings,$output_type,$row_offset])
     /**
-     * Select an entire row from a database.
+     * Select a single row from a database.
      *
      * @param string $query SQL query to execute
      * @param array $binding bind variables
@@ -267,6 +277,8 @@ class tgif_db_pdo extends pdo
      */
     function getRow($query, $bindings=array(), $output_type='ARRAY_A', $row_offset=0)
     {
+        global $_TAG;
+
         $_TAG->diagnostics->startTimer('db', sprintf('%s::getRow()',get_class($this)), array( 'bindings'=>$bindings ));
         $sth = $this->_prepareQuery($query,$bindings);
 
@@ -294,6 +306,8 @@ class tgif_db_pdo extends pdo
      */
     function getVar($query, $bindings=array(), $column_offset=0, $row_offset=0)
     {
+        global $_TAG;
+        
         $_TAG->diagnostics->startTimer('db', sprintf('%s::getVar()',get_class($this)), array( 'bindings'=>$bindings ));
         $sth = $this->_prepareQuery($query,$bindings);
 
