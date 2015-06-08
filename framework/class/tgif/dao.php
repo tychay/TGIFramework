@@ -203,6 +203,8 @@ class tgif_dao
                 $this->_exists = true;
             }
         }
+        //$this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); 
+        //$this->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC); 
     }
     // }}}
     // {{{ - _read([$whereKeys])
@@ -268,7 +270,7 @@ class tgif_dao
      * Example:<code>
      * $obj = new tgif_dao_tablename($data,true); // create new object but not database lookup
      * $obj->insert(); //now object is in the database and autoincrement key bound
-     * $_TAG->dao_tablename[$obj->autoIncrement()] = $obj; //bind to global
+     * $_TAG->dao_tablename[$obj->id()] = $obj; //bind to global
      * </code>
      *
      * Note that this does not bind to any global becuase it is in the base class of something else (which knows what global to bind to).
@@ -416,6 +418,27 @@ class tgif_dao
         return $this->_data;
     }
     // }}}
+    /**
+     * Return the id
+     * 
+     * @return [type] [description]
+     */
+    function id()
+    {
+        if ( $this->_autoIncrement ) {
+            return $this->_data[$this->_autoIncrement];
+        }
+        switch ( count($this->_primaryKeys) ) {
+            case 0: return null;
+            case 1: return $this->_data[$this->_primaryKeys[0]];
+            default:
+            $returns = array();
+            foreach ($this->_primaryKeys as $key) {
+                $returns[$key] = $this->_data[$key];
+            }
+            return $returns;
+        }
+    }
     // PUBLIC METHODS
     // {{{ - save()
     /**
