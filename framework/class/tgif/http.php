@@ -67,6 +67,7 @@ class tgif_http
         exit();
     }
     // }}}
+    // 
     // STATIC: URL UTILITIES
     // {{{ + self_url()
     /**
@@ -116,7 +117,7 @@ class tgif_http
             $url_parts['scheme']    = self::self_url_scheme();
         }
         if ( !isset($url_parts['host']) ) {
-            $url_parts['host']      = $_SERVER['SERVER_NAME'];
+            $url_parts['host']      = $_SERVER['HTTP_HOST'];
         }
         if ( !isset($url_parts['port']) && ($_SERVER['SERVER_PORT']!=='80' && $_SERVER['SERVER_PORT']!=='443') ) {
             $url_parts['port']      = $_SERVER['SERVER_PORT'];
