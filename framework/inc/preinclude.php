@@ -62,8 +62,8 @@ if (!defined('TGIF_CONF_PATH')) {
     define('TGIF_CONF_PATH','');
 }
 
-// composer autoload
-require_once dirname(TGIF_DIR).'/vendor/autoload.php';
+// composer autoload (should be already done as it loads this)
+//require_once dirname(TGIF_DIR).'/vendor/autoload.php';
 
 // bind autoload
 require_once TGIF_FUNC_DIRD.'autoload.php';

@@ -15,7 +15,7 @@
 if (!isset($symbol) && !defined('SYMBOL_FILE')) {
     // bootstrap framework based include system
     $symbol = 'bin';
-    include(dirname(__DIR__).'/inc/preinclude.php');
+    include(dirname(dirname(__DIR__)).'/vendor/autoload.php');
 }
 
 
