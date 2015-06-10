@@ -160,7 +160,7 @@ return array(
                 'name'         => 'bootstrap-additions/0.3.1/bootstrap-additions.css',
                 'version'      => '0.3.1',
                 'url_map'      => 'https://raw.githubusercontent.com/mgcrea/bootstrap-additions/master/dist/bootstrap-additions%2$s.css',
-                'use_cdn'      => false, //grabbbing from github, not good for mojo
+                'use_cdn'      => false, // using github directly is bad mojo
                 'dependencies' => array(
                     'bootstrap',
                 ),
@@ -170,6 +170,34 @@ return array(
                     'bootstrap-additions-0.3.1',
                     'ext/bootstrap-additions.css',
                     'ext/bootstrap-additions-0.3.1.css',
+                ),
+            ),
+            /* TODO Probably move all google fonts into own library? */
+            'roboto-draft-font' => array(
+                'name'         => 'RobotoDraft.css',
+                'version'      => '',
+                'url_map'      => 'http%1$s://fonts.googleapis.com/css?family=RobotoDraft:300,400,500,700,400italic',
+                'dependencies' => array(
+                ),
+                'provides'     => array(
+                    'roboto-draft-font',
+                ),
+            ),
+            'angular-material' => array(
+                'name'         => 'angular_material/0.9.4/angular-material.css',
+                'version'      => '0.9.4',
+                'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angular_material/%3$s/angular-material%2$s.css',
+                //'url_map'      => 'https://rawgit.com/angular/bower-material/master/angular-material.css',
+                //'use_cdn'      => false, //grabbbing from github, not good for mojo
+                'dependencies' => array(
+                    'roboto-draft-font',
+                ),
+                'provides'     => array(
+                    'angular-material',
+                    'angular-material.css',
+                    'angular-material-0.9.4',
+                    'ext/angular-material.css',
+                    'ext/angular-material-0.9.4.css',
                 ),
             ),
         ),
@@ -272,6 +300,42 @@ return array(
                     'angular-animate-1.3.16',
                     'ext/angular-animate.js',
                     'ext/angular-animate-1.3.16.js',
+                ),
+            ),
+            'angular-aria' => array(
+                'name'         => 'angularjs/1.3.16/angular-aria.js',
+                'version'      => '1.3.16',
+                'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angularjs/%3$s/angular-aria%2$s.js',
+                'dependencies' => array(
+                    'angularjs',
+                ),
+                'provides'     => array(
+                    'ngAria',
+                    'angular-aria',
+                    'angular-aria-1.3.16',
+                    'ext/angular-aria.js',
+                    'ext/angular-aria-1.3.16.js',
+                ),
+            ),
+            //https://developers.google.com/speed/libraries/#angular-material
+            'angular-material' => array(
+                'name'         => 'angular_material/0.9.4/angular-material.js',
+                'version'      => '0.9.4',
+                'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angular_material/%3$s/angular-material%2$s.js',
+                'use_cdn'      => true,
+                //'url_map'      => 'https://rawgit.com/angular/bower-material/master/angular-material.js',
+                //'use_cdn'      => false, //grabbbing from github, not good for mojo
+                'dependencies' => array(
+                    'angularjs',
+                    'angular-animate',
+                    'angular-aria',
+                ),
+                'provides'     => array(
+                    'ngMaterial',
+                    'angular-material',
+                    'angular-material-0.9.4',
+                    'ext/angular-material.js',
+                    'ext/angular-material-0.9.4.js',
                 ),
             ),
             'angular-strap' => array(
