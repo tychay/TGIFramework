@@ -104,100 +104,9 @@ return array(
                 'provides'     => array(
                     'fontawesome',
                     'font-awesome',
-                    'font-awesome.css',
                     'font-awesome-4.3.0',
                     'ext/font-awesome.css',
                     'ext/font-awesome-4.3.0.css',
-                ),
-            ),
-            'bootstrap-material-design' => array(
-                'name'         => 'bootstrap-material-design/0.3.0/material.css',
-                'version'      => '0.3.0',
-                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/%3$s/css/material%2$s.css',
-                'use_cdn'      => true, // because of relative path references to icon font
-                'dependencies' => array(
-                    'bootstrap',
-                ),
-                'provides'     => array(
-                    'bootstrap-material-design',
-                    'bootstrap-material-design.css',
-                    'bootstrap-material-design-0.3.0',
-                    'ext/material.css',
-                    'ext/material-0.3.0.css',
-                ),
-            ),
-            'bootstrap-material-design-ripples' => array(
-                'name'         => 'bootstrap-material-design/0.3.0/ripples.css',
-                'version'      => '0.3.0',
-                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/%3$s/css/ripples%2$s.css',
-                'dependencies' => array(
-                    'bootstrap-material-design',
-                ),
-                'provides'     => array(
-                    'bootstrap-material-design-ripples',
-                    'bootstrap-material-design-ripples.css',
-                    'bootstrap-material-design-ripples-0.3.0',
-                    'ext/material-ripples.css',
-                    'ext/material-ripples.0.3.0.css',
-                ),
-            ),
-            'angular-motion' => array(
-                'name'         => 'angular-motion/0.4.2/angular-motion.css',
-                'version'      => '0.4.2',
-                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/angular-motion/%3$s/angular-motion%2$s.css',
-                'dependencies' => array(
-                ),
-                'provides'     => array(
-                    'angularmotion',
-                    'angular-motion',
-                    'angular-motion.css',
-                    'angular-motion-0.4.2',
-                    'ext/angular-motion.css',
-                    'ext/angular-motion-0.4.2.css',
-                ),
-            ),
-            'bootstrap-additions' => array(
-                'name'         => 'bootstrap-additions/0.3.1/bootstrap-additions.css',
-                'version'      => '0.3.1',
-                'url_map'      => 'https://raw.githubusercontent.com/mgcrea/bootstrap-additions/master/dist/bootstrap-additions%2$s.css',
-                'use_cdn'      => false, // using github directly is bad mojo
-                'dependencies' => array(
-                    'bootstrap',
-                ),
-                'provides'     => array(
-                    'bootstrap-additions',
-                    'bootstrap-additions.css',
-                    'bootstrap-additions-0.3.1',
-                    'ext/bootstrap-additions.css',
-                    'ext/bootstrap-additions-0.3.1.css',
-                ),
-            ),
-            /* TODO Probably move all google fonts into own library? */
-            'roboto-draft-font' => array(
-                'name'         => 'RobotoDraft.css',
-                'version'      => '',
-                'url_map'      => 'http%1$s://fonts.googleapis.com/css?family=RobotoDraft:300,400,500,700,400italic',
-                'dependencies' => array(
-                ),
-                'provides'     => array(
-                    'roboto-draft-font',
-                ),
-            ),
-            'angular-material' => array(
-                'name'         => 'angular_material/0.9.4/angular-material.css',
-                'version'      => '0.9.4',
-                'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angular_material/%3$s/angular-material%2$s.css',
-                //'url_map'      => 'https://rawgit.com/angular/bower-material/master/angular-material.css',
-                //'use_cdn'      => false, //grabbbing from github, not good for mojo
-                'dependencies' => array(
-                    'roboto-draft-font',
-                ),
-                'provides'     => array(
-                    'angular-material',
-                    'angular-material.css',
-                    'angular-material-0.9.4',
-                    'ext/angular-material.css',
-                    'ext/angular-material-0.9.4.css',
                 ),
             ),
         ),
@@ -223,8 +132,7 @@ return array(
                     'jquery1',
                     'jquery-1.11.3',
                     'ext/jquery.js',
-                    'ext/jquery1',
-                    'ext/jquery-1.11.3',
+                    'ext/jquery-1.11.3.js',
                 ),
             ),
             'bootstrapjs' => array(
@@ -241,36 +149,6 @@ return array(
                     'bootstrap-3.3.4',
                     'ext/bootstrap.js',
                     'ext/bootstrap-3.3.4.js',
-                ),
-            ),
-            'bootstrap-material-design' => array(
-                'name'         => 'bootstrap-material-design/0.3.0/material.js',
-                'version'      => '0.3.0',
-                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/%3$s/js/material%2$s.js',
-                'dependencies' => array(
-                    'bootstrapjs',
-                ),
-                'provides'     => array(
-                    'bootstrap-material-design',
-                    'bootstrap-material-design.js',
-                    'bootstrap-material-design-0.3.0',
-                    'ext/material.js',
-                    'ext/material-0.3.0.js',
-                ),
-            ),
-            'bootstrap-material-design-ripples' => array(
-                'name'         => 'bootstrap-material-design/0.3.0/ripples.js',
-                'version'      => '0.3.0',
-                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/%3$s/js/ripples%2$s.js',
-                'dependencies' => array(
-                    'bootstrap-material-design',
-                ),
-                'provides'     => array(
-                    'bootstrap-material-design-ripples',
-                    'bootstrap-material-design-ripples.js',
-                    'bootstrap-material-design-ripples-0.3.0',
-                    'ext/material-ripples.js',
-                    'ext/material-ripples.0.3.0.js',
                 ),
             ),
             'angularjs' => array(
@@ -315,57 +193,6 @@ return array(
                     'angular-aria-1.3.16',
                     'ext/angular-aria.js',
                     'ext/angular-aria-1.3.16.js',
-                ),
-            ),
-            //https://developers.google.com/speed/libraries/#angular-material
-            'angular-material' => array(
-                'name'         => 'angular_material/0.9.4/angular-material.js',
-                'version'      => '0.9.4',
-                'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angular_material/%3$s/angular-material%2$s.js',
-                'use_cdn'      => true,
-                //'url_map'      => 'https://rawgit.com/angular/bower-material/master/angular-material.js',
-                //'use_cdn'      => false, //grabbbing from github, not good for mojo
-                'dependencies' => array(
-                    'angularjs',
-                    'angular-animate',
-                    'angular-aria',
-                ),
-                'provides'     => array(
-                    'ngMaterial',
-                    'angular-material',
-                    'angular-material-0.9.4',
-                    'ext/angular-material.js',
-                    'ext/angular-material-0.9.4.js',
-                ),
-            ),
-            'angular-strap' => array(
-                'name'         => 'angular-strap/1.3.16/angular-strap.js',
-                'version'      => '2.1.2',
-                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/angular-strap/%3$s/angular-strap%2$s.js',
-                'dependencies' => array(
-                    'angularjs',
-                ),
-                'provides'     => array(
-                    'angularstrap',
-                    'angular-strap',
-                    'angular-strap-2.1.2',
-                    'ext/angular-strap.js',
-                    'ext/angular-strap-2.1.2.js',
-                ),
-            ),
-            'angular-strap-tpl' => array(
-                'name'         => 'angular-strap/1.3.16/angular-strap.tpl.js',
-                'version'      => '2.1.2',
-                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/angular-strap/%3$s/angular-strap.tpl%2$s.js',
-                'dependencies' => array(
-                    'angular-strap'
-                ),
-                'provides'     => array(
-                    'angularstrap.tpl',
-                    'angular-strap-tpl',
-                    'angular-strap-tpl.2.1.2',
-                    'ext/angular-strap.tpl.js',
-                    'ext/angular-strap.tpl-2.1.2.js',
                 ),
             ),
         ),
