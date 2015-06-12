@@ -152,22 +152,22 @@ return array(
                 ),
             ),
             'angularjs' => array(
-                'name'         => 'angularjs/1.3.16/angular.js',
-                'version'      => '1.3.16',
+                'name'         => 'angularjs/1.4.0/angular.js',
+                'version'      => '1.4.0',
                 'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angularjs/%3$s/angular%2$s.js',
                 'dependencies' => array(
                 ),
                 'provides'     => array(
                     'angular',
                     'angularjs',
-                    'angularjs-1.3.16',
+                    'angularjs-1.4.0',
                     'ext/angular.js',
-                    'ext/angular-1.3.16.js',
+                    'ext/angular-1.4.0.js',
                 ),
             ),
             'angular-animate' => array(
-                'name'         => 'angularjs/1.3.16/angular-animate.js',
-                'version'      => '1.3.16',
+                'name'         => 'angularjs/1.4.0/angular-animate.js',
+                'version'      => '1.4.0',
                 'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angularjs/%3$s/angular-animate%2$s.js',
                 'dependencies' => array(
                     'angularjs',
@@ -175,14 +175,14 @@ return array(
                 'provides'     => array(
                     'ngAnimate',
                     'angular-animate',
-                    'angular-animate-1.3.16',
+                    'angular-animate-1.4.0',
                     'ext/angular-animate.js',
-                    'ext/angular-animate-1.3.16.js',
+                    'ext/angular-animate-1.4.0.js',
                 ),
             ),
             'angular-aria' => array(
-                'name'         => 'angularjs/1.3.16/angular-aria.js',
-                'version'      => '1.3.16',
+                'name'         => 'angularjs/1.4.0/angular-aria.js',
+                'version'      => '1.4.0',
                 'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angularjs/%3$s/angular-aria%2$s.js',
                 'dependencies' => array(
                     'angularjs',
@@ -190,9 +190,24 @@ return array(
                 'provides'     => array(
                     'ngAria',
                     'angular-aria',
-                    'angular-aria-1.3.16',
+                    'angular-aria-1.4.0',
                     'ext/angular-aria.js',
-                    'ext/angular-aria-1.3.16.js',
+                    'ext/angular-aria-1.4.0.js',
+                ),
+            ),
+            'angular-messages' => array(
+                'name'         => 'angularjs/1.4.0/angular-messages.js',
+                'version'      => '1.4.0',
+                'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angularjs/%3$s/angular-messages%2$s.js',
+                'dependencies' => array(
+                    'angularjs',
+                ),
+                'provides'     => array(
+                    'ngMessages',
+                    'angular-messages',
+                    'angular-messages-1.4.0',
+                    'ext/angular-messages.js',
+                    'ext/angular-messages-1.4.0.js',
                 ),
             ),
         ),
