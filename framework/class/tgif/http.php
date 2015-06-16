@@ -94,12 +94,15 @@ class tgif_http
     {
         static $protocol;
         if ( !$protocol ) {
-            $s = empty( $_SERVER['HTTPS'])
+            $s = ( empty($_SERVER['HTTPS']) )
                ? ''
                : ($_SERVER['HTTPS'] == "on")
                ? 's'
                : '';
-            $protocol = strtolower($_SERVER['SERVER_PROTOCOL']);
+            // SERVER_PROTOCOL: e.g. HTTP/1.0
+            $protocol = ( empty($_SERVER['SERVER_PROTOCOL']) )
+                      ? 'http'
+                      : strtolower($_SERVER['SERVER_PROTOCOL']);
             $protocol = substr($protocol, 0, strpos($protocol, '/')) . $s;
         }
         return $protocol;
