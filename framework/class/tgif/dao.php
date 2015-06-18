@@ -1,19 +1,16 @@
 <?php
-// vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 foldmethod=marker syntax=php:
 /**
  * Container for {@link tgif_dao}
  *
  * @package tgiframework
  * @subpackage database
  * @author terry chay <tychay@php.net>
- * @copyright c. 2010 5, Inc. and c. 2010 Terry Chay
+ * @copyright c. 2010-2015 Terry Chay, All Rights Reserved
  * @license GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>
  *
  * @todo clean up handling of new element creation or insertOrUpdate
  * @todo make _table_name and _primaryKeys and _autoIncremenet class variables via static:: (and test serialize deserialize)
  */
-// {{{ tgif_dao
-// docs {{{
 /**
  * This is an abstract base class for data access objects (really a data object).
  *
@@ -55,48 +52,42 @@
  * </code>
  *
  * This depends on the database handle $_TAG->dbh.
- * @author terry chay <tychay@buywith5.com>
+ * @author terry chay <tychay@php.net>
  * @package tgiframework
  * @subpackage database
  */
-// }}}
 class tgif_dao
 {
-    // {{{ - _SQL_READ
+    // - _SQL_READ
     /**
      * This is the base select for reading data from database
      */
     const _SQL_READ = 'SELECT * from %s WHERE %s';
-    // }}}
-    // {{{ - $_table_name
+    // - $_table_name
     /**
      * This is the name of the table in the database.
      * @var string
      */
     protected $_table_name = 'XXOVERRIDEXX';
-    // }}}
-    // {{{ - $_data
+    // - $_data
     /**
      * This is where the row is stored (indexed by key)
      * @var array
      */
     protected $_data = array();
-    // }}}
-    // {{{ - $_primaryKeys
+    // - $_primaryKeys
     /**
      * Set this in order to separate WHERE clause for UPDATE
      * @var array
      */
     protected $_primaryKeys = array();
-    // }}}
-    // {{{ - $_autoIncrement
+    // - $_autoIncrement
     /**
      * If set, then this is the autoincrement key in order to update {@link $_data}
      * on an insert.
      * @var string
      */
     protected $_autoIncrement = '';
-    // }}}
     // {{{ - $_exists
     /**
      * If set to false it means the table doesn't exist yet
@@ -216,7 +207,7 @@ class tgif_dao
      * list of primary keys.
      * @return array|false $this->_data
      */
-    function _read($whereKeys=array())
+    protected function _read($whereKeys=array())
     {
         global $_TAG;
         $wheres = array();
@@ -305,7 +296,7 @@ class tgif_dao
      * Do an insertOrUpdate()
      *
      * @param array $whereKeys a list of keys to use in the where cause.
-     * @param boolean $forceUpdate orce a re-read of the entry into the object
+     * @param boolean $forceUpdate force a re-read of the entry into the object
      * @return boolean success or failure
      * @todo failure should trigger exception
      * @todo things like this should be static method
@@ -487,5 +478,4 @@ class tgif_dao
     }
     // }}}
 }
-// }}}
 ?>
