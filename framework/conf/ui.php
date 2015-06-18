@@ -135,6 +135,29 @@ return array(
                     'ext/jquery-1.11.3.js',
                 ),
             ),
+            'momentjs' => array(
+                'name'         => 'momentjs/2.10.3/moment.js',
+                'version'      => '2.10.3',
+                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/moment.js/%3$s/moment%2$s.js',
+                'dependencies' => array(
+                ),
+                'provides'     => array(
+                    'momentjs',
+                    'ext/moment.js',
+                ),
+            ),
+            'momentjs-locales' => array(
+                'name'         => 'momentjs/2.10.3/locales.js',
+                'version'      => '2.10.3',
+                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/moment.js/%3$s/locales%2$s.js',
+                'dependencies' => array(
+                    'momentjs',
+                ),
+                'provides'     => array(
+                    'momentjs-locales',
+                    'ext/moment-with-locales.js',
+                ),
+            ),
             'bootstrapjs' => array(
                 'name'         => 'bootstrap/3.3.4/bootstrap.js',
                 'version'      => '3.3.4',
