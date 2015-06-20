@@ -20,6 +20,7 @@
 	},
 	"require": {
 		"firephp/firephp-core": "*",
-		"saltybeagle/savant3": "dev-master"
+		"saltybeagle/savant3": "dev-master",
+		"luracast/restler": "3.0.0"
 	}
 }
