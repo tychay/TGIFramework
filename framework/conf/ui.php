@@ -135,6 +135,18 @@ return array(
                     'ext/jquery-1.11.3.js',
                 ),
             ),
+            'lodash' => array(
+                'name'         => 'lodash/3.9.3/lodash.js',
+                'version'      => '3.9.3',
+                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/lodash.js/%3$s/lodash%2$s.js',
+                'dependencies' => array(
+                ),
+                'provides'     => array(
+                    'lodash',
+                    'underscore',
+                    'ext/lodash.js',
+                ),
+            ),
             'momentjs' => array(
                 'name'         => 'momentjs/2.10.3/moment.js',
                 'version'      => '2.10.3',
