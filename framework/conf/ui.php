@@ -230,6 +230,21 @@ return array(
                     'ext/angular-aria-1.4.0.js',
                 ),
             ),
+            'angular-cookies' => array(
+                'name'         => 'angularjs/1.4.0/angular-cookies.js',
+                'version'      => '1.4.0',
+                'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angularjs/%3$s/angular-cookies%2$s.js',
+                'dependencies' => array(
+                    'angularjs',
+                ),
+                'provides'     => array(
+                    'ngCookies',
+                    'angular-cookies',
+                    'angular-cookies-1.4.0',
+                    'ext/angular-cookies.js',
+                    'ext/angular-cookies-1.4.0.js',
+                ),
+            ),
             'angular-messages' => array(
                 'name'         => 'angularjs/1.4.0/angular-messages.js',
                 'version'      => '1.4.0',
