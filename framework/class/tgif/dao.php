@@ -77,7 +77,7 @@ class tgif_dao
     protected $_data = array();
     // - $_primaryKeys
     /**
-     * Set this in order to separate WHERE clause for UPDATE
+     * Set this in order to separate WHERE clause for UPDATE and DELETE
      * @var array
      */
     protected $_primaryKeys = array();
@@ -430,8 +430,29 @@ class tgif_dao
             return $returns;
         }
     }
+    //
+    // DELETE
+    //
+    // + delete($object)
+    /**
+     * Delete a DAO object
+     * 
+     * @param  tgif_dao $obj The dao object to be deleted
+     */
+    public static function delete($obj)
+    {
+        $where = array();
+        foreach ($this->_primaryKeys as $key) {
+            $where[$key] = $obj->key;
+        }
+        $success = $_TAG->dbj->delete($this->_table_name, $where);
+        if ( $success ) {
+            $obj = null;
+        }
+        return $success;
+    }
     // PUBLIC METHODS
-    // {{{ - save()
+    // - save()
     /**
      * Save the object if it's being destroyed
      */
@@ -455,7 +476,6 @@ class tgif_dao
             $this->_saveToCache();
         }
     }
-    // }}}
     // CACHING METHODS
     // {{{ - setLoader($loader)
     /**

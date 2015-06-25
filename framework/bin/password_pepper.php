@@ -15,8 +15,6 @@ if (!isset($symbol) && !defined('SYMBOL_FILE')) {
     include(dirname(dirname(__DIR__)).'/vendor/autoload.php');
 }
 
-$iv = mcrypt_create_iv(22, MCRYPT_DEV_URANDOM);
-$pepper = tgif_encode::hex_to_base64(bin2hex($iv));
-
+$pepper = tgif_encode::generate_key(29);
 echo $pepper . "\n";
 ?>

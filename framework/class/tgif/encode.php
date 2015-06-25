@@ -44,7 +44,7 @@ class tgif_encode {
         'Y'=>60,'Z'=>61,'-'=>62,'_'=>63,
     );
     // }}}
-    // {{{ + create_key($string[,$length])
+    // + create_key($string[,$length])
     /**
      * Creates a key out of an arbitrary string.
      *
@@ -66,7 +66,7 @@ class tgif_encode {
      *
      * @author terry chay <tychay@php.net> added crc32 switch
      * @param string $string arbitrary string to create key from
-     * @param int $length how large a string to return
+     * @param int $length how large a string to return (max is 22)
      * @return string base64 encoded md5 of the string
      */
     public static function create_key($string, $length=10)
@@ -87,7 +87,23 @@ class tgif_encode {
                : self::hex_to_base64(substr(md5($string), 0, $hexdigits));
         return str_pad($num64, $length, '0', STR_PAD_LEFT);
     }
-    // }}}
+    /**
+     * Generates a random key of a given length.
+     *
+     * Unlike {@link create_key()}, this is designed to be a secure random key
+     * of arbitrary length and it uses a secure random number generator to
+     * generate the key.
+     */
+    public static function generate_key($length)
+    {
+        // need 1.5x hex digits for each base 64 digit but each binary digit is
+        // 2 hex digits
+        $size = ceil(3*$length/4);
+        $iv = mcrypt_create_iv($size, MCRYPT_DEV_URANDOM);
+        $num64 = self::hex_to_base64(bin2hex($iv));
+        // take first $length digits of something padded to be minimum $length digits
+        return substr(str_pad($num64, $length, '0', STR_PAD_LEFT), 0, $length);
+    }
     // {{{ + create_password([$length,$strength])
     /**
      * Simple password generator.
