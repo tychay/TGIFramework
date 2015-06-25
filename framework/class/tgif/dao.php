@@ -127,7 +127,7 @@ class tgif_dao
     /**
      * Get the columsn titles
      *
-     * The static stuf caches the columns but the static:: stuff is needed
+     * The static stuff caches the columns but the static:: stuff is needed
      * to prevent self:: from working on the parent class.
      *
      * @return array the table columns
@@ -433,25 +433,36 @@ class tgif_dao
     //
     // DELETE
     //
-    // + delete($object)
+    // - delete()
     /**
      * Delete a DAO object
      * 
      * @param  tgif_dao $obj The dao object to be deleted
      */
-    public static function delete($obj)
+    public function delete()
     {
+        global $_TAG;
+
         $where = array();
-        foreach ($this->_primaryKeys as $key) {
-            $where[$key] = $obj->key;
+        $pks = $this->_primaryKeys;
+        foreach ($pks as $key) {
+            $where[$key] = $this->$key;
         }
-        $success = $_TAG->dbj->delete($this->_table_name, $where);
+        $success = $_TAG->dbh->delete($this->_table_name, $where);
+        return $success;
+    }
+    // + delete_and_dispoase($obj)
+    static public function delete_and_dispose($obj)
+    {
+        $success = $obj->delete();
         if ( $success ) {
             $obj = null;
         }
         return $success;
     }
+    //
     // PUBLIC METHODS
+    // 
     // - save()
     /**
      * Save the object if it's being destroyed
