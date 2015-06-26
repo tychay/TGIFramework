@@ -260,15 +260,15 @@ class tgif_dao
      *
      * Example:<code>
      * $obj = new tgif_dao_tablename($data,true); // create new object but not database lookup
-     * $obj->insert(); //now object is in the database and autoincrement key bound
+     * $obj->insert(true); //now object is in the database and autoincrement key bound
      * $_TAG->dao_tablename[$obj->id()] = $obj; //bind to global
      * </code>
      *
      * Note that this does not bind to any global becuase it is in the base class of something else (which knows what global to bind to).
      *
-     * @param array $data The row data to insert
+     * @param  boolean $forceUpdate read values back out after insert (good if default values in db)
      * @return boolean success or failure
-     * @todo failure should trigger exception
+     * @todo   failure should trigger exception
      */
     function insert($forceUpdate=false)
     {
