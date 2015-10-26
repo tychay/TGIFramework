@@ -451,8 +451,8 @@ class tgif_dao
         $success = $_TAG->dbh->delete($this->_table_name, $where);
         return $success;
     }
-    // + delete_and_dispoase($obj)
-    static public function delete_and_dispose($obj)
+    // + delete_and_dispose($obj)
+    public static function delete_and_dispose($obj)
     {
         $success = $obj->delete();
         if ( $success ) {
