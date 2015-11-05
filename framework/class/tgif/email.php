@@ -25,12 +25,13 @@ class tgif_email
     /**
      * Just a wrapper for mailparse's parse_address function.
      *
-     * If the pecl package isn't isntalled it attempts to use the PEAR package.
+     * If the pecl package isn't installed it attempts to use the PEAR package.
      *
      * @return array A list of e-mails with a hash with the following parameters
      * - display: name for display purposes
      * - address: the e-mail address
      * - is_group: true if newsgroup, false otherwise
+     * @todo  remove the crummy pear dependency
      */
     static function parse_addresses($text)
     {
@@ -100,9 +101,12 @@ class tgif_email
     // }}}
     // {{{ + validate_address($email[,$skipDomainCheck])
     /**
-     * @param text $email The email to validate
-     * @return string if empty it is invalid else
-     *  it returns the sanitized e-mail address
+     * A very fancy version of filter_var($email, FILTER_VALIDATE_EMAIL).
+     * 
+     * @param  text $email The email to validate
+     * @param  $skipDomainCheck boolean set to true to don't do domain name checking
+     * @return string if empty it is invalid else it returns the sanitized
+     *         e-mail address
      */
     static function validate_address($email,$skipDomainCheck=false)
     {
