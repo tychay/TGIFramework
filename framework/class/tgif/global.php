@@ -266,7 +266,7 @@ class tgif_global
     /**
      * Allows you to externally set a global :-)
      *
-     * You might think it woul be best to allow onfigurations for the
+     * You might think it would be best to allow configurations for the
      * '_loaderLoader' and 'cacheUpdateOnSet' assignements. However
      * since this is unparameterized, there is only one way to access
      * this variable. If you are explicitly setting this variable,
@@ -520,7 +520,7 @@ class tgif_global
     // }}}
     // {{{ - _getFromLocalCache($variableName,$params)
     /**
-     * Attempt to grab somehting if it's already in the global registry
+     * Attempt to grab something if it's already in the global registry
      * @param string $variableName the name of the global to grab
      * @param array $params paramterization of the global in the case of
      *  a colletction

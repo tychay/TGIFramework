@@ -35,7 +35,7 @@ if (!function_exists('apc_fetch')) {
  *   volatile stores return nothing. There is a special rule here in that if
  *   the callback is an array with a single element it will call "new" on the
  *   element instead of {@link call_user_func_array()}. This means if the
- *   constructor has multiple paramters, it can only have a single parameter!
+ *   constructor has multiple parameters, it can only have a single parameter!
  *   If it the call has only a single element that is passed through, but if it
  *   has more, it will be passed in as an array.
  * - version (0): the version number to append to the cache keys to allow
@@ -63,7 +63,7 @@ if (!function_exists('apc_fetch')) {
  *   empty, then $this is implied.
  * - isSmemable (false): whether or not this global can be stored into the
  *   shared memory segment of the server's user cache. Note: never serialize any
- *   user/profile data because you will blow through this cache! Instead resere
+ *   user/profile data because you will blow through this cache! Instead reserve
  *   smem for sitewide globals, and small things that are shared at the
  *   application level.
  * - smemKey (false): the callback to generate the shared memory key. If false,

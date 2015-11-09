@@ -234,6 +234,7 @@ class tgif_http
     // {{{ + append_query($url, $query)
     /**
      * Allows you to add a query string onto a URL
+     * @param  array $query query parameters to append
      * @uses tgif_http::parse_url()
      * @uses tgif_http::glue_url()
      */
