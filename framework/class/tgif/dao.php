@@ -452,7 +452,7 @@ class tgif_dao
         return $success;
     }
     // + delete_and_dispose($obj)
-    public static function delete_and_dispose($obj)
+    public static function delete_and_dispose(&$obj)
     {
         $success = $obj->delete();
         if ( $success ) {
