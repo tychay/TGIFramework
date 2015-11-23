@@ -486,6 +486,8 @@ class tgif_dao
         if ( $success) {
             $this->_saveToCache();
         }
+
+        return $success;
     }
     // CACHING METHODS
     // {{{ - setLoader($loader)
