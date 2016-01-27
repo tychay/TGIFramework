@@ -22,6 +22,7 @@
 		"firephp/firephp-core": "*",
 		"saltybeagle/savant3": "dev-master",
 		"luracast/restler": "3.0.0",
-		"phpmailer/phpmailer": "*"
+		"phpmailer/phpmailer": "*",
+		"google/apiclient": "^2.0.0@RC"
 	}
 }
