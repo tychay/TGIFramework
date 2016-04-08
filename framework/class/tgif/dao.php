@@ -228,7 +228,10 @@ class tgif_dao
     // }}}
     // {{{ __destruct()
     /**
-     * Save the object if it's being destroyed
+     * Save the object if it's being destroyed.
+     *
+     * Remember this is not called if this is a subclass (which it will be) so
+     * you must explicitly call this for it to work. :-(
      */
     function __destruct()
     {
