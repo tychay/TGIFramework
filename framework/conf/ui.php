@@ -96,17 +96,17 @@ return array(
                 ),
             ),
             'font-awesome' => array(
-                'name'         => 'font-awesome/4.3.0/font-awesome.css',
-                'version'      => '4.3.0',
+                'name'         => 'font-awesome/4.5.0/font-awesome.css',
+                'version'      => '4.5.0',
                 'url_map'      => 'http%1$s://maxcdn.bootstrapcdn.com/font-awesome/%3$s/css/font-awesome%2$s.css',
                 'dependencies' => array(
                 ),
                 'provides'     => array(
                     'fontawesome',
                     'font-awesome',
-                    'font-awesome-4.3.0',
+                    'font-awesome-4.5.0',
                     'ext/font-awesome.css',
-                    'ext/font-awesome-4.3.0.css',
+                    'ext/font-awesome-4.5.0.css',
                 ),
             ),
         ),
