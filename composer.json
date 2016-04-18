@@ -23,6 +23,7 @@
 		"saltybeagle/savant3": "dev-master",
 		"luracast/restler": "3.0.0",
 		"phpmailer/phpmailer": "*",
-		"league/oauth2-google": "^1.0.1"
+		"league/oauth2-google": "^1.0.1",
+		"emojione/emojione": "*"
 	}
 }
