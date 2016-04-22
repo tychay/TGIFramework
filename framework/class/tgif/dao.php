@@ -463,6 +463,35 @@ class tgif_dao
         }
         return $success;
     }
+
+    /**
+     * @return tgif_dao[]
+     */
+    public static function fetch_collection($query, $conds) {
+        global $_TAG;
+        $results = $_TAG->dbh->getResults($query, $conds);
+        $returns = array();
+        if (!$results) {
+            return $returns;
+        }
+        foreach ($results as $key=>$result) {
+            $returns[] = new static($result, true);
+        }
+        return $returns;
+    }
+
+    /**
+     * @return tgif_dao
+     */
+    public static function fetch_row($query, $conds) {
+        $collections = self::fetch_collection($query, $conds);
+        if (empty($collections)) {
+            return null;
+        } else {
+            return $collections[0];
+        }
+    }
+
     //
     // PUBLIC METHODS
     // 
