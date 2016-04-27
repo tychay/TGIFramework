@@ -148,8 +148,8 @@ return array(
                 ),
             ),
             'momentjs' => array(
-                'name'         => 'momentjs/2.10.3/moment.js',
-                'version'      => '2.10.3',
+                'name'         => 'momentjs/2.13.0/moment.js',
+                'version'      => '2.13.0',
                 'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/moment.js/%3$s/moment%2$s.js',
                 'dependencies' => array(
                 ),
@@ -159,8 +159,8 @@ return array(
                 ),
             ),
             'momentjs-locales' => array(
-                'name'         => 'momentjs/2.10.3/locales.js',
-                'version'      => '2.10.3',
+                'name'         => 'momentjs/2.13.0/locales.js',
+                'version'      => '2.13.0',
                 'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/moment.js/%3$s/locales%2$s.js',
                 'dependencies' => array(
                     'momentjs',
@@ -258,6 +258,23 @@ return array(
                     'angular-messages-1.4.7',
                     'ext/angular-messages.js',
                     'ext/angular-messages-1.4.7.js',
+                ),
+            ),
+            'angular-moment' => array(
+                'name'         => 'angular-moment/1.0.0-beta.6/angular-moment.js',
+                'version'      => '1.0.0-beta.6',
+                'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angularjs/%3$s/angular-cookies%2$s.js',
+                'url_map'      => 'http%1$s://cdnjs.cloudflare.com/ajax/libs/angular-moment/%3$s/angular-moment%2$s.js',
+                'dependencies' => array(
+                    'angularjs',
+                    'momentjs',
+                ),
+                'provides'     => array(
+                    'ngMoment',
+                    'angular-moment',
+                    'angular-moment-1.0.0-beta.6',
+                    'ext/angular-moment.js',
+                    'ext/angular-moment-1.0.0-beta.6.js',
                 ),
             ),
         ),
