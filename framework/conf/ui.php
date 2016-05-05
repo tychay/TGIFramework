@@ -187,22 +187,22 @@ return array(
                 ),
             ),
             'angularjs' => array(
-                'name'         => 'angularjs/1.4.7/angular.js',
-                'version'      => '1.4.7',
+                'name'         => 'angularjs/1.5.5/angular.js',
+                'version'      => '1.5.5',
                 'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angularjs/%3$s/angular%2$s.js',
                 'dependencies' => array(
                 ),
                 'provides'     => array(
                     'angular',
                     'angularjs',
-                    'angularjs-1.4.7',
+                    'angularjs-1.5.5',
                     'ext/angular.js',
-                    'ext/angular-1.4.7.js',
+                    'ext/angular-1.5.5.js',
                 ),
             ),
             'angular-animate' => array(
-                'name'         => 'angularjs/1.4.7/angular-animate.js',
-                'version'      => '1.4.7',
+                'name'         => 'angularjs/1.5.5/angular-animate.js',
+                'version'      => '1.5.5',
                 'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angularjs/%3$s/angular-animate%2$s.js',
                 'dependencies' => array(
                     'angularjs',
@@ -210,14 +210,14 @@ return array(
                 'provides'     => array(
                     'ngAnimate',
                     'angular-animate',
-                    'angular-animate-1.4.7',
+                    'angular-animate-1.5.5',
                     'ext/angular-animate.js',
-                    'ext/angular-animate-1.4.7.js',
+                    'ext/angular-animate-1.5.5.js',
                 ),
             ),
             'angular-aria' => array(
-                'name'         => 'angularjs/1.4.7/angular-aria.js',
-                'version'      => '1.4.7',
+                'name'         => 'angularjs/1.5.5/angular-aria.js',
+                'version'      => '1.5.5',
                 'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angularjs/%3$s/angular-aria%2$s.js',
                 'dependencies' => array(
                     'angularjs',
@@ -225,14 +225,14 @@ return array(
                 'provides'     => array(
                     'ngAria',
                     'angular-aria',
-                    'angular-aria-1.4.7',
+                    'angular-aria-1.5.5',
                     'ext/angular-aria.js',
-                    'ext/angular-aria-1.4.7.js',
+                    'ext/angular-aria-1.5.5.js',
                 ),
             ),
             'angular-cookies' => array(
-                'name'         => 'angularjs/1.4.7/angular-cookies.js',
-                'version'      => '1.4.7',
+                'name'         => 'angularjs/1.5.5/angular-cookies.js',
+                'version'      => '1.5.5',
                 'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angularjs/%3$s/angular-cookies%2$s.js',
                 'dependencies' => array(
                     'angularjs',
@@ -240,14 +240,14 @@ return array(
                 'provides'     => array(
                     'ngCookies',
                     'angular-cookies',
-                    'angular-cookies-1.4.7',
+                    'angular-cookies-1.5.5',
                     'ext/angular-cookies.js',
-                    'ext/angular-cookies-1.4.7.js',
+                    'ext/angular-cookies-1.5.5.js',
                 ),
             ),
             'angular-messages' => array(
-                'name'         => 'angularjs/1.4.7/angular-messages.js',
-                'version'      => '1.4.7',
+                'name'         => 'angularjs/1.5.5/angular-messages.js',
+                'version'      => '1.5.5',
                 'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angularjs/%3$s/angular-messages%2$s.js',
                 'dependencies' => array(
                     'angularjs',
@@ -255,9 +255,24 @@ return array(
                 'provides'     => array(
                     'ngMessages',
                     'angular-messages',
-                    'angular-messages-1.4.7',
+                    'angular-messages-1.5.5',
                     'ext/angular-messages.js',
-                    'ext/angular-messages-1.4.7.js',
+                    'ext/angular-messages-1.5.5.js',
+                ),
+            ),
+            'angular-sanitize' => array(
+                'name'         => 'angularjs/1.5.5/angular-sanitize.js',
+                'version'      => '1.5.5',
+                'url_map'      => 'http%1$s://ajax.googleapis.com/ajax/libs/angularjs/%3$s/angular-sanitize%2$s.js',
+                'dependencies' => array(
+                    'angularjs',
+                ),
+                'provides'     => array(
+                    'ngSanitize',
+                    'angular-sanitize',
+                    'angular-sanitize-1.5.5',
+                    'ext/angular-sanitize.js',
+                    'ext/angular-sanitize-1.5.5.js',
                 ),
             ),
             'angular-moment' => array(
