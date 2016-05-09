@@ -96,17 +96,30 @@ return array(
                 ),
             ),
             'font-awesome' => array(
-                'name'         => 'font-awesome/4.5.0/font-awesome.css',
-                'version'      => '4.5.0',
+                'name'         => 'font-awesome/4.6.2/font-awesome.css',
+                'version'      => '4.6.2',
                 'url_map'      => 'http%1$s://maxcdn.bootstrapcdn.com/font-awesome/%3$s/css/font-awesome%2$s.css',
                 'dependencies' => array(
                 ),
                 'provides'     => array(
                     'fontawesome',
                     'font-awesome',
-                    'font-awesome-4.5.0',
+                    'font-awesome-4.6.2',
                     'ext/font-awesome.css',
-                    'ext/font-awesome-4.5.0.css',
+                    'ext/font-awesome-4.6.2.css',
+                ),
+            ),
+            'emojione' => array(
+                'name'         => 'emojione/2.1.4/emojione.css',
+                'version'      => '2.1.4',
+                'url_map'      => 'http%1$s://cdn.jsdelivr.net/emojione/%3$s/assets/css/emojione.min.css',
+                'dependencies' => array(
+                ),
+                'provides'     => array(
+                    'emojione',
+                    'emojione-2.1.4',
+                    'ext/emojione.css',
+                    'ext/emojione-2.1.4.css',
                 ),
             ),
         ),
@@ -168,6 +181,19 @@ return array(
                 'provides'     => array(
                     'momentjs-locales',
                     'ext/moment-with-locales.js',
+                ),
+            ),
+            'emojione' => array(
+                'name'         => 'emojione/2.1.4/emojione.js',
+                'version'      => '2.1.4',
+                'url_map'      => 'http%1$s://cdn.jsdelivr.net/emojione/%3$s/lib/js/emojione.min.js',
+                'dependencies' => array(
+                ),
+                'provides'     => array(
+                    'emojione',
+                    'emojione-2.1.4',
+                    'ext/emojione.js',
+                    'ext/emojione-2.1.4.js',
                 ),
             ),
             'bootstrapjs' => array(
