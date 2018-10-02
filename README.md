@@ -148,9 +148,9 @@ Programming Notes
 
 ### [PHP Framework Interoperability](http://www.php-fig.org/) ###
 
-TGIFramework was written before this existed (in it's earliest incarnations it
-was written before PHP 5 was released). Because of that, support for PSR is a
-work in progress.
+TGIFramework was written long before this existed (in it's earliest incarnations it
+was written before PHP 5 was released!). Because of that, support for PSR is a
+work-in-progress.
 
 Here is the status:
 
@@ -158,7 +158,9 @@ Here is the status:
 
 While it is deprecated, the current iteration of TGIFramework is compliant
 with PSR-0 with the vendor name of `tgif`. Currently it creates its own
-`spl_autoload` function. (This is likely to change later.)
+`spl_autoload` function due to an artifact of needing to backward support
+and bootstrap existing spaghetti code at Tagged. (This is likely to change
+later.)
 
 #### [PSR-1](http://www.php-fig.org/psr/psr-1/ "Basic Coding Standard") ####
 
@@ -166,22 +168,24 @@ Compliant with the following exceptions:
 
 - Free energy scripts can theortically violate "side effects" _by design_.
 - Class names are (currently) all lower case instead of `StudlyCaps` because of
-  beta PHP5 compatibility with object instantiation. (This will be fixed later.)
+  broken beta PHP5 compatibility with object instantiation. (This will be fixed later.)
 - Class method names use underscores instead of `camelCase` due to the old way
-  of using them as a form of function namespacing. This will not change due to 
-  non-English-speaking readability/similarity to php built-in functions.
+  of using classes as a form of function namespacing which is still used throughout the
+  code. This will not change due to non-English-speaking readability and similarity to
+  php built-in functions.
 
 #### [PSR-2](http://www.php-fig.org/psr/psr-2/ "Coding Style Guide") ####
 
 - Not all pure-PHP files have the closing `?>` tag omitted. This is in the
   process of being fixed.
-- Method names _SHOULD NOT_ be prefixed is ignored because it's a dumb-ass
+- Method names _SHOULD NOT_ be prefixed is ignored because it's a short-sighted
   recommendation. That's probably why it's not a _MUST_.
 - Not all method names have been autdited for visibility declaration or
   ordering (`abstract`/`final` _access_ `static`)
 - Some expressions that evaluate to a truth condition violate the standard of
-  spaces around parenthesis. I'm keeping it because it's 100x more readable.
-- For look truth conditions do not always have spaces where they should. This
+  spaces around parenthesis. I'm keeping it because it's 100x more readable
+  when mixing function calls with truth conditions.
+- For loop truth conditions do not always have spaces where they should. This
   is in the process of being fixed.
 
 #### [PSR-3](http://www.php-fig.org/psr/psr-3/ "Logger Interface") ####
@@ -196,7 +200,7 @@ since [the latter is better](http://www.sitepoint.com/battle-autoloaders-psr-0-v
 
 #### [PSR-7](http://www.php-fig.org/psr/psr-7/ "HTTP Message Interfaces") ####
 
-This shit is opaque to me. I'll support it when I hit it in the real-world.
+This standard is opaque to me. I'll support it when I hit it in the real-world.
 
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/tychay/tgiframework/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
